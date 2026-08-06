@@ -2,6 +2,7 @@
 AEGISX - Security & Cryptographic Module
 JWT, password hashing, encryption, token management
 """
+import base64 as _base64
 import hashlib
 import hmac
 import secrets
@@ -125,8 +126,9 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
 # ── Encryption ───────────────────────────────────────────────────
 
 def get_fernet() -> Fernet:
-    key = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
-    return Fernet(Fernet.generate_key() if len(key) != 44 else key)
+    raw = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+    key = _base64.urlsafe_b64encode(raw)
+    return Fernet(key)
 
 
 def encrypt_value(value: str) -> str:

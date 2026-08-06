@@ -1,6 +1,7 @@
 """
 AEGISX - Main FastAPI Application Entry Point
 """
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -32,18 +33,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         async with async_session_factory() as db:
             result = await db.execute(select(Tenant).limit(1))
             if not result.scalar_one_or_none():
-                import uuid
+                import uuid as _uuid
                 from app.core.security import hash_password
                 from app.models.user import User, Role
                 
-                tid = uuid.uuid4()
+                admin_email = os.getenv("AEGISX_ADMIN_EMAIL", "admin@aegisx.com")
+                admin_password = os.getenv("AEGISX_ADMIN_PASSWORD", "Admin123!@#")
+                
+                tid = _uuid.uuid4()
                 db.add(Tenant(id=tid, name="default", display_name="AEGISX", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
                 await db.flush()
-                db.add(User(id=uuid.uuid4(), tenant_id=tid, username="admin", email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
+                db.add(User(id=_uuid.uuid4(), tenant_id=tid, username="admin", email=admin_email, hashed_password=hash_password(admin_password), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
                 for name, disp, p in [("tenant_admin","Tenant Admin",["users:*"]),("soc_manager","SOC Manager",["incidents:*"]),("soc_analyst_l1","Analyst L1",["incidents:read"]),("compliance_officer","Compliance",["compliance:*"])]:
                     db.add(Role(tenant_id=tid, name=name, display_name=disp, is_system=True, permissions=p))
                 await db.commit()
-                print("SETUP COMPLETE — Login: admin@aegisx.com / Admin123!@#")
+                if settings.APP_ENV == "development":
+                    print(f"SETUP COMPLETE — Login: {admin_email}")
     except Exception as e:
         print(f"Setup skipped: {e}")
 
@@ -62,18 +67,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         async with async_session_factory() as db:
             result = await db.execute(select(Tenant).limit(1))
             if not result.scalar_one_or_none():
-                import uuid
+                import uuid as _uuid
                 from app.core.security import hash_password
                 from app.models.user import User, Role
                 
-                tid = uuid.uuid4()
+                admin_email = os.getenv("AEGISX_ADMIN_EMAIL", "admin@aegisx.com")
+                admin_password = os.getenv("AEGISX_ADMIN_PASSWORD", "Admin123!@#")
+                
+                tid = _uuid.uuid4()
                 db.add(Tenant(id=tid, name="default", display_name="AEGISX", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
                 await db.flush()
-                db.add(User(id=uuid.uuid4(), tenant_id=tid, username="admin", email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
+                db.add(User(id=_uuid.uuid4(), tenant_id=tid, username="admin", email=admin_email, hashed_password=hash_password(admin_password), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
                 for name, disp, p in [("tenant_admin","Tenant Admin",["users:*"]),("soc_manager","SOC Manager",["incidents:*"]),("soc_analyst_l1","SOC Analyst L1",["incidents:read"]),("compliance_officer","Compliance Officer",["compliance:*"])]:
                     db.add(Role(tenant_id=tid, name=name, display_name=disp, is_system=True, permissions=p))
                 await db.commit()
-                print(f"\n  SETUP COMPLETE — Login: admin@aegisx.com / Admin123!@#\n")
+                if settings.APP_ENV == "development":
+                    print(f"SETUP COMPLETE — Login: {admin_email}")
     except Exception as e:
         print(f"Auto-setup: {e}")
 

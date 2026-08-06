@@ -3,6 +3,7 @@ AEGISX - API Dependencies
 Authentication, authorization, tenant isolation, and common dependencies
 """
 import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import Depends, Header, HTTPException, Request, Security, status
@@ -55,11 +56,37 @@ def require_tenant(
 async def get_current_user_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Validate JWT or API key and return payload."""
     if x_api_key:
-        # API Key authentication (to be implemented with DB check)
-        return {"sub": "api_key", "type": "api_key", "tenant_id": None, "roles": []}
+        from app.models import ApiKey
+        from app.core.security import hash_api_key
+        from sqlalchemy import select
+        hashed = hash_api_key(x_api_key)
+        result = await db.execute(
+            select(ApiKey).where(
+                ApiKey.key_hash == hashed,
+                ApiKey.is_active == True,
+            )
+        )
+        api_key_record = result.scalar_one_or_none()
+        if not api_key_record:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid API key",
+            )
+        if api_key_record.expires_at and api_key_record.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="API key has expired",
+            )
+        return {
+            "sub": str(api_key_record.user_id),
+            "type": "api_key",
+            "tenant_id": str(api_key_record.tenant_id) if api_key_record.tenant_id else None,
+            "roles": api_key_record.scopes or ["api"],
+        }
 
     if not credentials:
         raise HTTPException(
@@ -83,6 +110,20 @@ async def get_current_user_token(
             detail="Invalid token type",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    jti = payload.get("jti")
+    if jti and token_type == "access":
+        from app.models import BlacklistedToken
+        from sqlalchemy import select as _select
+        result = await db.execute(
+            _select(BlacklistedToken).where(BlacklistedToken.jti == jti)
+        )
+        if result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
     return payload
 
