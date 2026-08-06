@@ -304,6 +304,37 @@ async def create_user(
 
 
 @router.get(
+    "/stats",
+    summary="User Statistics",
+    dependencies=[Depends(RequireSOCManager)],
+)
+async def user_stats(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    total = (await db.execute(
+        select(func.count(User.id)).where(User.tenant_id == tid, User.is_deleted == False)
+    )).scalar() or 0
+    active = (await db.execute(
+        select(func.count(User.id)).where(User.tenant_id == tid, User.status == "active", User.is_deleted == False)
+    )).scalar() or 0
+    suspended = (await db.execute(
+        select(func.count(User.id)).where(User.tenant_id == tid, User.status == "suspended", User.is_deleted == False)
+    )).scalar() or 0
+    mfa_enabled = (await db.execute(
+        select(func.count(User.id)).where(User.tenant_id == tid, User.mfa_enabled == True, User.is_deleted == False)
+    )).scalar() or 0
+    return {
+        "total": total,
+        "active": active,
+        "suspended": suspended,
+        "mfa_enabled": mfa_enabled,
+    }
+
+
+@router.get(
     "/",
     response_model=UserListResponse,
     summary="List Users",
@@ -898,17 +929,17 @@ async def list_roles(
     )).scalars().all()
 
     return [
-        RoleResponse(
-            id=str(r.id),
-            tenant_id=str(r.tenant_id),
-            name=r.name,
-            display_name=r.display_name,
-            description=r.description,
-            permissions=r.permissions,
-            is_system=r.is_system,
-            created_at=r.created_at,
-            updated_at=r.updated_at,
-        )
+        RoleResponse.model_validate({
+            "id": str(r.id),
+            "tenant_id": str(r.tenant_id),
+            "name": r.name,
+            "display_name": r.display_name,
+            "description": r.description,
+            "permissions": r.permissions,
+            "is_system": r.is_system,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        })
         for r in roles
     ]
 
@@ -1070,7 +1101,7 @@ async def list_departments(
     )).scalars().all()
 
     tree = _build_dept_tree(departments)
-    return [DepartmentResponse(**node) for node in tree]
+    return [DepartmentResponse.model_validate(node) for node in tree]
 
 
 @router.post(

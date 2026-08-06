@@ -93,7 +93,7 @@ export function UsersPage() {
   const [newDepartment, setNewDepartment] = useState({ name: "", parent_id: "" });
 
   useEffect(() => {
-    api.get<UserStats>("/admin/users/stats")
+    api.get<UserStats>("/users/stats")
       .then((res) => setStats(res))
       .catch(() => {});
   }, []);
@@ -106,7 +106,7 @@ export function UsersPage() {
     if (roleFilter) params.role = roleFilter;
     if (statusFilter) params.status = statusFilter;
     if (departmentFilter) params.department = departmentFilter;
-    api.get<{ data: UserItem[]; total: number }>("/admin/users", { params })
+    api.get<{ data: UserItem[]; total: number }>("/users", { params })
       .then((res) => { setUsers(res.data); setUsersTotal(res.total); })
       .catch((err) => setUsersError(err?.error?.message || "Failed to load users"))
       .finally(() => setUsersLoading(false));
@@ -119,7 +119,7 @@ export function UsersPage() {
   useEffect(() => {
     if (activeTab === "roles") {
       setRolesLoading(true);
-      api.get<Role[]>("/admin/roles")
+      api.get<Role[]>("/users/roles")
         .then((res) => setRoles(res))
         .catch(() => {})
         .finally(() => setRolesLoading(false));
@@ -129,7 +129,7 @@ export function UsersPage() {
   useEffect(() => {
     if (activeTab === "departments") {
       setDepartmentsLoading(true);
-      api.get<Department[]>("/admin/departments")
+      api.get<Department[]>("/users/departments")
         .then((res) => setDepartments(res))
         .catch(() => {})
         .finally(() => setDepartmentsLoading(false));
@@ -139,7 +139,7 @@ export function UsersPage() {
   const createUser = async () => {
     if (!newUser.email || !newUser.full_name || !newUser.password) return;
     try {
-      await api.post("/admin/users", newUser);
+      await api.post("/users", newUser);
       setShowAddUser(false);
       setNewUser({ full_name: "", email: "", password: "", roles: [], department: "" });
       fetchUsers();
@@ -149,7 +149,7 @@ export function UsersPage() {
   const updateUser = async () => {
     if (!editingUser) return;
     try {
-      await api.put("/admin/users/" + editingUser.id, {
+      await api.put("/users/" + editingUser.id, {
         full_name: editingUser.full_name,
         email: editingUser.email,
         roles: editingUser.roles,
@@ -165,14 +165,14 @@ export function UsersPage() {
   const deleteUser = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await api.delete("/admin/users/" + id);
+      await api.delete("/users/" + id);
       fetchUsers();
     } catch (_) {}
   };
 
   const suspendUser = async (id: string) => {
     try {
-      await api.patch("/admin/users/" + id, { status: "suspended" });
+      await api.patch("/users/" + id, { status: "suspended" });
       fetchUsers();
     } catch (_) {}
   };
@@ -180,22 +180,22 @@ export function UsersPage() {
   const createRole = async () => {
     if (!newRole.name) return;
     try {
-      await api.post("/admin/roles", newRole);
+      await api.post("/users/roles", newRole);
       setShowAddRole(false);
       setNewRole({ name: "", description: "" });
       setRolesLoading(true);
-      api.get<Role[]>("/admin/roles").then((res) => setRoles(res)).catch(() => {}).finally(() => setRolesLoading(false));
+      api.get<Role[]>("/users/roles").then((res) => setRoles(res)).catch(() => {}).finally(() => setRolesLoading(false));
     } catch (_) {}
   };
 
   const createDepartment = async () => {
     if (!newDepartment.name) return;
     try {
-      await api.post("/admin/departments", newDepartment);
+      await api.post("/users/departments", newDepartment);
       setShowAddDepartment(false);
       setNewDepartment({ name: "", parent_id: "" });
       setDepartmentsLoading(true);
-      api.get<Department[]>("/admin/departments").then((res) => setDepartments(res)).catch(() => {}).finally(() => setDepartmentsLoading(false));
+      api.get<Department[]>("/users/departments").then((res) => setDepartments(res)).catch(() => {}).finally(() => setDepartmentsLoading(false));
     } catch (_) {}
   };
 

@@ -405,6 +405,30 @@ async def create_incident(
     )
 
 
+@router.get("/severity-counts")
+async def severity_counts(
+    current_user: dict = Depends(RequireSOCAnalyst),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    result = await db.execute(
+        select(Incident.severity, func.count(Incident.id))
+        .where(Incident.tenant_id == tid)
+        .group_by(Incident.severity)
+    )
+    sevs = dict(result.all())
+    return {
+        "counts": {
+            "critical": sevs.get("critical", 0),
+            "high": sevs.get("high", 0),
+            "medium": sevs.get("medium", 0),
+            "low": sevs.get("low", 0),
+            "info": sevs.get("info", 0),
+        }
+    }
+
+
 @router.get("/", response_model=IncidentListResponse)
 async def list_incidents(
     current_user: dict = Depends(RequireSOCAnalyst),
