@@ -35,7 +35,7 @@ AEGISX combines security information and event management (SIEM), security orche
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/aegisx.git
+git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
 cd aegisx
 
 # Copy environment template
