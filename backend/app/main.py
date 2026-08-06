@@ -16,60 +16,12 @@ from app.middleware import setup_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Startup — discover PostgreSQL on Railway and auto-initialize."""
-    import os, socket, asyncio
-    from app.core.config import settings
-    
-    # Try to find Railway PostgreSQL
-    db_url = settings.DATABASE_URL or ""
-    if "localhost" in db_url or "aegisx:aegisx@" in db_url:
-        # Try Railway internal PostgreSQL hosts
-        candidate_hosts = [
-            "postgres.railway.internal",
-            "monorail.proxy.rlwy.net",
-            os.environ.get("PGHOST", ""),
-            os.environ.get("POSTGRES_HOST", ""),
-        ]
-
-        # Also try all environment variables that might contain a PostgreSQL URL
-        for env_key in ["DATABASE_URL", "DATABASE_PUBLIC_URL"]:
-            env_val = os.environ.get(env_key, "")
-            if env_val and ("postgres" in env_val):
-                candidate = env_val.replace("postgres://", "postgresql+asyncpg://").replace("postgresql://", "postgresql+asyncpg://")
-                try:
-                    import asyncpg
-                    conn = await asyncpg.connect(candidate)
-                    await conn.close()
-                    settings.DATABASE_URL = candidate
-                    print(f"✓ Found PostgreSQL via {env_key}")
-                    break
-                except Exception:
-                    continue
-        
-        for host in candidate_hosts:
-            if not host: continue
-            try:
-                # Test DNS resolution
-                socket.gethostbyname(host)
-                # Build URL with Railway's default credentials
-                pg_user = os.environ.get("PGUSER", "postgres")
-                pg_pass = os.environ.get("PGPASSWORD", "")
-                pg_db = os.environ.get("PGDATABASE", "railway")
-                pg_port = os.environ.get("PGPORT", "5432")
-                candidate = f"postgresql+asyncpg://{pg_user}:{pg_pass}@{host}:{pg_port}/{pg_db}"
-                
-                # Test connection
-                import asyncpg
-                conn = await asyncpg.connect(candidate)
-                await conn.close()
-                
-                settings.DATABASE_URL = candidate
-                print(f"✓ Found PostgreSQL at {host}")
-                break
-            except Exception:
-                continue
-    
-    print(f"AEGISX starting... DB: {'connected' if 'railway' in settings.DATABASE_URL else 'fallback'}")
+    import os
+    # Print all env vars starting with PG, POSTGRES, DATABASE, REDIS
+    for k, v in sorted(os.environ.items()):
+        if any(k.startswith(p) for p in ["PG", "POSTGRES", "DATABASE", "REDIS", "RAILWAY"]):
+            masked = v.replace("://", "://***@") if "://" in v else v[:20]
+            print(f"ENV {k}={masked}")
     
     # Auto-setup if database is reachable
     try:
