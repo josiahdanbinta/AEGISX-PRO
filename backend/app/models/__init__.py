@@ -14,7 +14,7 @@ from app.models.operational import (
     ThreatFeed, ThreatIndicator,
     ComplianceAssessment,
     Report, ReportSchedule, ReportTemplate,
-    NotificationChannel, NotificationHistory, NotificationPreference,
+    NotificationChannel, NotificationHistory, NotificationPreference, NotificationTemplate,
 )
 
 __all__ = [

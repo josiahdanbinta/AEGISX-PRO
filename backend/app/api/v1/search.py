@@ -10,13 +10,14 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy import select, func, and_, or_, desc, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models import (
     Asset, Incident, Alert, ThreatIndicator, User,
     Vulnerability, Playbook, Report, DetectionRule, AuditLog,
+    IncidentEvidence, Agent,
 )
 from app.api.deps import (
     get_current_user,
@@ -920,8 +921,60 @@ async def search_processes(
     _: dict = Depends(RequireSOCAnalyst),
     db: AsyncSession = Depends(get_db),
 ):
+    tid = uuid.UUID(tenant_id)
+    conditions = [Asset.tenant_id == tid]
+
+    if asset_id:
+        conditions.append(Asset.id == uuid.UUID(asset_id))
+
+    asset_query = select(Asset).where(and_(*conditions))
+    asset_result = await db.execute(asset_query)
+    assets = asset_result.scalars().all()
+
+    conditions2 = [Agent.tenant_id == tid]
+    agent_query = select(Agent).where(and_(*conditions2))
+    agent_result = await db.execute(agent_query)
+    agents = agent_result.scalars().all()
+
+    items = []
+    for agent in agents:
+        if not agent.capabilities or "process_list" not in agent.capabilities:
+            continue
+        proc_data = agent.config.get("processes", []) if agent.config else []
+        for proc in proc_data:
+            name_match = q.lower() in (proc.get("name", "") or "").lower()
+            cmd_match = q.lower() in (proc.get("command_line", "") or "").lower()
+            if not name_match and not cmd_match:
+                continue
+            if pid is not None and proc.get("pid") != pid:
+                continue
+            if user and user.lower() not in (proc.get("user", "") or "").lower():
+                continue
+            if hash and hash.lower() not in ((proc.get("hash_sha256", "") or "")).lower():
+                continue
+            items.append(ProcessSearchResult(
+                id=str(uuid.uuid4()),
+                process_name=proc.get("name", "unknown"),
+                pid=proc.get("pid", 0),
+                ppid=proc.get("ppid"),
+                user=proc.get("user"),
+                command_line=proc.get("command_line"),
+                hash_sha256=proc.get("hash_sha256"),
+                asset_id=str(agent.asset_id) if agent.asset_id else None,
+                asset_name=agent.hostname,
+                start_time=None,
+                end_time=None,
+                is_malicious=proc.get("is_malicious"),
+                highlights={},
+            ))
+
+    total = len(items)
+    offset = (page - 1) * page_size
+    paged_items = items[offset:offset + page_size]
+    total_pages = max(1, math.ceil(total / page_size))
     return PaginatedSearchResults(
-        items=[], total=0, page=page, page_size=page_size, total_pages=0,
+        items=[i.model_dump() for i in paged_items],
+        total=total, page=page, page_size=page_size, total_pages=total_pages,
     )
 
 
@@ -943,8 +996,66 @@ async def search_logs(
     _: dict = Depends(RequireSOCAnalyst),
     db: AsyncSession = Depends(get_db),
 ):
+    tid = uuid.UUID(tenant_id)
+    conditions = [AuditLog.tenant_id == tid]
+
+    search_term = f"%{q}%"
+    conditions.append(
+        or_(
+            AuditLog.action.ilike(search_term),
+            AuditLog.resource_type.ilike(search_term),
+            AuditLog.details.cast(String).ilike(search_term),
+        )
+    )
+
+    if level:
+        conditions.append(AuditLog.severity == level.value)
+    if date_from:
+        conditions.append(AuditLog.created_at >= date_from)
+    if date_to:
+        conditions.append(AuditLog.created_at <= date_to)
+
+    count_stmt = select(func.count()).select_from(AuditLog).where(and_(*conditions))
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+
+    offset = (page - 1) * page_size
+    stmt = select(AuditLog).where(and_(*conditions)).order_by(desc(AuditLog.created_at)).offset(offset).limit(page_size)
+    result = await db.execute(stmt)
+    logs = result.scalars().all()
+
+    items = []
+    for al in logs:
+        detail_parts = []
+        if al.details:
+            for k, v in al.details.items():
+                detail_parts.append(f"{k}={v}")
+        message = f"{al.action} on {al.resource_type}" + (" " + " ".join(detail_parts) if detail_parts else "")
+
+        log_level = LogLevel.INFO
+        if al.severity == "critical":
+            log_level = LogLevel.CRITICAL
+        elif al.severity == "warning":
+            log_level = LogLevel.WARNING
+        elif al.severity == "error":
+            log_level = LogLevel.ERROR
+
+        items.append(LogSearchResult(
+            id=str(al.id),
+            log_source=al.resource_type,
+            level=log_level,
+            message=message,
+            timestamp=al.created_at,
+            host=al.ip_address,
+            service="audit",
+            raw_log=str(al.details) if al.details else message,
+            highlights={},
+        ))
+
+    total_pages = max(1, math.ceil(total / page_size))
     return PaginatedSearchResults(
-        items=[], total=0, page=page, page_size=page_size, total_pages=0,
+        items=[i.model_dump() for i in items],
+        total=total, page=page, page_size=page_size, total_pages=total_pages,
     )
 
 
@@ -1151,8 +1262,71 @@ async def search_evidence(
     _: dict = Depends(RequireSOCAnalyst),
     db: AsyncSession = Depends(get_db),
 ):
+    from sqlalchemy.orm import joinedload
+    tid = uuid.UUID(tenant_id)
+
+    conditions = []
+    if incident_id:
+        conditions.append(IncidentEvidence.incident_id == uuid.UUID(incident_id))
+    if file_type:
+        conditions.append(IncidentEvidence.file_type == file_type.value)
+    if date_from:
+        conditions.append(IncidentEvidence.created_at >= date_from)
+    if date_to:
+        conditions.append(IncidentEvidence.created_at <= date_to)
+
+    search_term = f"%{q}%"
+    conditions.append(
+        or_(
+            IncidentEvidence.filename.ilike(search_term),
+            IncidentEvidence.description.ilike(search_term),
+        )
+    )
+
+    count_stmt = select(func.count()).select_from(IncidentEvidence).join(
+        Incident, IncidentEvidence.incident_id == Incident.id
+    ).where(and_(Incident.tenant_id == tid, *conditions))
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+
+    offset = (page - 1) * page_size
+    stmt = (
+        select(IncidentEvidence)
+        .join(Incident, IncidentEvidence.incident_id == Incident.id)
+        .options(joinedload(IncidentEvidence.incident))
+        .where(and_(Incident.tenant_id == tid, *conditions))
+        .order_by(desc(IncidentEvidence.created_at))
+        .offset(offset)
+        .limit(page_size)
+    )
+    result = await db.execute(stmt)
+    evidence_items = result.unique().scalars().all()
+
+    items = []
+    for ev in evidence_items:
+        ext = (ev.file_type or ev.filename.split(".")[-1] if "." in ev.filename else "other").lower()
+        try:
+            eft = EvidenceFileType(ext)
+        except ValueError:
+            eft = EvidenceFileType.OTHER
+
+        items.append(EvidenceSearchResult(
+            id=str(ev.id),
+            name=ev.filename,
+            file_type=eft,
+            file_name=ev.filename,
+            file_size_bytes=ev.file_size,
+            incident_id=str(ev.incident_id),
+            incident_title=ev.incident.title if ev.incident else None,
+            uploaded_by=str(ev.uploaded_by),
+            created_at=ev.created_at,
+            highlights={},
+        ))
+
+    total_pages = max(1, math.ceil(total / page_size))
     return PaginatedSearchResults(
-        items=[], total=0, page=page, page_size=page_size, total_pages=0,
+        items=[i.model_dump() for i in items],
+        total=total, page=page, page_size=page_size, total_pages=total_pages,
     )
 
 

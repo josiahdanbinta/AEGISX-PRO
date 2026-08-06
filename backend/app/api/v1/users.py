@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.security import hash_password
-from app.models import User, Role, Department, UserRole, AuditLog, RefreshToken
+from app.models import User, Role, Department, UserRole, AuditLog, RefreshToken, Tenant
 
 from app.api.deps import (
     PaginationParams,
@@ -234,6 +234,18 @@ async def create_user(
     db = Depends(get_db),
 ):
     tid = uuid.UUID(tenant_id)
+
+    # Quota enforcement
+    tenant = (await db.execute(select(Tenant).where(Tenant.id == tid))).scalar_one_or_none()
+    if tenant:
+        user_count = (await db.execute(
+            select(func.count(User.id)).where(User.tenant_id == tid, User.is_deleted == False)
+        )).scalar() or 0
+        if user_count >= tenant.quota_users:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"User quota exceeded ({tenant.quota_users}). Contact your administrator to upgrade.",
+            )
 
     existing = (await db.execute(
         select(User).where(User.tenant_id == tid, User.email == payload.email, User.is_deleted == False)

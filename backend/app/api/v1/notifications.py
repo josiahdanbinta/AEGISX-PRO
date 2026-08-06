@@ -2,19 +2,30 @@
 AEGISX - Notifications API Router
 Preferences, channels, templates, ad-hoc sending, history, integrations
 """
+import logging
+import smtplib
 import uuid
 from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
-from app.models import NotificationChannel, NotificationHistory, NotificationPreference, AuditLog
+from app.models import (
+    NotificationChannel,
+    NotificationHistory,
+    NotificationPreference,
+    NotificationTemplate,
+    AuditLog,
+)
 from app.api.deps import (
     get_current_user,
     require_tenant,
@@ -699,6 +710,25 @@ async def get_notification_history(
 # TEMPLATE ENDPOINTS
 # ════════════════════════════════════════════════════════════════════
 
+
+def _template_to_response(t: NotificationTemplate) -> TemplateResponse:
+    return TemplateResponse(
+        id=str(t.id),
+        tenant_id=str(t.tenant_id),
+        name=t.name,
+        category=TemplateCategory(t.category) if t.category in [e.value for e in TemplateCategory] else TemplateCategory.SYSTEM,
+        subject=t.subject,
+        body_html=t.body_html,
+        body_text=t.body_text,
+        variables=t.variables or [],
+        channels=[NotificationChannelEnum(ch) for ch in (t.channels or ["email"]) if ch in [e.value for e in NotificationChannelEnum]],
+        enabled=t.enabled,
+        created_at=t.created_at,
+        updated_at=t.updated_at,
+        created_by=str(t.created_by) if t.created_by else None,
+    )
+
+
 _HARDCODED_TEMPLATES = [
     TemplateResponse(
         id="tmpl-001",
@@ -755,20 +785,41 @@ async def list_templates(
     _: dict = Depends(RequireSOCManager),
     db: AsyncSession = Depends(get_db),
 ):
-    templates = list(_HARDCODED_TEMPLATES)
-    prefix = f"{tenant_id}:"
-    for tpl in _custom_templates.values():
-        templates.append(TemplateResponse(**tpl))
+    tid = uuid.UUID(tenant_id)
+
+    conditions = [
+        or_(
+            NotificationTemplate.tenant_id == tid,
+            NotificationTemplate.is_system == True,
+        )
+    ]
     if category:
-        templates = [t for t in templates if t.category == category]
-    if channel:
-        templates = [t for t in templates if channel in t.channels]
+        conditions.append(NotificationTemplate.category == category.value)
     if enabled is not None:
-        templates = [t for t in templates if t.enabled == enabled]
+        conditions.append(NotificationTemplate.enabled == enabled)
+
+    result = await db.execute(
+        select(NotificationTemplate).where(and_(*conditions)).order_by(desc(NotificationTemplate.created_at))
+    )
+    db_templates = result.scalars().all()
+
+    templates = []
+    for t in db_templates:
+        tpl = _template_to_response(t)
+        if channel and channel not in tpl.channels:
+            continue
+        templates.append(tpl)
+
+    if not db_templates:
+        templates = list(_HARDCODED_TEMPLATES)
+        if category:
+            templates = [t for t in templates if t.category == category]
+        if channel:
+            templates = [t for t in templates if channel in t.channels]
+        if enabled is not None:
+            templates = [t for t in templates if t.enabled == enabled]
+
     return templates
-
-
-_custom_templates: Dict[str, Dict[str, Any]] = {}
 
 
 @router.post("/templates", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
@@ -779,40 +830,40 @@ async def create_template(
     _: dict = Depends(RequireSOCManager),
     db: AsyncSession = Depends(get_db),
 ):
-    template_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
-    template_data = {
-        "id": template_id,
-        "tenant_id": tenant_id,
-        "name": body.name,
-        "category": body.category,
-        "subject": body.subject,
-        "body_html": body.body_html,
-        "body_text": body.body_text,
-        "variables": body.variables,
-        "channels": body.channels,
-        "enabled": body.enabled,
-        "created_at": now,
-        "updated_at": now,
-        "created_by": current_user.get("user_id"),
-    }
-    _custom_templates[f"{tenant_id}:{template_id}"] = template_data
+    tid = uuid.UUID(tenant_id)
+    uid = uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None
+
+    t = NotificationTemplate(
+        tenant_id=tid,
+        name=body.name,
+        category=body.category.value,
+        subject=body.subject,
+        body_html=body.body_html,
+        body_text=body.body_text,
+        variables=body.variables,
+        channels=[ch.value for ch in body.channels] if body.channels else ["email"],
+        enabled=body.enabled,
+        is_system=False,
+        created_by=uid,
+    )
+    db.add(t)
+    await db.flush()
 
     await db.execute(
         AuditLog.__table__.insert().values(
             id=uuid.uuid4(),
-            tenant_id=uuid.UUID(tenant_id),
-            user_id=uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None,
+            tenant_id=tid,
+            user_id=uid,
             action="template.created",
             resource_type="notification_template",
-            resource_id=uuid.UUID(template_id),
+            resource_id=t.id,
             details={"name": body.name, "category": body.category.value if body.category else None},
             status="success",
             severity="info",
         )
     )
     await db.flush()
-    return TemplateResponse(**template_data)
+    return _template_to_response(t)
 
 
 @router.patch("/templates/{template_id}", response_model=TemplateResponse)
@@ -824,32 +875,53 @@ async def update_template(
     _: dict = Depends(RequireSOCManager),
     db: AsyncSession = Depends(get_db),
 ):
-    key = f"{tenant_id}:{template_id}"
-    if key not in _custom_templates:
+    tid = uuid.UUID(tenant_id)
+    uid = uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None
+
+    t = (await db.execute(
+        select(NotificationTemplate).where(
+            NotificationTemplate.id == uuid.UUID(template_id),
+            NotificationTemplate.tenant_id == tid,
+            NotificationTemplate.is_system == False,
+        )
+    )).scalar_one_or_none()
+    if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
 
-    template = _custom_templates[key]
     update_data = body.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        if value is not None:
-            template[field] = value
-    template["updated_at"] = datetime.now(timezone.utc)
+    if "name" in update_data and update_data["name"] is not None:
+        t.name = update_data["name"]
+    if "category" in update_data and update_data["category"] is not None:
+        t.category = update_data["category"].value
+    if "subject" in update_data and update_data["subject"] is not None:
+        t.subject = update_data["subject"]
+    if "body_html" in update_data:
+        t.body_html = update_data["body_html"]
+    if "body_text" in update_data:
+        t.body_text = update_data["body_text"]
+    if "variables" in update_data and update_data["variables"] is not None:
+        t.variables = update_data["variables"]
+    if "channels" in update_data and update_data["channels"] is not None:
+        t.channels = [ch.value for ch in update_data["channels"]]
+    if "enabled" in update_data and update_data["enabled"] is not None:
+        t.enabled = update_data["enabled"]
 
     await db.execute(
         AuditLog.__table__.insert().values(
             id=uuid.uuid4(),
-            tenant_id=uuid.UUID(tenant_id),
-            user_id=uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None,
+            tenant_id=tid,
+            user_id=uid,
             action="template.updated",
             resource_type="notification_template",
-            resource_id=uuid.UUID(template_id),
+            resource_id=t.id,
             details={"updated_fields": list(update_data.keys())},
             status="success",
             severity="info",
         )
     )
     await db.flush()
-    return TemplateResponse(**template)
+    await db.refresh(t)
+    return _template_to_response(t)
 
 
 @router.delete("/templates/{template_id}", response_model=MessageResponse)
@@ -860,27 +932,91 @@ async def delete_template(
     _: dict = Depends(RequireSOCManager),
     db: AsyncSession = Depends(get_db),
 ):
-    key = f"{tenant_id}:{template_id}"
-    if key not in _custom_templates:
+    tid = uuid.UUID(tenant_id)
+    uid = uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None
+
+    t = (await db.execute(
+        select(NotificationTemplate).where(
+            NotificationTemplate.id == uuid.UUID(template_id),
+            NotificationTemplate.tenant_id == tid,
+            NotificationTemplate.is_system == False,
+        )
+    )).scalar_one_or_none()
+    if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
 
-    template = _custom_templates.pop(key)
+    name = t.name
+    await db.delete(t)
 
     await db.execute(
         AuditLog.__table__.insert().values(
             id=uuid.uuid4(),
-            tenant_id=uuid.UUID(tenant_id),
-            user_id=uuid.UUID(current_user["user_id"]) if current_user.get("user_id") else None,
+            tenant_id=tid,
+            user_id=uid,
             action="template.deleted",
             resource_type="notification_template",
             resource_id=uuid.UUID(template_id),
-            details={"name": template.get("name")},
+            details={"name": name},
             status="success",
             severity="info",
         )
     )
     await db.flush()
-    return MessageResponse(message="Template deleted successfully", detail=f"Template '{template.get('name')}' removed")
+    return MessageResponse(message="Template deleted successfully", detail=f"Template '{name}' removed")
+
+
+# ════════════════════════════════════════════════════════════════════
+# EMAIL DELIVERY
+# ════════════════════════════════════════════════════════════════════
+
+logger = logging.getLogger(__name__)
+
+
+def send_email_notification(
+    recipient: str,
+    subject: str,
+    body: str,
+    body_html: Optional[str] = None,
+    smtp_host: Optional[str] = None,
+    smtp_port: Optional[int] = None,
+    smtp_user: Optional[str] = None,
+    smtp_password: Optional[str] = None,
+    smtp_from: Optional[str] = None,
+    use_tls: bool = True,
+) -> tuple[bool, Optional[str]]:
+    host = smtp_host or settings.SMTP_HOST
+    port = smtp_port or settings.SMTP_PORT
+    user = smtp_user or settings.SMTP_USER
+    password = smtp_password or settings.SMTP_PASSWORD
+    from_addr = smtp_from or settings.SMTP_FROM
+    tls = use_tls if use_tls is not None else settings.SMTP_TLS
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = from_addr
+        msg["To"] = recipient
+        msg.attach(MIMEText(body, "plain", "utf-8"))
+        if body_html:
+            msg.attach(MIMEText(body_html, "html", "utf-8"))
+
+        if tls:
+            server = smtplib.SMTP(host, port, timeout=30)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+        else:
+            server = smtplib.SMTP(host, port, timeout=30)
+
+        if user and password:
+            server.login(user, password)
+
+        server.sendmail(from_addr, [recipient], msg.as_string())
+        server.quit()
+        return True, None
+    except Exception as e:
+        logger.error(f"Failed to send email to {recipient}: {e}")
+        return False, str(e)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -911,6 +1047,20 @@ async def send_notification(
             triggered_by=current_user["user_id"],
         )
         db.add(entry)
+
+        if body.channel == NotificationChannelEnum.EMAIL:
+            success, error = send_email_notification(
+                recipient=recipient,
+                subject=body.subject or "Notification",
+                body=body.body,
+                body_html=body.body_html,
+            )
+            if success:
+                entry.status = "sent"
+            else:
+                entry.status = "failed"
+                entry.error_message = error
+                errors.append({"recipient": recipient, "error": error})
 
     await db.flush()
 

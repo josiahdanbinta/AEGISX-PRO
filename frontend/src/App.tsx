@@ -5,8 +5,10 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { ExecutiveDashboard } from '@/pages/dashboard/ExecutiveDashboard';
 import { SOCDashboard } from '@/pages/dashboard/SOCDashboard';
+import { AssetListPage } from '@/pages/assets/AssetListPage';
 import { AssetDetailPage } from '@/pages/assets/AssetDetailPage';
 import { IncidentListPage } from '@/pages/incidents/IncidentListPage';
+import { IncidentDetailPage } from '@/pages/incidents/IncidentDetailPage';
 import { AlertsPage } from '@/pages/alerts/AlertsPage';
 import { ThreatIntelPage } from '@/pages/threat_intel/ThreatIntelPage';
 import { VulnerabilitiesPage } from '@/pages/vulnerabilities/VulnerabilitiesPage';
@@ -14,6 +16,8 @@ import { CompliancePage } from '@/pages/compliance/CompliancePage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { PlaybooksPage } from '@/pages/soar/PlaybooksPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
+import { TenantListPage } from '@/pages/admin/TenantListPage';
+import { AuditLogsPage } from '@/pages/admin/AuditLogsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { Loading } from '@/components/ui/Loading';
 import { Server } from 'lucide-react';
@@ -40,10 +44,11 @@ export default function App() {
       <Route path="/soc" element={<ProtectedRoute><SOCDashboard /></ProtectedRoute>} />
 
       {/* Asset routes */}
-      <Route path="/assets" element={<ProtectedRoute><PlaceholderPage title="Asset Management" icon="monitor" /></ProtectedRoute>} />
+      <Route path="/assets" element={<ProtectedRoute><AssetListPage /></ProtectedRoute>} />
       <Route path="/assets/:id" element={<ProtectedRoute><AssetDetailPage /></ProtectedRoute>} />
 
       <Route path="/incidents" element={<ProtectedRoute><IncidentListPage /></ProtectedRoute>} />
+      <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetailPage /></ProtectedRoute>} />
       <Route path="/detection" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
       <Route path="/soar" element={<ProtectedRoute><PlaybooksPage /></ProtectedRoute>} />
       <Route path="/threat-intel" element={<ProtectedRoute><ThreatIntelPage /></ProtectedRoute>} />
@@ -51,8 +56,8 @@ export default function App() {
       <Route path="/compliance" element={<ProtectedRoute><CompliancePage /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
-      <Route path="/admin/tenants" element={<ProtectedRoute><PlaceholderPage title="Tenant Management" icon="building" /></ProtectedRoute>} />
-      <Route path="/admin/audit" element={<ProtectedRoute><PlaceholderPage title="Audit Logs" icon="scroll-text" /></ProtectedRoute>} />
+      <Route path="/admin/tenants" element={<ProtectedRoute><TenantListPage /></ProtectedRoute>} />
+      <Route path="/admin/audit" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
       <Route path="/deploy" element={<ProtectedRoute><DeploymentPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 

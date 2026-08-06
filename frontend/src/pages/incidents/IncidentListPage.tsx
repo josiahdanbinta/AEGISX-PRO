@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Shield, Search, Plus, AlertTriangle, AlertCircle, AlertOctagon,
   Info, BarChart3, ChevronDown, Filter, X,
@@ -82,6 +83,7 @@ const severityOptions: { value: string; label: string }[] = [
 ];
 
 export function IncidentListPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -228,7 +230,7 @@ export function IncidentListPage() {
             {hasActiveFilters && ' (filtered)'}
           </p>
         </div>
-        <Button size="md">
+        <Button size="md" onClick={() => navigate('/incidents/new')}>
           <Plus className="w-4 h-4" />
           New Incident
         </Button>
@@ -342,7 +344,7 @@ export function IncidentListPage() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSort={handleSort}
-            onRowClick={() => {}}
+            onRowClick={(row: Record<string, unknown>) => navigate(`/incidents/${row.id}`)}
           />
         )}
       </Card>

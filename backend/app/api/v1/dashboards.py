@@ -1279,6 +1279,9 @@ async def system_dashboard(
     tenant_id: str = Depends(require_tenant),
     current_user: dict = Depends(RequireSOCManager),
 ):
+    # NOTE: These are reasonable defaults. For real-time system metrics, integrate with
+    # Prometheus/Grafana, Datadog, or psutil-based collector. The config module
+    # provides SMTP/Redis/OpenSearch connection settings that can be probed for actual health.
     return SystemHealthDashboardResponse(
         service_status={"api": "healthy", "worker": "healthy", "db": "healthy", "redis": "healthy"},
         healthy_services=4,
@@ -1573,9 +1576,11 @@ async def get_widget_data(
         data = [{"analyst": row[0], "incidents": row[1]} for row in result.all()]
 
     elif widget_id == "system_health":
+        # NOTE: Default metrics shown. For live data, integrate with Prometheus/Grafana or psutil.
         data = {
             "services": {"api": "healthy", "worker": "healthy", "db": "healthy"},
             "metrics": {"cpu": 42.0, "memory": 58.3, "disk": 31.7},
+            "note": "Integrate with Prometheus/metrics collector for real-time data",
         }
 
     else:
