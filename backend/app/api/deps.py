@@ -116,7 +116,7 @@ async def get_current_user_token(
         from app.models import BlacklistedToken
         from sqlalchemy import select as _select
         result = await db.execute(
-            _select(BlacklistedToken).where(BlacklistedToken.jti == jti)
+            _select(BlacklistedToken).where(BlacklistedToken.token_jti == jti)
         )
         if result.scalar_one_or_none():
             raise HTTPException(
