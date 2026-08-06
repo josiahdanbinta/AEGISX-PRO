@@ -92,7 +92,7 @@ echo     Direct Frontend: http://%sysip%:3000
 echo.
 echo   Agent Enrollment:
 echo     Linux/macOS : curl -sSL http://%sysip%:8000/deploy/install.sh ^| bash -s -- --server http://%sysip%:8000 --key YOUR_KEY --tenant YOUR_TENANT
-echo     Windows PS  : Invoke-WebRequest -Uri "http://%sysip%:8000/deploy/install.ps1" -OutFile install.ps1; .\install.ps1 -Server "http://%sysip%:8000" -Key "YOUR_KEY" -Tenant "YOUR_TENANT"
+echo     Windows PS  : Invoke-WebRequest -Uri "http://%sysip%:8000/deploy/install.ps1" -OutFile install.ps1; .\install.ps1 -Server "http://%sysip%:8001" -Key "YOUR_KEY" -Tenant "YOUR_TENANT"
 echo.
 echo   Press any key to open the dashboard in your browser...
 pause >nul

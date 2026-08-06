@@ -145,7 +145,7 @@ services:
       - ./backend/alembic:/app/alembic:ro
       - uploads_data:/app/uploads
     ports:
-      - "0.0.0.0:8000:8000"
+      - "0.0.0.0:8001:8000"
     env_file:
       - ./backend/.env
     environment:
@@ -273,7 +273,7 @@ services:
       - ./frontend/postcss.config.js:/app/postcss.config.js:ro
       - frontend_node_modules:/app/node_modules
     ports:
-      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:5173:3000"
     environment:
       - VITE_API_BASE_URL=http://localhost/api/v1
     depends_on:
@@ -296,8 +296,8 @@ services:
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
       - frontend_dist:/usr/share/nginx/html:ro
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     depends_on:
       - backend
       - frontend
