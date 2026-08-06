@@ -4,7 +4,13 @@ AEGISX - Redis Cache Module
 import json
 from typing import Any, AsyncGenerator, Optional
 
-import redis.asyncio as aioredis
+try:
+    import redis.asyncio as aioredis
+    HAS_REDIS = True
+except ImportError:
+    aioredis = None
+    HAS_REDIS = False
+
 from app.core.config import settings
 
 
@@ -13,13 +19,20 @@ redis_client: Optional[aioredis.Redis] = None
 
 async def init_cache() -> None:
     global redis_client
-    redis_client = aioredis.from_url(
-        settings.REDIS_URL,
-        encoding="utf-8",
-        decode_responses=True,
-        max_connections=50,
-    )
-    await redis_client.ping()
+    if not HAS_REDIS or aioredis is None:
+        print("Redis: not available (package not installed)")
+        return
+    try:
+        redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+            max_connections=20,
+        )
+        await redis_client.ping()
+    except Exception as e:
+        print(f"Redis: connection failed ({e})")
+        redis_client = None
 
 
 async def close_cache() -> None:

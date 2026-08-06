@@ -7,11 +7,9 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
-from fastapi.staticfiles import StaticFiles
 
-from app.core.cache import init_cache, close_cache
 from app.core.config import settings
-from app.core.database import check_db_connection, close_db_connection
+from app.core.database import close_db_connection
 from app.core.exception_handlers import setup_exception_handlers
 from app.middleware import setup_middleware
 
