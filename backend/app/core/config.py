@@ -73,22 +73,22 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def assemble_db_url(self) -> "Settings":
-        if not self.DATABASE_URL:
-            self.DATABASE_URL = (
-                f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-            )
-        # Railway provides DATABASE_URL as postgres:// or postgresql://
-        # Convert to asyncpg compatible format
-        url = self.DATABASE_URL or ""
-        if "postgres://" in url:
-            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif "postgresql://" in url and "+asyncpg" not in url:
-            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        self.DATABASE_URL = url
-        # Fallback for build time
-        if not self.DATABASE_URL:
-            self.DATABASE_URL = "sqlite+aiosqlite:///./fallback.db"
+        # Only assemble if DATABASE_URL wasn't provided via env var
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
+            # Railway provides postgres:// or postgresql://
+            if "postgres://" in url:
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif "postgresql://" in url and "+asyncpg" not in url:
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            self.DATABASE_URL = url
+            return self
+        
+        # Fallback: assemble from components
+        self.DATABASE_URL = (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
         return self
 
     SQLALCHEMY_DATABASE_URL: Optional[str] = None
