@@ -73,10 +73,25 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def assemble_db_url(self) -> "Settings":
-        # Only assemble if DATABASE_URL wasn't provided via env var
-        if self.DATABASE_URL:
-            url = self.DATABASE_URL
-            # Railway provides postgres:// or postgresql://
+        import os
+        
+        # 1. Try DATABASE_URL env var (Railway provides this)
+        url = self.DATABASE_URL or os.environ.get("DATABASE_URL", "")
+        
+        # 2. Railway Docker: try PostgreSQL service via internal DNS
+        if not url or "localhost" in url or "aegisx:aegisx@" in url:
+            # Try common Railway PostgreSQL internal hosts
+            import socket
+            for host in ["postgres.railway.internal", "postgresql.railway.internal"]:
+                try:
+                    socket.gethostbyname(host)
+                    url = f"postgresql://postgres:{os.environ.get('PGPASSWORD','postgres')}@{host}:5432/railway"
+                    break
+                except:
+                    pass
+        
+        # 3. Convert to asyncpg format
+        if url:
             if "postgres://" in url:
                 url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             elif "postgresql://" in url and "+asyncpg" not in url:
@@ -84,7 +99,7 @@ class Settings(BaseSettings):
             self.DATABASE_URL = url
             return self
         
-        # Fallback: assemble from components
+        # 4. Last resort fallback
         self.DATABASE_URL = (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
