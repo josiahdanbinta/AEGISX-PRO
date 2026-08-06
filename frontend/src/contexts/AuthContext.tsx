@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         throw { mfaRequired: true, mfa_session_token: res.mfa_session_token };
       }
+      useAuthStore.getState().setToken(res.access_token);
       const user = await authService.getMe();
       setAuth(user, res.access_token, res.refresh_token);
     } catch (err) {
