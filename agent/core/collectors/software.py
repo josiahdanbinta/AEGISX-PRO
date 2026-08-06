@@ -28,6 +28,52 @@ _LATEST_VERSIONS = {
     "node.js": "22.11.0",
     "nodejs": "22.11.0",
     "git": "2.47.0",
+
+# FIX RECOMMENDATIONS with download URLs for each outdated app
+_FIX_RECOMMENDATIONS = {
+    "google chrome": {"action": "Update via Chrome → Help → About Google Chrome, or download from", "url": "https://www.google.com/chrome/"},
+    "microsoft edge": {"action": "Update via Edge → Help → About Microsoft Edge, or download from", "url": "https://www.microsoft.com/edge"},
+    "mozilla firefox": {"action": "Update via Firefox → Help → About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
+    "firefox": {"action": "Update via Firefox → Help → About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
+    "adobe acrobat reader": {"action": "Update via Help → Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
+    "adobe acrobat": {"action": "Update via Help → Check for Updates, or download from", "url": "https://acrobat.adobe.com/"},
+    "adobe reader": {"action": "Update via Help → Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
+    "java": {"action": "Download latest Java from", "url": "https://www.java.com/download/"},
+    "oracle java": {"action": "Download latest JDK from", "url": "https://www.oracle.com/java/technologies/downloads/"},
+    "openjdk": {"action": "Download latest OpenJDK from", "url": "https://adoptium.net/download/"},
+    "python": {"action": "Download latest Python from", "url": "https://www.python.org/downloads/"},
+    "node.js": {"action": "Download latest Node.js from", "url": "https://nodejs.org/"},
+    "nodejs": {"action": "Download latest Node.js from", "url": "https://nodejs.org/"},
+    "git": {"action": "Download latest Git from", "url": "https://git-scm.com/downloads"},
+    "7-zip": {"action": "Download latest 7-Zip from", "url": "https://www.7-zip.org/download.html"},
+    "vlc media player": {"action": "Download latest VLC from", "url": "https://www.videolan.org/vlc/"},
+    "notepad++": {"action": "Download latest Notepad++ from", "url": "https://notepad-plus-plus.org/downloads/"},
+    "putty": {"action": "Download latest PuTTY from", "url": "https://www.putty.org/"},
+    "wireshark": {"action": "Download latest Wireshark from", "url": "https://www.wireshark.org/download.html"},
+    "openssh": {"action": "Update via package manager: apt upgrade openssh-client / brew upgrade openssh", "url": "https://www.openssh.com/"},
+    "curl": {"action": "Update via package manager: apt upgrade curl / brew upgrade curl", "url": "https://curl.se/download.html"},
+    "openssl": {"action": "Update via package manager: apt upgrade openssl / brew upgrade openssl", "url": "https://www.openssl.org/source/"},
+    "apache": {"action": "Update via package manager: apt upgrade apache2 / brew upgrade httpd", "url": "https://httpd.apache.org/download.cgi"},
+    "nginx": {"action": "Update via package manager: apt upgrade nginx / brew upgrade nginx", "url": "https://nginx.org/en/download.html"},
+    "mysql": {"action": "Download latest MySQL from", "url": "https://dev.mysql.com/downloads/"},
+    "postgresql": {"action": "Update via package manager: apt upgrade postgresql", "url": "https://www.postgresql.org/download/"},
+    "docker": {"action": "Download latest Docker from", "url": "https://www.docker.com/products/docker-desktop"},
+    "virtualbox": {"action": "Download latest VirtualBox from", "url": "https://www.virtualbox.org/wiki/Downloads"},
+    "winscp": {"action": "Download latest WinSCP from", "url": "https://winscp.net/eng/download.php"},
+    "zoom": {"action": "Update via Zoom → Check for Updates, or download from", "url": "https://zoom.us/download"},
+    "slack": {"action": "Update via Slack → Check for Updates, or download from", "url": "https://slack.com/downloads"},
+    "discord": {"action": "Update via Discord → Check for Updates, or download from", "url": "https://discord.com/download"},
+    "telegram": {"action": "Download latest Telegram from", "url": "https://desktop.telegram.org/"},
+    "signal": {"action": "Download latest Signal from", "url": "https://signal.org/download/"},
+    "teamviewer": {"action": "Download latest TeamViewer from", "url": "https://www.teamviewer.com/download/"},
+    "anydesk": {"action": "Download latest AnyDesk from", "url": "https://anydesk.com/download"},
+    "dropbox": {"action": "Download latest Dropbox from", "url": "https://www.dropbox.com/downloading"},
+    "onedrive": {"action": "Update via Microsoft Store or download from", "url": "https://www.microsoft.com/en-us/microsoft-365/onedrive/download"},
+    "powershell": {"action": "Download latest PowerShell from", "url": "https://github.com/PowerShell/PowerShell/releases"},
+    "windows terminal": {"action": "Update via Microsoft Store or download from", "url": "https://github.com/microsoft/terminal/releases"},
+    "vscode": {"action": "Update via VS Code → Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
+    "visual studio code": {"action": "Update via VS Code → Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
+}  
     "7-zip": "24.08",
     "7zip": "24.08",
     "notepad++": "8.7.1",
@@ -658,6 +704,14 @@ class SoftwareCollector(BaseCollector):
                     if pkg_version and self._version_behind(pkg_version, latest_ver):
                         flags.append("outdated")
                         pkg["latest_version"] = latest_ver
+                        # Add fix recommendation
+                        fix = _FIX_RECOMMENDATIONS.get(known_name)
+                        if fix:
+                            pkg["fix_action"] = fix["action"]
+                            pkg["fix_url"] = fix["url"]
+                        else:
+                            pkg["fix_action"] = f"Update {pkg.get('name', 'this application')} to version {latest_ver} via your package manager or vendor website"
+                            pkg["fix_url"] = ""
                     break
 
             for eol_sw in _EOL_SOFTWARE:
@@ -665,6 +719,8 @@ class SoftwareCollector(BaseCollector):
                         eol_sw["name_pattern"].search(pkg.get("publisher", "") or "")):
                     flags.append("eol")
                     pkg["eol_date"] = eol_sw["eol_date"]
+                    pkg["fix_action"] = f"Uninstall {pkg.get('name', 'this software')} and upgrade to a supported version immediately. No security patches available."
+                    pkg["fix_url"] = ""
                     break
 
             for cve_sw in _KNOWN_CVE_SOFTWARE:
@@ -673,6 +729,8 @@ class SoftwareCollector(BaseCollector):
                     flags.append("vulnerable")
                     pkg["cve"] = cve_sw["cve"]
                     pkg["cve_severity"] = cve_sw["severity"]
+                    pkg["fix_action"] = f"Apply security patch for {cve_sw.get('cve', 'vulnerability')}. Update to latest version."
+                    pkg["fix_url"] = ""
                     break
 
             if flags:

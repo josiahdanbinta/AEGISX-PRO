@@ -371,7 +371,7 @@ function HardwareTab({ hardware }: { hardware: HardwareInfo | null }) {
 }
 
 function SoftwareTab({ software }: { software: SoftwareInfo | null }) {
-  if (!software) return <Card className="p-8 text-center text-slate-500">No software data available</Card>;
+  if (!software) return <Card className="p-8 text-center text-slate-500 dark:text-slate-400">No software data available</Card>;
 
   return (
     <div className="space-y-6">
@@ -381,14 +381,43 @@ function SoftwareTab({ software }: { software: SoftwareInfo | null }) {
           <SectionHeader icon={AlertTriangle} title="Outdated Applications" subtitle={`${software.outdated_apps.length} apps behind latest version`} />
           <Table
             columns={[
-              { key: 'name', header: 'Application' },
-              { key: 'current_version', header: 'Current' },
-              { key: 'latest_version', header: 'Latest' },
-              { key: 'severity', header: 'Risk', render: (r: Record<string, unknown>) => (
+              { key: 'name', header: 'Application', width: '18%' },
+              { key: 'current_version', header: 'Current', width: '10%', render: (r: Record<string, unknown>) => (
+                <span className="text-red-600 dark:text-red-400 font-medium">{String(r.current_version || r.version || '?')}</span>
+              )},
+              { key: 'latest_version', header: 'Latest', width: '10%', render: (r: Record<string, unknown>) => (
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{String(r.latest_version || '?')}</span>
+              )},
+              { key: 'fix', header: 'Fix Recommendation', width: '32%', render: (r: Record<string, unknown>) => {
+                const action = String(r.fix_action || `Update ${r.name} to version ${r.latest_version}`);
+                const url = String(r.fix_url || '');
+                return (
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    <p className="truncate max-w-xs">{action}</p>
+                    {url && (
+                      <a href={url} target="_blank" rel="noopener noreferrer"
+                        className="text-brand-600 dark:text-brand-400 hover:underline font-medium text-[11px]">
+                        Download Fix →
+                      </a>
+                    )}
+                  </div>
+                );
+              }},
+              { key: 'severity', header: 'Risk', width: '10%', render: (r: Record<string, unknown>) => (
                 <Badge variant={r.severity === 'critical' ? 'danger' : r.severity === 'high' ? 'warning' : 'info'} size="sm">
-                  {String(r.severity)}
+                  {String(r.severity || r.risk_flags?.[0] || 'outdated')}
                 </Badge>
               )},
+              { key: 'action', header: '', width: '10%', render: (r: Record<string, unknown>) => {
+                const url = String(r.fix_url || '');
+                return url ? (
+                  <a href={url} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950 px-2 py-1 rounded-lg transition-colors">
+                    <span>Fix Now</span>
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
+                ) : null;
+              }},
             ]}
             data={software.outdated_apps}
             keyExtractor={(r) => r.name}

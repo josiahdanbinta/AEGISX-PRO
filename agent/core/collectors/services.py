@@ -9,6 +9,32 @@ from agent.platforms import is_windows, is_linux, is_macos
 
 logger = logging.getLogger("aegisx.collector.services")
 
+# Outdated/vulnerable service versions with fix recommendations
+_OUTDATED_SERVICES = {
+    "sshd": {"min_version": "9.6", "fix": "Update OpenSSH: sudo apt install --only-upgrade openssh-server / brew upgrade openssh", "url": "https://www.openssh.com/"},
+    "apache2": {"min_version": "2.4.62", "fix": "Update Apache: sudo apt install --only-upgrade apache2 / brew upgrade httpd", "url": "https://httpd.apache.org/"},
+    "httpd": {"min_version": "2.4.62", "fix": "Update Apache: sudo yum update httpd / brew upgrade httpd", "url": "https://httpd.apache.org/"},
+    "nginx": {"min_version": "1.26.2", "fix": "Update Nginx: sudo apt install --only-upgrade nginx / brew upgrade nginx", "url": "https://nginx.org/"},
+    "mysqld": {"min_version": "8.0.40", "fix": "Update MySQL: sudo apt install --only-upgrade mysql-server", "url": "https://dev.mysql.com/downloads/mysql/"},
+    "mariadb": {"min_version": "11.4.3", "fix": "Update MariaDB: sudo apt install --only-upgrade mariadb-server", "url": "https://mariadb.org/download/"},
+    "postgresql": {"min_version": "16.4", "fix": "Update PostgreSQL: sudo apt install --only-upgrade postgresql", "url": "https://www.postgresql.org/download/"},
+    "redis-server": {"min_version": "7.4.1", "fix": "Update Redis: sudo apt install --only-upgrade redis-server", "url": "https://redis.io/download/"},
+    "docker": {"min_version": "27.3.0", "fix": "Update Docker: sudo apt install --only-upgrade docker-ce", "url": "https://docs.docker.com/engine/install/"},
+    "containerd": {"min_version": "1.7.22", "fix": "Update containerd: sudo apt install --only-upgrade containerd.io", "url": "https://containerd.io/downloads/"},
+    "cups": {"min_version": "2.4.10", "fix": "Update CUPS: sudo apt install --only-upgrade cups", "url": "https://openprinting.github.io/cups/"},
+    "bind9": {"min_version": "9.18.28", "fix": "Update BIND DNS: sudo apt install --only-upgrade bind9", "url": "https://www.isc.org/download/"},
+    "named": {"min_version": "9.18.28", "fix": "Update BIND DNS: sudo apt install --only-upgrade bind9", "url": "https://www.isc.org/download/"},
+    "samba": {"min_version": "4.20.4", "fix": "Update Samba: sudo apt install --only-upgrade samba", "url": "https://www.samba.org/"},
+    "smbd": {"min_version": "4.20.4", "fix": "Update Samba: sudo apt install --only-upgrade samba", "url": "https://www.samba.org/"},
+    "vsftpd": {"min_version": "3.0.5", "fix": "Update vsftpd: sudo apt install --only-upgrade vsftpd", "url": "https://security.appspot.com/vsftpd.html"},
+    "exim4": {"min_version": "4.98", "fix": "Update Exim: sudo apt install --only-upgrade exim4", "url": "https://www.exim.org/"},
+    "postfix": {"min_version": "3.9.0", "fix": "Update Postfix: sudo apt install --only-upgrade postfix", "url": "http://www.postfix.org/"},
+    "php": {"min_version": "8.3.12", "fix": "Update PHP: sudo apt install --only-upgrade php", "url": "https://www.php.net/downloads"},
+    "php-fpm": {"min_version": "8.3.12", "fix": "Update PHP-FPM: sudo apt install --only-upgrade php-fpm", "url": "https://www.php.net/downloads"},
+    "tomcat": {"min_version": "10.1.30", "fix": "Update Tomcat: Download from", "url": "https://tomcat.apache.org/download-10.cgi"},
+    "jenkins": {"min_version": "2.479.1", "fix": "Update Jenkins: sudo apt install --only-upgrade jenkins", "url": "https://www.jenkins.io/download/"},
+}
+
 _CRYPTO_MINER_NAMES = [
     "xmrig", "xmr-stak", "ccminer", "ethminer", "phoenixminer", "lolminer",
     "nbminer", "t-rex", "gminer", "bminer", "cryptominer", "minergate",
@@ -379,7 +405,47 @@ class ServicesCollector(BaseCollector):
                 if "renamed_system_service" not in flags:
                     flags.append("suspicious_masked_process")
 
+        # Check for outdated service versions
+        for svc_name, svc_info in _OUTDATED_SERVICES.items():
+            if svc_name in name or name == svc_name or svc_name in display:
+                svc_version = svc.get("version", "")
+                if svc_version and self._is_version_behind(svc_version, svc_info["min_version"]):
+                    flags.append("outdated")
+                    svc["latest_version"] = svc_info["min_version"]
+                    svc["fix_action"] = svc_info["fix"]
+                    svc["fix_url"] = svc_info["url"]
+                    svc["current_version"] = svc_version
+                elif not svc_version:
+                    # Can't determine version — flag as needing verification
+                    flags.append("version_unknown")
+                    svc["fix_action"] = svc_info["fix"]
+                    svc["fix_url"] = svc_info["url"]
+                break
+
         return flags
+
+    @staticmethod
+    def _is_version_behind(current: str, minimum: str) -> bool:
+        """Compare semantic versions. Returns True if current < minimum."""
+        try:
+            import re
+            def parse(v):
+                parts = []
+                for seg in re.split(r'[.\-_]', str(v)):
+                    try: parts.append(int(seg))
+                    except: parts.append(0)
+                return parts
+            cp = parse(current)
+            mp = parse(minimum)
+            max_len = max(len(cp), len(mp))
+            cp.extend([0] * (max_len - len(cp)))
+            mp.extend([0] * (max_len - len(mp)))
+            for c, m in zip(cp, mp):
+                if c < m: return True
+                if c > m: return False
+            return False
+        except:
+            return False
 
     def _is_unsigned_windows(self, exe_path: str) -> bool:
         sigcheck = self._run_command(
