@@ -16,14 +16,61 @@ from app.middleware import setup_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Application lifecycle management — no blocking checks."""
+    """Startup — auto-initialize database if empty."""
     print("AEGISX starting up...")
-
-    # Don't block startup waiting for services
-    # Services are checked lazily when endpoints are called
+    
+    # Auto-setup: create tables and admin user if database is empty
+    try:
+        from app.core.database import async_session_factory, engine
+        from sqlalchemy import select, text
+        from app.models.tenant import Tenant
+        from app.models.base import Base
+        
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        
+        async with async_session_factory() as db:
+            result = await db.execute(select(Tenant).limit(1))
+            if not result.scalar_one_or_none():
+                import uuid
+                from app.core.security import hash_password
+                from app.models.user import User, Role
+                
+                tenant_id = uuid.uuid4()
+                db.add(Tenant(id=tenant_id, name="default", display_name="AEGISX Enterprise",
+                              subscription_tier="enterprise", status="active",
+                              quota_assets=10000, quota_users=1000, quota_storage_gb=500))
+                await db.flush()
+                
+                admin = User(id=uuid.uuid4(), tenant_id=tenant_id, username="admin",
+                             email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"),
+                             full_name="Super Admin", roles=[{"role_name": "super_admin"}],
+                             status="active", must_change_password=True)
+                db.add(admin)
+                
+                roles_data = [
+                    ("tenant_admin", "Tenant Administrator", ["users:*","roles:*","departments:*","audit:read"]),
+                    ("soc_manager", "SOC Manager", ["incidents:*","alerts:*","detection:*","soar:*"]),
+                    ("soc_analyst_l2", "SOC Analyst L2", ["incidents:*","alerts:*","detection:read"]),
+                    ("soc_analyst_l1", "SOC Analyst L1", ["incidents:read","alerts:acknowledge"]),
+                    ("threat_hunter", "Threat Hunter", ["threat_intel:*","detection:*"]),
+                    ("incident_responder", "Incident Responder", ["incidents:*","soar:execute"]),
+                    ("compliance_officer", "Compliance Officer", ["compliance:*","vulnerabilities:*"]),
+                    ("auditor", "Auditor", ["audit:read","reports:read"]),
+                ]
+                for name, display, perms in roles_data:
+                    db.add(Role(tenant_id=tenant_id, name=name, display_name=display, is_system=True, permissions=perms))
+                
+                await db.commit()
+                print(f"\n{'='*60}")
+                print(f"  AEGISX Auto-Setup Complete!")
+                print(f"  Tenant ID: {tenant_id}")
+                print(f"  Login: admin@aegisx.com / Admin123!@#")
+                print(f"{'='*60}\n")
+    except Exception as e:
+        print(f"Auto-setup skipped (DB not available): {e}")
 
     yield
-
     print("AEGISX shutting down...")
 
 
