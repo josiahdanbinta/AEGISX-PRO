@@ -417,6 +417,392 @@ async def list_users(
     )
 
 
+# ── Role Endpoints ────────────────────────────────────────────────
+
+@router.get(
+    "/roles",
+    response_model=List[RoleResponse],
+    summary="List All Roles",
+    dependencies=[Depends(RequireSOCManager)],
+)
+async def list_roles(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    roles = (await db.execute(
+        select(Role).where(Role.tenant_id == tid).order_by(Role.name)
+    )).scalars().all()
+
+    return [
+        RoleResponse.model_validate({
+            "id": str(r.id),
+            "tenant_id": str(r.tenant_id),
+            "name": r.name,
+            "display_name": r.display_name,
+            "description": r.description,
+            "permissions": r.permissions,
+            "is_system": r.is_system,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        })
+        for r in roles
+    ]
+
+
+@router.post(
+    "/roles",
+    response_model=RoleResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Role",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def create_role(
+    payload: RoleCreate,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+
+    existing = (await db.execute(
+        select(Role).where(Role.name == payload.name, Role.tenant_id == tid)
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Role name already exists in this tenant")
+
+    r = Role(
+        tenant_id=tid,
+        name=payload.name,
+        display_name=payload.display_name,
+        description=payload.description,
+        permissions=payload.permissions,
+        is_system=payload.is_system,
+    )
+    db.add(r)
+    await db.flush()
+
+    await _audit(
+        db,
+        action="role.created",
+        resource_type="role",
+        resource_id=r.id,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"name": payload.name},
+    )
+
+    return RoleResponse(
+        id=str(r.id), tenant_id=str(r.tenant_id), name=r.name,
+        display_name=r.display_name, description=r.description,
+        permissions=r.permissions, is_system=r.is_system,
+        created_at=r.created_at, updated_at=r.updated_at,
+    )
+
+
+@router.patch(
+    "/roles/{role_id}",
+    response_model=RoleResponse,
+    summary="Update Role",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def update_role(
+    role_id: str,
+    payload: RoleUpdate,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    rid = uuid.UUID(role_id)
+
+    r = (await db.execute(
+        select(Role).where(Role.id == rid, Role.tenant_id == tid)
+    )).scalar_one_or_none()
+
+    if not r:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    if r.is_system:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot modify system roles")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    changed = []
+    for field, value in update_data.items():
+        if hasattr(r, field):
+            setattr(r, field, value)
+        changed.append(field)
+
+    await _audit(
+        db,
+        action="role.updated",
+        resource_type="role",
+        resource_id=rid,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"changed_fields": changed},
+    )
+
+    return RoleResponse(
+        id=str(r.id), tenant_id=str(r.tenant_id), name=r.name,
+        display_name=r.display_name, description=r.description,
+        permissions=r.permissions, is_system=r.is_system,
+        created_at=r.created_at, updated_at=r.updated_at,
+    )
+
+
+@router.delete(
+    "/roles/{role_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Role",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def delete_role(
+    role_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    rid = uuid.UUID(role_id)
+
+    r = (await db.execute(
+        select(Role).where(Role.id == rid, Role.tenant_id == tid)
+    )).scalar_one_or_none()
+
+    if not r:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    if r.is_system:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete system roles")
+
+    await db.delete(r)
+
+    await _audit(
+        db,
+        action="role.deleted",
+        resource_type="role",
+        resource_id=rid,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"name": r.name},
+        severity="warning",
+    )
+
+
+# ── Department Endpoints ──────────────────────────────────────────
+
+@router.get(
+    "/departments",
+    response_model=List[DepartmentResponse],
+    summary="List Departments (Hierarchical)",
+    dependencies=[Depends(RequireSOCManager)],
+)
+async def list_departments(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    departments = (await db.execute(
+        select(Department).where(Department.tenant_id == tid).order_by(Department.name)
+    )).scalars().all()
+
+    tree = _build_dept_tree(departments)
+    return [DepartmentResponse.model_validate(node) for node in tree]
+
+
+@router.post(
+    "/departments",
+    response_model=DepartmentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Department",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def create_department(
+    payload: DepartmentCreate,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+
+    if payload.parent_department_id:
+        parent = (await db.execute(
+            select(Department).where(Department.id == uuid.UUID(payload.parent_department_id), Department.tenant_id == tid)
+        )).scalar_one_or_none()
+        if not parent:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent department not found")
+
+    if payload.manager_id:
+        manager = (await db.execute(
+            select(User).where(User.id == uuid.UUID(payload.manager_id), User.tenant_id == tid, User.is_deleted == False)
+        )).scalar_one_or_none()
+        if not manager:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Manager user not found")
+
+    d = Department(
+        tenant_id=tid,
+        name=payload.name,
+        parent_department_id=uuid.UUID(payload.parent_department_id) if payload.parent_department_id else None,
+        description=payload.description,
+        manager_id=uuid.UUID(payload.manager_id) if payload.manager_id else None,
+    )
+    db.add(d)
+    await db.flush()
+
+    await _audit(
+        db,
+        action="department.created",
+        resource_type="department",
+        resource_id=d.id,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"name": payload.name},
+    )
+
+    return DepartmentResponse(
+        id=str(d.id), tenant_id=str(d.tenant_id), name=d.name,
+        parent_department_id=str(d.parent_department_id) if d.parent_department_id else None,
+        description=d.description,
+        manager_id=str(d.manager_id) if d.manager_id else None,
+        created_at=d.created_at, updated_at=d.updated_at,
+    )
+
+
+@router.patch(
+    "/departments/{dept_id}",
+    response_model=DepartmentResponse,
+    summary="Update Department",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def update_department(
+    dept_id: str,
+    payload: DepartmentUpdate,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    did = uuid.UUID(dept_id)
+
+    d = (await db.execute(
+        select(Department).where(Department.id == did, Department.tenant_id == tid)
+    )).scalar_one_or_none()
+
+    if not d:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    changed = []
+
+    if "name" in update_data:
+        d.name = update_data["name"]
+        changed.append("name")
+    if "description" in update_data:
+        d.description = update_data["description"]
+        changed.append("description")
+
+    new_parent_id = None
+    if "parent_department_id" in update_data:
+        new_parent_id = uuid.UUID(update_data["parent_department_id"]) if update_data["parent_department_id"] else None
+        if new_parent_id and new_parent_id == did:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Department cannot be its own parent")
+        if new_parent_id:
+            parent = (await db.execute(
+                select(Department).where(Department.id == new_parent_id, Department.tenant_id == tid)
+            )).scalar_one_or_none()
+            if not parent:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent department not found")
+        d.parent_department_id = new_parent_id
+        changed.append("parent_department_id")
+
+    if "manager_id" in update_data:
+        new_manager = uuid.UUID(update_data["manager_id"]) if update_data["manager_id"] else None
+        if new_manager:
+            manager = (await db.execute(
+                select(User).where(User.id == new_manager, User.tenant_id == tid, User.is_deleted == False)
+            )).scalar_one_or_none()
+            if not manager:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Manager user not found")
+        d.manager_id = new_manager
+        changed.append("manager_id")
+
+    await _audit(
+        db,
+        action="department.updated",
+        resource_type="department",
+        resource_id=did,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"changed_fields": changed},
+    )
+
+    return DepartmentResponse(
+        id=str(d.id), tenant_id=str(d.tenant_id), name=d.name,
+        parent_department_id=str(d.parent_department_id) if d.parent_department_id else None,
+        description=d.description,
+        manager_id=str(d.manager_id) if d.manager_id else None,
+        created_at=d.created_at, updated_at=d.updated_at,
+    )
+
+
+@router.delete(
+    "/departments/{dept_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Department",
+    dependencies=[Depends(RequireTenantAdmin)],
+)
+async def delete_department(
+    dept_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    did = uuid.UUID(dept_id)
+
+    d = (await db.execute(
+        select(Department).where(Department.id == did, Department.tenant_id == tid)
+    )).scalar_one_or_none()
+
+    if not d:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+
+    user_count = (await db.execute(
+        select(func.count()).select_from(User).where(
+            User.department_id == did, User.tenant_id == tid, User.is_deleted == False
+        )
+    )).scalar()
+    if user_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete department with {user_count} active users. Reassign users first.",
+        )
+
+    child_count = (await db.execute(
+        select(func.count()).select_from(Department).where(Department.parent_department_id == did, Department.tenant_id == tid)
+    )).scalar()
+    if child_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete department with {child_count} child departments. Delete or reassign children first.",
+        )
+
+    await db.delete(d)
+
+    await _audit(
+        db,
+        action="department.deleted",
+        resource_type="department",
+        resource_id=did,
+        tenant_id=tid,
+        user_id=uuid.UUID(current_user["user_id"]),
+        details={"name": d.name},
+        severity="warning",
+    )
+
+
+
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
@@ -909,387 +1295,3 @@ async def revoke_user_sessions(
         severity="warning",
     )
 
-
-# ── Role Endpoints ────────────────────────────────────────────────
-
-@router.get(
-    "/roles",
-    response_model=List[RoleResponse],
-    summary="List All Roles",
-    dependencies=[Depends(RequireSOCManager)],
-)
-async def list_roles(
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    roles = (await db.execute(
-        select(Role).where(Role.tenant_id == tid).order_by(Role.name)
-    )).scalars().all()
-
-    return [
-        RoleResponse.model_validate({
-            "id": str(r.id),
-            "tenant_id": str(r.tenant_id),
-            "name": r.name,
-            "display_name": r.display_name,
-            "description": r.description,
-            "permissions": r.permissions,
-            "is_system": r.is_system,
-            "created_at": r.created_at.isoformat() if r.created_at else None,
-            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
-        })
-        for r in roles
-    ]
-
-
-@router.post(
-    "/roles",
-    response_model=RoleResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create Role",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def create_role(
-    payload: RoleCreate,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-
-    existing = (await db.execute(
-        select(Role).where(Role.name == payload.name, Role.tenant_id == tid)
-    )).scalar_one_or_none()
-    if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Role name already exists in this tenant")
-
-    r = Role(
-        tenant_id=tid,
-        name=payload.name,
-        display_name=payload.display_name,
-        description=payload.description,
-        permissions=payload.permissions,
-        is_system=payload.is_system,
-    )
-    db.add(r)
-    await db.flush()
-
-    await _audit(
-        db,
-        action="role.created",
-        resource_type="role",
-        resource_id=r.id,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"name": payload.name},
-    )
-
-    return RoleResponse(
-        id=str(r.id), tenant_id=str(r.tenant_id), name=r.name,
-        display_name=r.display_name, description=r.description,
-        permissions=r.permissions, is_system=r.is_system,
-        created_at=r.created_at, updated_at=r.updated_at,
-    )
-
-
-@router.patch(
-    "/roles/{role_id}",
-    response_model=RoleResponse,
-    summary="Update Role",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def update_role(
-    role_id: str,
-    payload: RoleUpdate,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    rid = uuid.UUID(role_id)
-
-    r = (await db.execute(
-        select(Role).where(Role.id == rid, Role.tenant_id == tid)
-    )).scalar_one_or_none()
-
-    if not r:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-    if r.is_system:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot modify system roles")
-
-    update_data = payload.model_dump(exclude_unset=True)
-    changed = []
-    for field, value in update_data.items():
-        if hasattr(r, field):
-            setattr(r, field, value)
-        changed.append(field)
-
-    await _audit(
-        db,
-        action="role.updated",
-        resource_type="role",
-        resource_id=rid,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"changed_fields": changed},
-    )
-
-    return RoleResponse(
-        id=str(r.id), tenant_id=str(r.tenant_id), name=r.name,
-        display_name=r.display_name, description=r.description,
-        permissions=r.permissions, is_system=r.is_system,
-        created_at=r.created_at, updated_at=r.updated_at,
-    )
-
-
-@router.delete(
-    "/roles/{role_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete Role",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def delete_role(
-    role_id: str,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    rid = uuid.UUID(role_id)
-
-    r = (await db.execute(
-        select(Role).where(Role.id == rid, Role.tenant_id == tid)
-    )).scalar_one_or_none()
-
-    if not r:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-    if r.is_system:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete system roles")
-
-    await db.delete(r)
-
-    await _audit(
-        db,
-        action="role.deleted",
-        resource_type="role",
-        resource_id=rid,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"name": r.name},
-        severity="warning",
-    )
-
-
-# ── Department Endpoints ──────────────────────────────────────────
-
-@router.get(
-    "/departments",
-    response_model=List[DepartmentResponse],
-    summary="List Departments (Hierarchical)",
-    dependencies=[Depends(RequireSOCManager)],
-)
-async def list_departments(
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    departments = (await db.execute(
-        select(Department).where(Department.tenant_id == tid).order_by(Department.name)
-    )).scalars().all()
-
-    tree = _build_dept_tree(departments)
-    return [DepartmentResponse.model_validate(node) for node in tree]
-
-
-@router.post(
-    "/departments",
-    response_model=DepartmentResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create Department",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def create_department(
-    payload: DepartmentCreate,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-
-    if payload.parent_department_id:
-        parent = (await db.execute(
-            select(Department).where(Department.id == uuid.UUID(payload.parent_department_id), Department.tenant_id == tid)
-        )).scalar_one_or_none()
-        if not parent:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent department not found")
-
-    if payload.manager_id:
-        manager = (await db.execute(
-            select(User).where(User.id == uuid.UUID(payload.manager_id), User.tenant_id == tid, User.is_deleted == False)
-        )).scalar_one_or_none()
-        if not manager:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Manager user not found")
-
-    d = Department(
-        tenant_id=tid,
-        name=payload.name,
-        parent_department_id=uuid.UUID(payload.parent_department_id) if payload.parent_department_id else None,
-        description=payload.description,
-        manager_id=uuid.UUID(payload.manager_id) if payload.manager_id else None,
-    )
-    db.add(d)
-    await db.flush()
-
-    await _audit(
-        db,
-        action="department.created",
-        resource_type="department",
-        resource_id=d.id,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"name": payload.name},
-    )
-
-    return DepartmentResponse(
-        id=str(d.id), tenant_id=str(d.tenant_id), name=d.name,
-        parent_department_id=str(d.parent_department_id) if d.parent_department_id else None,
-        description=d.description,
-        manager_id=str(d.manager_id) if d.manager_id else None,
-        created_at=d.created_at, updated_at=d.updated_at,
-    )
-
-
-@router.patch(
-    "/departments/{dept_id}",
-    response_model=DepartmentResponse,
-    summary="Update Department",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def update_department(
-    dept_id: str,
-    payload: DepartmentUpdate,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    did = uuid.UUID(dept_id)
-
-    d = (await db.execute(
-        select(Department).where(Department.id == did, Department.tenant_id == tid)
-    )).scalar_one_or_none()
-
-    if not d:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
-
-    update_data = payload.model_dump(exclude_unset=True)
-    changed = []
-
-    if "name" in update_data:
-        d.name = update_data["name"]
-        changed.append("name")
-    if "description" in update_data:
-        d.description = update_data["description"]
-        changed.append("description")
-
-    new_parent_id = None
-    if "parent_department_id" in update_data:
-        new_parent_id = uuid.UUID(update_data["parent_department_id"]) if update_data["parent_department_id"] else None
-        if new_parent_id and new_parent_id == did:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Department cannot be its own parent")
-        if new_parent_id:
-            parent = (await db.execute(
-                select(Department).where(Department.id == new_parent_id, Department.tenant_id == tid)
-            )).scalar_one_or_none()
-            if not parent:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent department not found")
-        d.parent_department_id = new_parent_id
-        changed.append("parent_department_id")
-
-    if "manager_id" in update_data:
-        new_manager = uuid.UUID(update_data["manager_id"]) if update_data["manager_id"] else None
-        if new_manager:
-            manager = (await db.execute(
-                select(User).where(User.id == new_manager, User.tenant_id == tid, User.is_deleted == False)
-            )).scalar_one_or_none()
-            if not manager:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Manager user not found")
-        d.manager_id = new_manager
-        changed.append("manager_id")
-
-    await _audit(
-        db,
-        action="department.updated",
-        resource_type="department",
-        resource_id=did,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"changed_fields": changed},
-    )
-
-    return DepartmentResponse(
-        id=str(d.id), tenant_id=str(d.tenant_id), name=d.name,
-        parent_department_id=str(d.parent_department_id) if d.parent_department_id else None,
-        description=d.description,
-        manager_id=str(d.manager_id) if d.manager_id else None,
-        created_at=d.created_at, updated_at=d.updated_at,
-    )
-
-
-@router.delete(
-    "/departments/{dept_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete Department",
-    dependencies=[Depends(RequireTenantAdmin)],
-)
-async def delete_department(
-    dept_id: str,
-    current_user: dict = Depends(get_current_user),
-    tenant_id: str = Depends(require_tenant),
-    db = Depends(get_db),
-):
-    tid = uuid.UUID(tenant_id)
-    did = uuid.UUID(dept_id)
-
-    d = (await db.execute(
-        select(Department).where(Department.id == did, Department.tenant_id == tid)
-    )).scalar_one_or_none()
-
-    if not d:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
-
-    user_count = (await db.execute(
-        select(func.count()).select_from(User).where(
-            User.department_id == did, User.tenant_id == tid, User.is_deleted == False
-        )
-    )).scalar()
-    if user_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot delete department with {user_count} active users. Reassign users first.",
-        )
-
-    child_count = (await db.execute(
-        select(func.count()).select_from(Department).where(Department.parent_department_id == did, Department.tenant_id == tid)
-    )).scalar()
-    if child_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot delete department with {child_count} child departments. Delete or reassign children first.",
-        )
-
-    await db.delete(d)
-
-    await _audit(
-        db,
-        action="department.deleted",
-        resource_type="department",
-        resource_id=did,
-        tenant_id=tid,
-        user_id=uuid.UUID(current_user["user_id"]),
-        details={"name": d.name},
-        severity="warning",
-    )

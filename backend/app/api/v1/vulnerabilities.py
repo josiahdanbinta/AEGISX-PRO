@@ -1523,7 +1523,7 @@ async def get_scan_report(
 # VULNERABILITIES
 # ═══════════════════════════════════════════════════════════════════
 
-@router.get("/vulnerabilities", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/", dependencies=[Depends(RequireSOCAnalyst)])
 async def list_vulnerabilities(
     db: AsyncSession = Depends(get_db),
     tenant_id: str = Depends(require_tenant),
@@ -1644,7 +1644,7 @@ async def list_vulnerabilities(
     return _paginated_response(items, total, page, page_size)
 
 
-@router.get("/vulnerabilities/stats", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/stats", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability_stats(
     db: AsyncSession = Depends(get_db),
     tenant_id: str = Depends(require_tenant),
@@ -1712,7 +1712,7 @@ async def get_vulnerability_stats(
     }
 
 
-@router.get("/vulnerabilities/{vulnerability_id}", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/{vulnerability_id}", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability(
     vulnerability_id: str,
     db: AsyncSession = Depends(get_db),
@@ -1772,7 +1772,7 @@ async def get_vulnerability(
     return d
 
 
-@router.patch("/vulnerabilities/{vulnerability_id}", dependencies=[Depends(RequireSOCAnalyst)])
+@router.patch("/{vulnerability_id}", dependencies=[Depends(RequireSOCAnalyst)])
 async def update_vulnerability(
     vulnerability_id: str,
     body: VulnerabilityUpdate,
@@ -1832,7 +1832,7 @@ async def update_vulnerability(
     }
 
 
-@router.post("/vulnerabilities/bulk", dependencies=[Depends(RequireSOCManager)])
+@router.post("/bulk", dependencies=[Depends(RequireSOCManager)])
 async def bulk_update_vulnerabilities(
     body: VulnerabilityBulkUpdate,
     db: AsyncSession = Depends(get_db),
@@ -1889,7 +1889,7 @@ async def bulk_update_vulnerabilities(
     )
 
 
-@router.get("/vulnerabilities/{vulnerability_id}/affected-assets", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/{vulnerability_id}/affected-assets", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability_affected_assets(
     vulnerability_id: str,
     db: AsyncSession = Depends(get_db),
@@ -1930,7 +1930,7 @@ async def get_vulnerability_affected_assets(
     }
 
 
-@router.get("/vulnerabilities/{vulnerability_id}/exploits", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/{vulnerability_id}/exploits", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability_exploits(
     vulnerability_id: str,
     db: AsyncSession = Depends(get_db),
@@ -1955,7 +1955,7 @@ async def get_vulnerability_exploits(
     }
 
 
-@router.get("/vulnerabilities/{vulnerability_id}/mitre", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/{vulnerability_id}/mitre", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability_mitre(
     vulnerability_id: str,
     db: AsyncSession = Depends(get_db),
@@ -1979,7 +1979,7 @@ async def get_vulnerability_mitre(
     }
 
 
-@router.get("/vulnerabilities/{vulnerability_id}/remediation", dependencies=[Depends(RequireSOCAnalyst)])
+@router.get("/{vulnerability_id}/remediation", dependencies=[Depends(RequireSOCAnalyst)])
 async def get_vulnerability_remediation(
     vulnerability_id: str,
     db: AsyncSession = Depends(get_db),

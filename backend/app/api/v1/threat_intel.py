@@ -117,9 +117,21 @@ class ActorThreatLevel(str, Enum):
     LOW = "low"; MEDIUM = "medium"; HIGH = "high"; CRITICAL = "critical"
 
 class Sector(str, Enum):
-    FINANCE = "finance"; HEALTHCARE = "healthcare"; ENERGY = "energy"; GOVERNMENT = "government"; DEFENSE = "defense"
-    EDUCATION = "education"; TELECOMMUNICATIONS = "telecommunications"; MANUFACTURING = "manufacturing"
-    RETAIL = "retail"; TRANSPORTATION = "transportation"; TECHNOLOGY = "technology"; CRITICAL_INFRASTRUCTURE = "critical_infrastructure"
+    FINANCE = "finance"
+    HEALTHCARE = "healthcare"
+    ENERGY = "energy"
+    GOVERNMENT = "government"
+    DEFENSE = "defense"
+    MEDIA = "media"
+    AEROSPACE = "aerospace"
+    EDUCATION = "education"
+    TELECOMMUNICATIONS = "telecommunications"
+    MANUFACTURING = "manufacturing"
+    RETAIL = "retail"
+    TRANSPORTATION = "transportation"
+    TECHNOLOGY = "technology"
+    CRITICAL_INFRASTRUCTURE = "critical_infrastructure"
+    OTHER = "other"
 
 class CampaignStatus(str, Enum):
     ONGOING = "ongoing"; COMPLETED = "completed"; INACTIVE = "inactive"
@@ -3485,6 +3497,25 @@ MITRE_TACTICS = [
 _TACTIC_NAME_TO_ID = {t["short_name"].replace("-", "_"): t["id"] for t in MITRE_TACTICS}
 _TACTIC_NAME_TO_ID["command_and_control"] = "TA0011"
 
+
+@router.get("/mitre", response_model=MitreEnterpriseResponse, summary="MITRE ATT&CK Enterprise Techniques")
+async def mitre_enterprise_short(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    _: dict = Depends(RequireSOCAnalyst),
+):
+    techniques = []
+    for t in TTP_DATABASE:
+        tactic_ids = [_TACTIC_NAME_TO_ID.get(t["tactic"].replace("-", "_"), "TA0043")]
+        techniques.append({
+            "id": t["technique_id"], "name": t["name"],
+            "description": t.get("description", ""),
+            "tactics": tactic_ids,
+            "platforms": t.get("platforms", []),
+            "is_subtechnique": False, "parent_technique_id": None,
+        })
+    return {"domain": "enterprise", "version": "15.1",
+            "tactics": MITRE_TACTICS, "techniques": techniques}
 
 @router.get("/mitre/enterprise", response_model=MitreEnterpriseResponse)
 async def get_mitre_enterprise(

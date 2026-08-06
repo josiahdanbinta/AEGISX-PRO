@@ -105,7 +105,7 @@ export function AlertsPage() {
   const fetchAlerts = useCallback(() => {
     setLoading(true);
     setError(null);
-    api.get<PaginatedResponse<Alert>>('/alerts', { params: buildParams() })
+    api.get<PaginatedResponse<Alert>>('/detection/alerts', { params: buildParams() })
       .then((res) => {
         setData(res.data);
         setTotal(res.total);
@@ -121,7 +121,7 @@ export function AlertsPage() {
   }, [fetchAlerts]);
 
   useEffect(() => {
-    api.get<AlertStats>('/alerts/stats')
+    api.get<AlertStats>('/detection/alerts/stats')
       .then((res) => setStats(res))
       .catch(() => {});
   }, []);
@@ -146,7 +146,7 @@ export function AlertsPage() {
     if (selectedIds.size === 0) return;
     setBulkActionLoading(true);
     try {
-      await api.post(`/alerts/bulk/${action}`, { ids: Array.from(selectedIds) });
+      await api.post(`/detection/alerts/bulk/${action}`, { ids: Array.from(selectedIds) });
       setSelectedIds(new Set());
       fetchAlerts();
     } catch (err: unknown) {
@@ -159,7 +159,7 @@ export function AlertsPage() {
 
   const handleSingleAction = async (id: string, action: 'acknowledge' | 'dismiss' | 'escalate') => {
     try {
-      await api.post(`/alerts/${id}/${action}`);
+      await api.post(`/detection/alerts/${id}/${action}`);
       fetchAlerts();
     } catch (err: unknown) {
       const message = (err as { error?: { message?: string } })?.error?.message || `Failed to ${action} alert`;
