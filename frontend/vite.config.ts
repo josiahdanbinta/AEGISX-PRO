@@ -15,10 +15,30 @@ export default defineConfig({
       '/api': {
         target: 'http://backend:8000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            if (proxyRes.statusCode && proxyRes.statusCode >= 300 && proxyRes.statusCode < 400) {
+              const loc = proxyRes.headers['location'];
+              if (loc && typeof loc === 'string' && loc.includes('backend:8000')) {
+                proxyRes.headers['location'] = loc.replace('http://backend:8000', '');
+              }
+            }
+          });
+        },
       },
       '/health': {
         target: 'http://backend:8000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            if (proxyRes.statusCode && proxyRes.statusCode >= 300 && proxyRes.statusCode < 400) {
+              const loc = proxyRes.headers['location'];
+              if (loc && typeof loc === 'string' && loc.includes('backend:8000')) {
+                proxyRes.headers['location'] = loc.replace('http://backend:8000', '');
+              }
+            }
+          });
+        },
       },
     },
   },
