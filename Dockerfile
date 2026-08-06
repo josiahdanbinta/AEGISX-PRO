@@ -26,9 +26,6 @@ EXPOSE 8000
 CMD ["sh", "-c", "\
   echo '=== AEGISX v1.0.0 ===' && \
   echo 'PORT: '${PORT:-8000} && \
-  echo 'DATABASE_URL: '$(echo $DATABASE_URL | sed 's/\/\/.*@/\/\/****:****@/') && \
-  echo 'REDIS_URL: '$(echo ${REDIS_URL:-not-set}) && \
-  echo 'Starting server...' && \
-  sleep 3 && \
-  exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --log-level info \
+  echo 'Starting uvicorn...' && \
+  exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --log-level info --timeout-keep-alive 30 \
 "]

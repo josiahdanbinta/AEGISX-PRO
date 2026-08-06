@@ -18,34 +18,15 @@ from app.middleware import setup_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Application lifecycle management."""
-    # Try Redis
-    try:
-        await init_cache()
-        print("Redis: connected")
-    except Exception as e:
-        print(f"Redis: unavailable ({e}) — continuing without cache")
+    """Application lifecycle management — no blocking checks."""
+    print("AEGISX starting up...")
 
-    # Try Database
-    try:
-        db_ok = await check_db_connection()
-        if db_ok:
-            print("Database: connected")
-        else:
-            print("WARNING: Database connection failed")
-    except Exception as e:
-        print(f"WARNING: Database init error: {e}")
+    # Don't block startup waiting for services
+    # Services are checked lazily when endpoints are called
 
     yield
 
-    try:
-        await close_cache()
-    except Exception:
-        pass
-    try:
-        await close_db_connection()
-    except Exception:
-        pass
+    print("AEGISX shutting down...")
 
 
 def create_application() -> FastAPI:
@@ -95,6 +76,11 @@ and Incident Response.
     # ── Health Check ─────────────────────────────────────────────
     from app.api.v1.health import router as health_router
     app.include_router(health_router, prefix="/health", tags=["Health"])
+
+    # ── Root endpoint for Railway health check ────────────────────
+    @app.get("/")
+    async def root():
+        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
     # ── Documentation Routes ─────────────────────────────────────
     @app.get("/docs", include_in_schema=False)
