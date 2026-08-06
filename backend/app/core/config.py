@@ -79,8 +79,11 @@ class Settings(BaseSettings):
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
         # Railway provides DATABASE_URL as postgresql:// - convert to asyncpg
-        if self.DATABASE_URL and self.DATABASE_URL.startswith("postgresql://"):
+        if self.DATABASE_URL and "postgresql://" in self.DATABASE_URL and "+asyncpg" not in self.DATABASE_URL:
             self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # Fallback for build time when no DB is available
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = "sqlite+aiosqlite:///./fallback.db"
         return self
 
     SQLALCHEMY_DATABASE_URL: Optional[str] = None
@@ -92,9 +95,10 @@ class Settings(BaseSettings):
                 f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
-        # If DATABASE_URL was converted from Railway, use the sync version too
-        if not self.SQLALCHEMY_DATABASE_URL and self.DATABASE_URL:
+        if self.DATABASE_URL and "postgresql+" in (self.DATABASE_URL or ""):
             self.SQLALCHEMY_DATABASE_URL = self.DATABASE_URL.replace("+asyncpg", "", 1)
+        if not self.SQLALCHEMY_DATABASE_URL:
+            self.SQLALCHEMY_DATABASE_URL = "sqlite:///./fallback.db"
         return self
 
     # ── Redis ────────────────────────────────────────────────────

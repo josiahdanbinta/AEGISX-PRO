@@ -1,58 +1,28 @@
-# Railway.app Deployment Configuration
-# Deploy both backend and frontend as separate services
+# Railway.app — AEGISX Deployment
+# 
+# Deploy steps:
+# 1. Push this repo to Railway
+# 2. Add PostgreSQL plugin → auto-sets DATABASE_URL
+# 3. Add Redis plugin → auto-sets REDIS_URL  
+# 4. Set SECRET_KEY + JWT_SECRET_KEY + AGENT_REGISTRATION_KEY in Variables
+# 5. Open Shell → run: python setup.py
+# 6. Login: admin@aegisx.com / Admin123!@#
 
 [build]
 builder = "nixpacks"
-# Nixpacks auto-detects Python + Node.js
 
-# ── Backend Service ──────────────────────────────────────
-[services.backend]
-source = "backend"
-startCommand = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-# Railway provides DATABASE_URL and REDIS_URL automatically via PostgreSQL + Redis plugins
+[build.nixpacks]
+# Install system dependencies before pip
+aptPackages = ["libpq-dev", "gcc", "python3-dev"]
 
-[services.backend.build]
-nixpacksPlan = { providers = ["python"] }
-
-[services.backend.deploy]
+[deploy]
+# Start command — Railway sets $PORT automatically
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 healthcheckPath = "/health"
 restartPolicyMaxRetries = 3
-
-# ── Frontend Service ──────────────────────────────────────
-[services.frontend]
-source = "frontend"
-startCommand = "node -e \"const http = require('http'); const fs = require('fs'); const path = require('path'); const server = http.createServer((req, res) => { let file = req.url === '/' ? '/index.html' : req.url; const fp = path.join('dist', file); fs.existsSync(fp) ? (res.writeHead(200), fs.createReadStream(fp).pipe(res)) : (res.writeHead(200), fs.createReadStream('dist/index.html').pipe(res)) }); server.listen(process.env.PORT || 3000);\""
-
-[services.frontend.build]
-nixpacksPlan = { providers = ["node"] }
-buildCommand = "npm install && npm run build"
-startCommand = "node -e \"const http=require('http'),fs=require('fs'),path=require('path');http.createServer((q,r)=>{const f=path.join('dist',q.url==='/'?'index.html':q.url);fs.existsSync(f)?(r.writeHead(200),fs.createReadStream(f).pipe(r)):(r.writeHead(200),fs.createReadStream('dist/index.html').pipe(r))}).listen(process.env.PORT||3000)\""
-
-# ── Celery Worker (optional) ─────────────────────────────
-[services.celery-worker]
-source = "backend"
-startCommand = "celery -A app.core.celery_config.celery_app worker --loglevel=info --concurrency=2"
-
-[services.celery-worker.build]
-nixpacksPlan = { providers = ["python"] }
 
 # ── Environment Variables ────────────────────────────────
 [variables]
 APP_NAME = "AEGISX"
 APP_ENV = "production"
-API_V1_PREFIX = "/api/v1"
-BACKEND_CORS_ORIGINS = "*"
-JWT_ALGORITHM = "HS256"
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = "30"
-JWT_REFRESH_TOKEN_EXPIRE_DAYS = "7"
-PASSWORD_MIN_LENGTH = "12"
-MFA_ENABLED = "true"
-RATE_LIMIT_ENABLED = "true"
-LOG_LEVEL = "INFO"
-TENANT_ISOLATION_MODE = "row"
-AI_ENABLED = "false"
-FEATURE_SOAR = "true"
-FEATURE_THREAT_INTEL = "true"
-FEATURE_COMPLIANCE = "true"
-FEATURE_VULNERABILITY = "true"
-FEATURE_AUDIT = "true"
+PYTHONUNBUFFERED = "1"
