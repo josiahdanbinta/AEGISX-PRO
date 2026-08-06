@@ -119,10 +119,11 @@ export function IncidentListPage() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    api.get<PaginatedResponse<Incident>>('/incidents', { params: buildParams() })
+    api.get<{ items: Incident[]; meta: { total_items: number; page: number; page_size: number; total_pages: number } }>('/incidents', { params: buildParams() })
       .then((res) => {
-        setData(res.data);
-        setTotal(res.total);
+        setData(res.items);
+        setTotal(res.meta.total_items);
+        setTotalPages(res.meta.total_pages);
       })
       .catch((err) => {
         setError(err?.error?.message || 'Failed to load incidents');
