@@ -19,21 +19,33 @@ from app.middleware import setup_middleware
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifecycle management."""
+    # Try Redis
     try:
         await init_cache()
-        db_ok = await check_db_connection()
-        if not db_ok:
-            print("WARNING: Database connection failed on startup")
+        print("Redis: connected")
     except Exception as e:
-        print(f"WARNING: Service initialization error: {e}")
+        print(f"Redis: unavailable ({e}) — continuing without cache")
+
+    # Try Database
+    try:
+        db_ok = await check_db_connection()
+        if db_ok:
+            print("Database: connected")
+        else:
+            print("WARNING: Database connection failed")
+    except Exception as e:
+        print(f"WARNING: Database init error: {e}")
 
     yield
 
     try:
         await close_cache()
+    except Exception:
+        pass
+    try:
         await close_db_connection()
-    except Exception as e:
-        print(f"ERROR during shutdown: {e}")
+    except Exception:
+        pass
 
 
 def create_application() -> FastAPI:

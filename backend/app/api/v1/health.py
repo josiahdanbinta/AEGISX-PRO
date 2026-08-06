@@ -51,7 +51,14 @@ async def readiness_check():
     except Exception:
         db_status = "unavailable"
 
-    cache_status = "ok" if redis_client else "unavailable"
+    cache_status = "ok"
+    try:
+        if redis_client:
+            await redis_client.ping()
+        else:
+            cache_status = "unavailable"
+    except Exception:
+        cache_status = "unavailable"
     search_status = "ok"  # Simplified
 
     overall = "healthy" if all(s == "ok" for s in [db_status, cache_status, search_status]) else "degraded"

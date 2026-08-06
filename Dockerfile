@@ -1,4 +1,5 @@
 # Railway.app Dockerfile — AEGISX Backend
+# Optimized for Railway's free tier (512MB RAM)
 
 FROM python:3.12-slim-bookworm
 
@@ -15,11 +16,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY backend/requirements.txt .
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 
 COPY backend/ .
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start: wait for DB to be ready, then run with single worker for memory efficiency
+CMD ["sh", "-c", "\
+  echo 'AEGISX starting...' && \
+  echo 'Waiting for database...' && \
+  sleep 5 && \
+  echo 'Starting server on port '${PORT:-8000} && \
+  uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-concurrency 50 --backlog 100 \
+"]
