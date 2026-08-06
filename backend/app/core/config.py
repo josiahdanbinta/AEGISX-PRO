@@ -75,31 +75,26 @@ class Settings(BaseSettings):
     def assemble_db_url(self) -> "Settings":
         import os
         
-        # 1. Try DATABASE_URL env var (Railway provides this)
+        # 1. Use DATABASE_URL from env if set
         url = self.DATABASE_URL or os.environ.get("DATABASE_URL", "")
-        
-        # 2. Railway Docker: try PostgreSQL service via internal DNS
-        if not url or "localhost" in url or "aegisx:aegisx@" in url:
-            # Try common Railway PostgreSQL internal hosts
-            import socket
-            for host in ["postgres.railway.internal", "postgresql.railway.internal"]:
-                try:
-                    socket.gethostbyname(host)
-                    url = f"postgresql://postgres:{os.environ.get('PGPASSWORD','postgres')}@{host}:5432/railway"
-                    break
-                except:
-                    pass
-        
-        # 3. Convert to asyncpg format
-        if url:
-            if "postgres://" in url:
-                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-            elif "postgresql://" in url and "+asyncpg" not in url:
-                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if url and ("postgres" in url) and "localhost" not in url:
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1).replace("postgresql://", "postgresql+asyncpg://", 1)
             self.DATABASE_URL = url
             return self
         
-        # 4. Last resort fallback
+        # 2. Try Railway PostgreSQL via proxy (PGHOST + PGPORT + PGPASSWORD)
+        pg_host = os.environ.get("PGHOST", "")
+        pg_port = os.environ.get("PGPORT", "5432")
+        pg_user = os.environ.get("PGUSER", "postgres")
+        pg_pass = os.environ.get("PGPASSWORD", "")
+        pg_db   = os.environ.get("PGDATABASE", "railway")
+        
+        if pg_host and pg_pass:
+            url = f"postgresql+asyncpg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
+            self.DATABASE_URL = url
+            return self
+        
+        # 3. Assemble from component defaults
         self.DATABASE_URL = (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

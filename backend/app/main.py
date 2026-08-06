@@ -16,12 +16,38 @@ from app.middleware import setup_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    import os
-    # Print all env vars starting with PG, POSTGRES, DATABASE, REDIS
-    for k, v in sorted(os.environ.items()):
-        if any(k.startswith(p) for p in ["PG", "POSTGRES", "DATABASE", "REDIS", "RAILWAY"]):
-            masked = v.replace("://", "://***@") if "://" in v else v[:20]
-            print(f"ENV {k}={masked}")
+    """Startup — auto-initialize database if empty."""
+    from app.core.config import settings
+    print(f"AEGISX starting... DB: {settings.DATABASE_URL and settings.DATABASE_URL[:30]}...")
+    
+    try:
+        from app.core.database import async_session_factory, engine
+        from sqlalchemy import select
+        from app.models.tenant import Tenant
+        from app.models.base import Base
+        
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        
+        async with async_session_factory() as db:
+            result = await db.execute(select(Tenant).limit(1))
+            if not result.scalar_one_or_none():
+                import uuid
+                from app.core.security import hash_password
+                from app.models.user import User, Role
+                
+                tid = uuid.uuid4()
+                db.add(Tenant(id=tid, name="default", display_name="AEGISX", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
+                await db.flush()
+                db.add(User(id=uuid.uuid4(), tenant_id=tid, username="admin", email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
+                for name, disp, p in [("tenant_admin","Tenant Admin",["users:*"]),("soc_manager","SOC Manager",["incidents:*"]),("soc_analyst_l1","Analyst L1",["incidents:read"]),("compliance_officer","Compliance",["compliance:*"])]:
+                    db.add(Role(tenant_id=tid, name=name, display_name=disp, is_system=True, permissions=p))
+                await db.commit()
+                print("SETUP COMPLETE — Login: admin@aegisx.com / Admin123!@#")
+    except Exception as e:
+        print(f"Setup skipped: {e}")
+
+    yield
     
     # Auto-setup if database is reachable
     try:
