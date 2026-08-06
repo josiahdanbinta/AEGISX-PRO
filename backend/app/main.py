@@ -26,9 +26,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # Try Railway internal PostgreSQL hosts
         candidate_hosts = [
             "postgres.railway.internal",
+            "monorail.proxy.rlwy.net",
             os.environ.get("PGHOST", ""),
             os.environ.get("POSTGRES_HOST", ""),
         ]
+
+        # Also try all environment variables that might contain a PostgreSQL URL
+        for env_key in ["DATABASE_URL", "DATABASE_PUBLIC_URL"]:
+            env_val = os.environ.get(env_key, "")
+            if env_val and ("postgres" in env_val):
+                candidate = env_val.replace("postgres://", "postgresql+asyncpg://").replace("postgresql://", "postgresql+asyncpg://")
+                try:
+                    import asyncpg
+                    conn = await asyncpg.connect(candidate)
+                    await conn.close()
+                    settings.DATABASE_URL = candidate
+                    print(f"✓ Found PostgreSQL via {env_key}")
+                    break
+                except Exception:
+                    continue
         
         for host in candidate_hosts:
             if not host: continue
