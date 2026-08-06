@@ -170,7 +170,6 @@ secrets/
 *.env.local
 *.env.production
 *.env.staging
-!backend/.env
 secrets.env
 credentials.json
 service-account.json
