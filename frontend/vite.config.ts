@@ -13,11 +13,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'http://backend:8000',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:8001',
+        target: 'http://backend:8000',
         changeOrigin: true,
       },
     },
