@@ -21,6 +21,7 @@ RUN addgroup --system --gid 1001 aegisx \
     && adduser --system --uid 1001 --ingroup aegisx aegisx
 
 COPY --from=builder --chown=aegisx:aegisx /app /app
+RUN chown aegisx:aegisx /app
 
 USER aegisx:aegisx
 
