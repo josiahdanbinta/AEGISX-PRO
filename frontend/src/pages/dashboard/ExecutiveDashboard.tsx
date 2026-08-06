@@ -431,6 +431,41 @@ export function ExecutiveDashboard() {
         </div>
       </motion.div>
 
+      {/* System IP Connection Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+      >
+        <div className="bg-gradient-to-r from-brand-600 via-brand-700 to-blue-800 rounded-xl px-5 py-3 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Server className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-brand-200 font-medium">System IP</p>
+              <p className="text-sm font-bold text-white tracking-tight">
+                http://{window.location.hostname}:{window.location.port || '80'}
+              </p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center gap-4 text-xs text-brand-200">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>API: :8000</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>Agent: :8000/api/v1/agent</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>Docs: :8000/docs</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpiStats.map((stat, i) => (
