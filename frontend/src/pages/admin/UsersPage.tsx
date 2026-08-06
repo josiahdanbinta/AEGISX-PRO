@@ -107,7 +107,7 @@ export function UsersPage() {
     if (statusFilter) params.status = statusFilter;
     if (departmentFilter) params.department = departmentFilter;
     api.get<{ data: UserItem[]; total: number }>("/users", { params })
-      .then((res) => { setUsers(res.data); setUsersTotal(res.total); })
+      .then((res) => { setUsers(res.items); setUsersTotal(res.total); })
       .catch((err) => setUsersError(err?.error?.message || "Failed to load users"))
       .finally(() => setUsersLoading(false));
   }, [usersPage, searchQuery, roleFilter, statusFilter, departmentFilter]);

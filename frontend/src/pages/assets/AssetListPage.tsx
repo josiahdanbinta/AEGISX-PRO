@@ -65,8 +65,8 @@ export function AssetListPage() {
       if (search) params.search = search;
       const res = await api.get<AssetListResponse>('/assets', { params });
       setAssets(res.items);
-      setTotal(res.total);
-      setTotalPages(res.total_pages);
+      setTotal(res.meta.total_items);
+      setTotalPages(res.meta.total_pages);
     } catch (err: unknown) {
       const e = err as { error?: { message?: string } };
       setError(e?.error?.message || 'Failed to load assets');

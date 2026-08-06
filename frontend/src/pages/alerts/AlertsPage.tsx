@@ -107,7 +107,7 @@ export function AlertsPage() {
     setError(null);
     api.get<PaginatedResponse<Alert>>('/detection/alerts', { params: buildParams() })
       .then((res) => {
-        setData(res.data);
+        setData(res.items);
         setTotal(res.total);
       })
       .catch((err) => {
