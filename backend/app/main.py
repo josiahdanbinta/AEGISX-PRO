@@ -127,6 +127,18 @@ and Incident Response.
     async def root():
         return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
+    @app.get("/debug")
+    async def debug():
+        """Debug endpoint — shows configuration state."""
+        url = settings.DATABASE_URL or "NOT SET"
+        masked = url.replace("://", "://****:****@") if "://" in url else url
+        return {
+            "database_url": masked,
+            "database_url_raw_type": url.split("://")[0] if "://" in url else "none",
+            "redis_url": settings.REDIS_URL or "NOT SET",
+            "port": settings.PORT,
+        }
+
     # ── Documentation Routes ─────────────────────────────────────
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html():
