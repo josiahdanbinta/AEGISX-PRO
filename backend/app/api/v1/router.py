@@ -22,6 +22,7 @@ from app.api.v1.audit import router as audit_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.sso import router as sso_router
 from app.api.v1.websocket import router as websocket_router
+from app.api.v1.agent import router as agent_router
 
 api_router = APIRouter()
 
@@ -43,3 +44,4 @@ api_router.include_router(audit_router, prefix="/audit", tags=["Audit"])
 api_router.include_router(ai_router, prefix="/ai", tags=["AI"])
 api_router.include_router(sso_router, prefix="/sso", tags=["SSO"])
 api_router.include_router(websocket_router, prefix="", tags=["WebSocket"])
+api_router.include_router(agent_router, prefix="/agent", tags=["Agent"])

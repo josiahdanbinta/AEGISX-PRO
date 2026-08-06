@@ -6,6 +6,7 @@ import signal
 import sys
 import socket
 import time
+import argparse
 from datetime import datetime
 from pathlib import Path
 
@@ -613,7 +614,28 @@ def _setup_signal_handlers(agent: AEGISXAgent, loop: asyncio.AbstractEventLoop):
 
 
 def main():
-    agent = AEGISXAgent()
+    parser = argparse.ArgumentParser(description="AEGISX Security Agent")
+    parser.add_argument("--config", help="Path to config.yaml file")
+    parser.add_argument("--server", help="AEGISX server URL (overrides config)")
+    parser.add_argument("--key", help="Agent registration key (overrides config)")
+    parser.add_argument("--tenant", help="Tenant ID (overrides config)")
+    parser.add_argument("--version", action="version", version=f"AEGISX Agent v{__version__}")
+    args = parser.parse_args()
+
+    agent = AEGISXAgent(config_path=args.config)
+
+    # Override config with CLI arguments
+    if args.server:
+        agent._config["server_url"] = args.server
+    if args.key:
+        agent._config["registration_key"] = args.key
+    if args.tenant:
+        agent._config["tenant_id"] = args.tenant
+
+    logger.info(f"AEGISX Agent v{__version__} starting")
+    logger.info(f"Server: {agent._config.get('server_url', 'not configured')}")
+    logger.info(f"Tenant: {agent._config.get('tenant_id', 'not configured')}")
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
