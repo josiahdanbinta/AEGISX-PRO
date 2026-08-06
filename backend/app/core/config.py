@@ -78,10 +78,15 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
-        # Railway provides DATABASE_URL as postgresql:// - convert to asyncpg
-        if self.DATABASE_URL and "postgresql://" in self.DATABASE_URL and "+asyncpg" not in self.DATABASE_URL:
-            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # Fallback for build time when no DB is available
+        # Railway provides DATABASE_URL as postgres:// or postgresql://
+        # Convert to asyncpg compatible format
+        url = self.DATABASE_URL or ""
+        if "postgres://" in url:
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif "postgresql://" in url and "+asyncpg" not in url:
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        self.DATABASE_URL = url
+        # Fallback for build time
         if not self.DATABASE_URL:
             self.DATABASE_URL = "sqlite+aiosqlite:///./fallback.db"
         return self

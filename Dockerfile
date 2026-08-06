@@ -24,9 +24,11 @@ EXPOSE 8000
 
 # Start: wait for DB to be ready, then run with single worker for memory efficiency
 CMD ["sh", "-c", "\
-  echo 'AEGISX starting...' && \
-  echo 'Waiting for database...' && \
-  sleep 5 && \
-  echo 'Starting server on port '${PORT:-8000} && \
-  uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-concurrency 50 --backlog 100 \
+  echo '=== AEGISX v1.0.0 ===' && \
+  echo 'PORT: '${PORT:-8000} && \
+  echo 'DATABASE_URL: '$(echo $DATABASE_URL | sed 's/\/\/.*@/\/\/****:****@/') && \
+  echo 'REDIS_URL: '$(echo ${REDIS_URL:-not-set}) && \
+  echo 'Starting server...' && \
+  sleep 3 && \
+  exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --log-level info \
 "]
