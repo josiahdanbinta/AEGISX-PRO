@@ -3,6 +3,30 @@ import { useAppStore } from '@/store/appStore';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return {};
+  }
+}
+
+function getEffectiveTenantId(): string | null {
+  const appTenant = useAppStore.getState().selectedTenantId;
+  if (appTenant) return appTenant;
+  const token = useAuthStore.getState().token;
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  const tid = payload.tenant_id as string | undefined;
+  if (tid) {
+    useAppStore.getState().setSelectedTenant(tid);
+    return tid;
+  }
+  return null;
+}
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -60,7 +84,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     reqHeaders['Authorization'] = `Bearer ${token}`;
   }
 
-  const effectiveTenantId = tenantId || useAppStore.getState().selectedTenantId;
+  const effectiveTenantId = tenantId || getEffectiveTenantId();
   if (effectiveTenantId) {
     reqHeaders['X-Tenant-ID'] = effectiveTenantId;
   }
