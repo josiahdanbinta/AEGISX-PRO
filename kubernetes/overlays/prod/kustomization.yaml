@@ -1,0 +1,53 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aegisx
+
+resources:
+  - ../../base
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+        namespace: aegisx
+      spec:
+        replicas: 6
+        template:
+          spec:
+            containers:
+              - name: backend
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: "1Gi"
+                  limits:
+                    cpu: "4"
+                    memory: "4Gi"
+    target:
+      kind: Deployment
+      name: backend
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: celery-worker
+        namespace: aegisx
+      spec:
+        replicas: 4
+    target:
+      kind: Deployment
+      name: celery-worker
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: frontend
+        namespace: aegisx
+      spec:
+        replicas: 3
+    target:
+      kind: Deployment
+      name: frontend

@@ -1,0 +1,81 @@
+{{ include "aegisx.name" . }} has been deployed successfully!
+
+==================================================================
+  █████╗ ███████╗ ██████╗ ██╗███████╗██╗  ██╗
+ ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚██╗██╔╝
+ ███████║█████╗  ██║  ███╗██║███████╗ ╚███╔╝ 
+ ██╔══██║██╔══╝  ██║   ██║██║╚════██║ ██╔██╗ 
+ ██║  ██║███████╗╚██████╔╝██║███████║██╔╝ ██╗
+ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝
+==================================================================
+  Enterprise Cybersecurity Operations Platform
+  Version: {{ .Chart.AppVersion }}
+  Environment: {{ .Values.global.environment }}
+==================================================================
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+Access the AEGISX Dashboard:
+  https://{{ .host }}/
+{{- end }}
+{{- else }}
+To access the AEGISX Dashboard, run:
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "aegisx.fullname" . }}-frontend 8080:{{ .Values.frontend.service.port }}
+  Then open: http://localhost:8080
+{{- end }}
+
+Retrieve the Agent Registration Key:
+  kubectl get secret -n {{ .Release.Namespace }} {{ include "aegisx.fullname" . }}-secrets -o jsonpath="{.data.AGENT_REGISTRATION_KEY}" | base64 --decode
+  echo
+
+Check Pod Status:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Watch Pod Status:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -w
+
+View Backend Logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=backend -f
+
+View Celery Worker Logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=celery-worker -f
+
+Resources Deployed:
+{{- if .Values.postgresql.enabled }}
+  - PostgreSQL ({{ .Values.postgresql.image.tag }})
+{{- end }}
+{{- if .Values.redis.enabled }}
+  - Redis ({{ .Values.redis.image.tag }})
+{{- end }}
+{{- if .Values.opensearch.enabled }}
+  - OpenSearch ({{ .Values.opensearch.image.tag }})
+{{- end }}
+{{- if .Values.rabbitmq.enabled }}
+  - RabbitMQ ({{ .Values.rabbitmq.image.tag }})
+{{- end }}
+  - Backend API ({{ .Values.backend.replicaCount }} replicas)
+  - Celery Worker ({{ .Values.celeryWorker.replicaCount }} replicas)
+  - Celery Beat ({{ .Values.celeryBeat.replicaCount }} replica)
+  - Frontend ({{ .Values.frontend.replicaCount }} replicas)
+
+{{- if .Values.backend.autoscaling.enabled }}
+Autoscaling is enabled for the Backend:
+  Min: {{ .Values.backend.autoscaling.minReplicas }} | Max: {{ .Values.backend.autoscaling.maxReplicas }}
+  CPU Target: {{ .Values.backend.autoscaling.targetCPUUtilizationPercentage }}% | Memory Target: {{ .Values.backend.autoscaling.targetMemoryUtilizationPercentage }}%
+{{- end }}
+
+{{- if .Values.frontend.autoscaling.enabled }}
+Autoscaling is enabled for the Frontend:
+  Min: {{ .Values.frontend.autoscaling.minReplicas }} | Max: {{ .Values.frontend.autoscaling.maxReplicas }}
+  CPU Target: {{ .Values.frontend.autoscaling.targetCPUUtilizationPercentage }}%
+{{- end }}
+
+Upgrade:
+  helm upgrade {{ .Release.Name }} aegisx/aegisx -n {{ .Release.Namespace }} --values values-prod.yaml
+
+Uninstall:
+  helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Documentation: https://docs.aegisx.com
+Support: dev@aegisx.com
+==================================================================

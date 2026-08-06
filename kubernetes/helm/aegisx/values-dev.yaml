@@ -1,0 +1,40 @@
+global:
+  environment: development
+
+config:
+  appEnv: "development"
+  logLevel: "DEBUG"
+
+backend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  autoscaling:
+    enabled: false
+
+celeryWorker:
+  replicaCount: 1
+
+frontend:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+opensearch:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"

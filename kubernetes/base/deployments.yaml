@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: aegisx
+  labels:
+    app: aegisx-backend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: aegisx-backend
+  template:
+    metadata:
+      labels:
+        app: aegisx-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/org/aegisx-backend:latest
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: aegisx-config
+            - secretRef:
+                name: aegisx-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: aegisx
+  labels:
+    app: aegisx-celery-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aegisx-celery-worker
+  template:
+    metadata:
+      labels:
+        app: aegisx-celery-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/org/aegisx-backend:latest
+          command: ["celery", "-A", "app.core.celery_config", "worker", "-l", "info"]
+          envFrom:
+            - configMapRef:
+                name: aegisx-config
+            - secretRef:
+                name: aegisx-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  namespace: aegisx
+  labels:
+    app: aegisx-celery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aegisx-celery-beat
+  template:
+    metadata:
+      labels:
+        app: aegisx-celery-beat
+    spec:
+      containers:
+        - name: beat
+          image: ghcr.io/org/aegisx-backend:latest
+          command: ["celery", "-A", "app.core.celery_config", "beat", "-l", "info"]
+          envFrom:
+            - configMapRef:
+                name: aegisx-config
+            - secretRef:
+                name: aegisx-secrets
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: aegisx
+  labels:
+    app: aegisx-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aegisx-frontend
+  template:
+    metadata:
+      labels:
+        app: aegisx-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/org/aegisx-frontend:latest
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10

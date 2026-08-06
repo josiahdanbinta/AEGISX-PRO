@@ -1,0 +1,117 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "aegisx.fullname" . }}-backend
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: frontend
+      ports:
+        - port: http
+          protocol: TCP
+  egress:
+    {{- if has "postgresql" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: postgresql
+      ports:
+        - port: {{ .Values.postgresql.service.port }}
+          protocol: TCP
+    {{- end }}
+    {{- if has "redis" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: redis
+      ports:
+        - port: {{ .Values.redis.service.port }}
+          protocol: TCP
+    {{- end }}
+    {{- if has "opensearch" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: opensearch
+      ports:
+        - port: {{ .Values.opensearch.service.port }}
+          protocol: TCP
+    {{- end }}
+    {{- if has "rabbitmq" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: rabbitmq
+      ports:
+        - port: {{ .Values.rabbitmq.service.port }}
+          protocol: TCP
+    {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "aegisx.fullname" . }}-frontend
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: http
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "aegisx.fullname" . }}-datastores
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: datastores
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - postgresql
+          - redis
+          - opensearch
+          - rabbitmq
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: backend
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: celery-worker
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "aegisx.name" . }}
+{{- end }}

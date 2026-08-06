@@ -1,0 +1,64 @@
+server_url: "https://api.aegisx.local"
+registration_key: ""
+tenant_id: ""
+
+heartbeat_interval: 60
+
+collectors:
+  cpu: true
+  memory: true
+  disk: true
+  network: true
+  processes: true
+  services: true
+  logs: true
+  installed_software: true
+  hardware: true
+  usb: true
+  registry: false
+  ransomware: true
+
+monitoring_interval: 30
+
+inventory_interval_seconds: 21600
+
+log_level: "INFO"
+data_dir: "./data"
+
+enable_auto_update: true
+
+communication:
+  reconnect_base_delay: 5
+  reconnect_max_delay: 300
+  reconnect_max_attempts: 0
+  batch_size: 100
+  compress_data: true
+
+logs:
+  sources:
+    windows:
+      - "System"
+      - "Security"
+      - "Application"
+    linux:
+      - "/var/log/syslog"
+      - "/var/log/auth.log"
+    macos:
+      - "/var/log/system.log"
+  severity_filter: ["ERROR", "WARNING", "CRITICAL"]
+  real_time: true
+  max_lines: 1000
+
+suspicious_detection:
+  unsigned_processes: true
+  temp_location_execution: true
+  unusual_parent_process: true
+
+ransomware:
+  scan_interval_seconds: 30
+  change_window_seconds: 10
+  change_threshold: 50
+  high_io_threshold_mb_per_sec: 50
+  high_cpu_threshold_percent: 60
+  high_handles_threshold: 500
+  max_alerts: 500
