@@ -4,7 +4,7 @@ Playbooks, executions, actions, and integration management
 """
 import json
 import math
-import uuid as _uuid
+import uuid as uuid_mod
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Set
@@ -31,10 +31,10 @@ router = APIRouter()
 # Helpers
 # ════════════════════════════════════════════════════════════════════
 
-def _uuid(v: Any) -> _uuid.UUID:
-    if isinstance(v, _uuid.UUID):
+def _uuid(v: Any) -> uuid_mod.UUID:
+    if isinstance(v, uuid_mod.UUID):
         return v
-    return _uuid.UUID(str(v))
+    return uuid_mod.UUID(str(v))
 
 def _paginated(items: list, total: int, page: int, page_size: int) -> dict:
     return {
@@ -50,7 +50,7 @@ async def _audit_log(
     user: dict,
     action: str,
     resource_type: str,
-    resource_id: Optional[_uuid.UUID] = None,
+    resource_id: Optional[uuid_mod.UUID] = None,
     details: Optional[dict] = None,
 ):
     try:
@@ -1004,7 +1004,7 @@ async def import_playbook(
         except Exception:
             return PlaybookImportResponse(imported=False, message="Unable to parse playbook content")
 
-    name = data.get("name", f"imported-playbook-{_uuid.uuid4().hex[:8]}")
+    name = data.get("name", f"imported-playbook-{uuid_mod.uuid4().hex[:8]}")
     tid = _uuid(tenant_id)
 
     existing = await db.execute(

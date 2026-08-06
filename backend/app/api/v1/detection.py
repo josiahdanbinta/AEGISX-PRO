@@ -4,7 +4,7 @@ Detection rules (YARA, Sigma, Suricata), alerts, IOCs, anomaly detection, UEBA, 
 """
 import json
 import math
-import uuid as _uuid
+import uuid as uuid_mod
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Set
@@ -31,10 +31,10 @@ router = APIRouter()
 # Helpers
 # ════════════════════════════════════════════════════════════════════
 
-def _uuid(v: Any) -> _uuid.UUID:
-    if isinstance(v, _uuid.UUID):
+def _uuid(v: Any) -> uuid_mod.UUID:
+    if isinstance(v, uuid_mod.UUID):
         return v
-    return _uuid.UUID(str(v))
+    return uuid_mod.UUID(str(v))
 
 def _build_rule_response(rule: DetectionRule) -> dict:
     rc = rule.rule_content or {}
@@ -117,7 +117,7 @@ async def _audit_log(
     user: dict,
     action: str,
     resource_type: str,
-    resource_id: Optional[_uuid.UUID] = None,
+    resource_id: Optional[uuid_mod.UUID] = None,
     details: Optional[dict] = None,
     status_val: str = "success",
 ):
@@ -822,7 +822,7 @@ async def import_rules(
             errors.append({"error": "Invalid rule entry", "entry": str(item)})
             continue
 
-        rule_name = item.get("title") or item.get("name") or f"imported-rule-{_uuid.uuid4().hex[:8]}"
+        rule_name = item.get("title") or item.get("name") or f"imported-rule-{uuid_mod.uuid4().hex[:8]}"
 
         existing = await db.execute(
             select(DetectionRule).where(

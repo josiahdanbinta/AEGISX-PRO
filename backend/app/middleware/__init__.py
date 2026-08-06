@@ -11,7 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.middleware.sessions import SessionMiddleware
+try:
+    from starlette.middleware.sessions import SessionMiddleware
+    HAS_SESSION_MIDDLEWARE = True
+except ImportError:
+    SessionMiddleware = None
+    HAS_SESSION_MIDDLEWARE = False
 from starlette.types import ASGIApp
 
 from app.core.cache import rate_limit_check
