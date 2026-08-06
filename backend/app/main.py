@@ -16,13 +16,49 @@ from app.middleware import setup_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Startup — auto-initialize database if empty."""
-    print("AEGISX starting up...")
+    """Startup — discover PostgreSQL on Railway and auto-initialize."""
+    import os, socket, asyncio
+    from app.core.config import settings
     
-    # Auto-setup: create tables and admin user if database is empty
+    # Try to find Railway PostgreSQL
+    db_url = settings.DATABASE_URL or ""
+    if "localhost" in db_url or "aegisx:aegisx@" in db_url:
+        # Try Railway internal PostgreSQL hosts
+        candidate_hosts = [
+            "postgres.railway.internal",
+            os.environ.get("PGHOST", ""),
+            os.environ.get("POSTGRES_HOST", ""),
+        ]
+        
+        for host in candidate_hosts:
+            if not host: continue
+            try:
+                # Test DNS resolution
+                socket.gethostbyname(host)
+                # Build URL with Railway's default credentials
+                pg_user = os.environ.get("PGUSER", "postgres")
+                pg_pass = os.environ.get("PGPASSWORD", "")
+                pg_db = os.environ.get("PGDATABASE", "railway")
+                pg_port = os.environ.get("PGPORT", "5432")
+                candidate = f"postgresql+asyncpg://{pg_user}:{pg_pass}@{host}:{pg_port}/{pg_db}"
+                
+                # Test connection
+                import asyncpg
+                conn = await asyncpg.connect(candidate)
+                await conn.close()
+                
+                settings.DATABASE_URL = candidate
+                print(f"✓ Found PostgreSQL at {host}")
+                break
+            except Exception:
+                continue
+    
+    print(f"AEGISX starting... DB: {'connected' if 'railway' in settings.DATABASE_URL else 'fallback'}")
+    
+    # Auto-setup if database is reachable
     try:
         from app.core.database import async_session_factory, engine
-        from sqlalchemy import select, text
+        from sqlalchemy import select
         from app.models.tenant import Tenant
         from app.models.base import Base
         
@@ -36,39 +72,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 from app.core.security import hash_password
                 from app.models.user import User, Role
                 
-                tenant_id = uuid.uuid4()
-                db.add(Tenant(id=tenant_id, name="default", display_name="AEGISX Enterprise",
-                              subscription_tier="enterprise", status="active",
-                              quota_assets=10000, quota_users=1000, quota_storage_gb=500))
+                tid = uuid.uuid4()
+                db.add(Tenant(id=tid, name="default", display_name="AEGISX", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
                 await db.flush()
-                
-                admin = User(id=uuid.uuid4(), tenant_id=tenant_id, username="admin",
-                             email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"),
-                             full_name="Super Admin", roles=[{"role_name": "super_admin"}],
-                             status="active", must_change_password=True)
-                db.add(admin)
-                
-                roles_data = [
-                    ("tenant_admin", "Tenant Administrator", ["users:*","roles:*","departments:*","audit:read"]),
-                    ("soc_manager", "SOC Manager", ["incidents:*","alerts:*","detection:*","soar:*"]),
-                    ("soc_analyst_l2", "SOC Analyst L2", ["incidents:*","alerts:*","detection:read"]),
-                    ("soc_analyst_l1", "SOC Analyst L1", ["incidents:read","alerts:acknowledge"]),
-                    ("threat_hunter", "Threat Hunter", ["threat_intel:*","detection:*"]),
-                    ("incident_responder", "Incident Responder", ["incidents:*","soar:execute"]),
-                    ("compliance_officer", "Compliance Officer", ["compliance:*","vulnerabilities:*"]),
-                    ("auditor", "Auditor", ["audit:read","reports:read"]),
-                ]
-                for name, display, perms in roles_data:
-                    db.add(Role(tenant_id=tenant_id, name=name, display_name=display, is_system=True, permissions=perms))
-                
+                db.add(User(id=uuid.uuid4(), tenant_id=tid, username="admin", email="admin@aegisx.com", hashed_password=hash_password("Admin123!@#"), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
+                for name, disp, p in [("tenant_admin","Tenant Admin",["users:*"]),("soc_manager","SOC Manager",["incidents:*"]),("soc_analyst_l1","SOC Analyst L1",["incidents:read"]),("compliance_officer","Compliance Officer",["compliance:*"])]:
+                    db.add(Role(tenant_id=tid, name=name, display_name=disp, is_system=True, permissions=p))
                 await db.commit()
-                print(f"\n{'='*60}")
-                print(f"  AEGISX Auto-Setup Complete!")
-                print(f"  Tenant ID: {tenant_id}")
-                print(f"  Login: admin@aegisx.com / Admin123!@#")
-                print(f"{'='*60}\n")
+                print(f"\n  SETUP COMPLETE — Login: admin@aegisx.com / Admin123!@#\n")
     except Exception as e:
-        print(f"Auto-setup skipped (DB not available): {e}")
+        print(f"Auto-setup: {e}")
 
     yield
     print("AEGISX shutting down...")
