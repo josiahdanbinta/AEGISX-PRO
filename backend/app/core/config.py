@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # ── Server ───────────────────────────────────────────────────
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = 8001
     WORKERS: int = 4
     RELOAD: bool = True
 
@@ -78,6 +78,9 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
+        # Railway provides DATABASE_URL as postgresql:// - convert to asyncpg
+        if self.DATABASE_URL and self.DATABASE_URL.startswith("postgresql://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
         return self
 
     SQLALCHEMY_DATABASE_URL: Optional[str] = None
@@ -89,6 +92,9 @@ class Settings(BaseSettings):
                 f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
+        # If DATABASE_URL was converted from Railway, use the sync version too
+        if not self.SQLALCHEMY_DATABASE_URL and self.DATABASE_URL:
+            self.SQLALCHEMY_DATABASE_URL = self.DATABASE_URL.replace("+asyncpg", "", 1)
         return self
 
     # ── Redis ────────────────────────────────────────────────────
