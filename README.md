@@ -1,272 +1,416 @@
 # AEGISX — Enterprise Cybersecurity Operations Platform
 
-[![CI/CD](https://github.com/org/aegisx/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/org/aegisx/actions)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/org/aegisx/releases)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+**AI-Powered SIEM + SOAR + XDR + Vulnerability Management + Compliance — All in One.**
 
-**AI-Powered SIEM + SOAR + XDR + Vulnerability Management + Compliance — All in One Platform.**
-
-AEGISX combines security information and event management (SIEM), security orchestration automation and response (SOAR), extended detection and response (XDR), vulnerability management, asset management, threat intelligence, compliance management, and incident response into a single, scalable, cloud-native platform designed for enterprise SOCs, MSSPs, and fintech organizations.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    AEGISX Platform                          │
-├─────────────────────────────────────────────────────────────┤
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐ │
-│  │ Frontend │  │ Backend  │  │  Celery  │  │   Agent    │ │
-│  │ React+TS │  │ FastAPI  │  │ Workers  │  │ Python 3   │ │
-│  │ Tailwind │  │ Python   │  │          │  │ Win/Lin/Mac│ │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └─────┬──────┘ │
-│       │              │              │              │         │
-│  ┌────┴──────────────┴──────────────┴──────────────┴──────┐ │
-│  │              Infrastructure & Data Layer                │ │
-│  │  PostgreSQL │ Redis │ OpenSearch │ RabbitMQ │ Nginx    │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)]()
+[![Tests](https://img.shields.io/badge/tests-530+-green)]()
+[![API](https://img.shields.io/badge/endpoints-330+-blue)]()
+[![Stubs](https://img.shields.io/badge/unimplemented-0-success)]()
 
 ---
 
 ## Quick Start (Docker)
 
 ```bash
-# Clone the repository
 git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
-cd aegisx
-
-# Copy environment template
+cd AEGISX-PRO
 cp .env.example backend/.env
-
-# Start all services
 docker-compose up -d
-
-# Initialize database
-docker-compose exec backend alembic upgrade head
-
-# Access the platform
-# Dashboard: http://localhost:3000
-# API Docs:  http://localhost:8000/docs
-# Health:    http://localhost:8000/health
+docker-compose exec backend python setup.py
 ```
 
-### Kubernetes Deployment
+Open **http://localhost:8080** — Login: `admin@aegisx.com` / `Admin123!@#`
+
+---
+
+## Table of Contents
+
+1. [Installation](#installation)
+   - [Docker (Recommended)](#docker-recommended)
+   - [Native Windows](#native-windows)
+   - [Native Linux](#native-linux)
+   - [Native macOS](#native-macos)
+2. [Kubernetes Deployment](#kubernetes-deployment)
+3. [Agent Deployment](#agent-deployment)
+4. [Platform Overview](#platform-overview)
+5. [API Reference](#api-reference)
+6. [Architecture](#architecture)
+7. [Testing](#testing)
+8. [Security](#security)
+
+---
+
+## Installation
+
+### Docker (Recommended)
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+```bash
+# 1. Clone
+git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
+cd AEGISX-PRO
+
+# 2. Configure
+cp .env.example backend/.env
+# Edit backend/.env and set SECRET_KEY + JWT_SECRET_KEY + AGENT_REGISTRATION_KEY
+
+# 3. Start all services (PostgreSQL, Redis, OpenSearch, RabbitMQ, Backend, Celery, Frontend, Nginx)
+docker-compose up -d
+
+# 4. Initialize database (creates tenant, admin user, roles)
+docker-compose exec backend python setup.py
+```
+
+**Access the platform:**
+
+| Service | URL |
+|---|---|
+| Dashboard | http://localhost:8080 |
+| API Docs | http://localhost:8080/docs |
+| API Health | http://localhost:8001/health |
+| Redis Insight | http://localhost:8001/api/v1/health/ready |
+
+**Startup script (auto-detects your IP):**
+```bash
+# Windows
+.\start.bat
+
+# Linux / macOS
+chmod +x start.sh && ./start.sh
+```
+
+---
+
+### Native Windows
+
+**Prerequisites:** [PostgreSQL 17](https://www.enterprisedb.com/downloads/postgresql-postgresql-downloads), Python 3.12+
+
+```powershell
+# 1. Install PostgreSQL
+#    - Run installer as Administrator
+#    - Set superuser password: aegisx
+#    - Port: 5432
+
+# 2. Create database
+cd C:\Path\To\AEGISX-PRO
+& "C:\Program Files\PostgreSQL\17\bin\createdb.exe" -U postgres aegisx
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -c "CREATE USER aegisx WITH PASSWORD 'aegisx' SUPERUSER;"
+
+# 3. Install backend dependencies
+cd backend
+pip install -r requirements.txt
+
+# 4. Configure
+cp ..\.env.example .env
+# Edit .env — set SECRET_KEY, JWT_SECRET_KEY, AGENT_REGISTRATION_KEY
+# Ensure POSTGRES_HOST=localhost, POSTGRES_PORT=5432
+
+# 5. Initialize database
+python setup.py
+
+# 6. Start backend
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+# 7. Start frontend (new terminal)
+cd ..\frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Open **http://192.168.2.34:5173** — Login: `admin@aegisx.com` / `Admin123!@#`
+
+---
+
+### Native Linux
+
+**Prerequisites:** PostgreSQL 15+, Python 3.12+, Redis (optional)
+
+```bash
+# 1. Install PostgreSQL
+sudo apt update
+sudo apt install -y postgresql postgresql-client python3 python3-pip python3-venv
+
+# 2. Create database
+sudo -u postgres createdb aegisx
+sudo -u postgres psql -c "CREATE USER aegisx WITH PASSWORD 'aegisx' SUPERUSER;"
+
+# 3. Clone and setup
+git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
+cd AEGISX-PRO/backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp ../.env.example .env
+# Edit .env with your keys
+
+# 4. Initialize
+python setup.py
+
+# 5. Start
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+---
+
+### Native macOS
+
+```bash
+# 1. Install PostgreSQL
+brew install postgresql@17
+brew services start postgresql@17
+createdb aegisx
+psql -c "CREATE USER aegisx WITH PASSWORD 'aegisx' SUPERUSER;"
+
+# 2. Clone and setup (same as Linux above)
+git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
+cd AEGISX-PRO/backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp ../.env.example .env
+
+# 3. Initialize and start
+python setup.py
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+---
+
+## Kubernetes Deployment
 
 ```bash
 # Deploy with Helm
 helm install aegisx ./kubernetes/helm/aegisx \
   --namespace aegisx --create-namespace \
-  -f ./kubernetes/helm/aegisx/values.yaml
+  -f ./kubernetes/helm/aegisx/values-prod.yaml
 
-# Development environment
+# Development
 helm install aegisx-dev ./kubernetes/helm/aegisx \
   --namespace aegisx-dev --create-namespace \
   -f ./kubernetes/helm/aegisx/values-dev.yaml
-
-# Production environment (6+ backend replicas, HPA, TLS)
-helm install aegisx-prod ./kubernetes/helm/aegisx \
-  --namespace aegisx-prod --create-namespace \
-  -f ./kubernetes/helm/aegisx/values-prod.yaml \
-  --set secrets.secretKey=$(openssl rand -hex 32) \
-  --set secrets.jwtSecretKey=$(openssl rand -hex 32)
 ```
 
-### Agent Deployment
-
+**Post-install:**
 ```bash
-# Linux / macOS
-curl -sSL https://your-server.com/deploy/install.sh | bash -s -- \
-  --server https://aegisx.company.com \
-  --key YOUR_REGISTRATION_KEY \
+kubectl exec -it deployment/aegisx-backend -n aegisx -- python setup.py
+```
+
+---
+
+## Agent Deployment
+
+Deploy the AEGISX agent to monitor endpoints (Windows, Linux, macOS).
+
+### One-Command Enrollment
+
+**Windows (PowerShell):**
+```powershell
+.\deploy\install.ps1 -Server http://YOUR_SERVER:8001 -Key YOUR_REG_KEY -Tenant YOUR_TENANT_ID
+```
+
+**Windows (CMD):**
+```cmd
+deploy\install.cmd http://YOUR_SERVER:8001 YOUR_REG_KEY YOUR_TENANT_ID
+```
+
+**Linux / macOS:**
+```bash
+curl -sSL http://YOUR_SERVER:8001/deploy/install.sh | bash -s -- \
+  --server http://YOUR_SERVER:8001 \
+  --key YOUR_REG_KEY \
   --tenant YOUR_TENANT_ID
+```
 
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://your-server.com/deploy/install.ps1" -OutFile install.ps1
-.\install.ps1 -Server "https://aegisx.company.com" -Key "YOUR_KEY" -Tenant "YOUR_TENANT"
+### What the Agent Does
+- Collects hardware inventory (CPU, RAM, disks, BIOS, TPM, Secure Boot, serial numbers)
+- Collects software inventory (installed apps, versions, certificates, browser extensions)
+- Detects outdated applications with fix recommendations and download links
+- Detects outdated/vulnerable services (SSH, Apache, Nginx, MySQL, Redis, etc.)
+- Monitors running processes and services with risk assessment
+- Detects ransomware activity (file extensions, ransom notes, shadow copy deletion)
+- Real-time system metrics (CPU, memory, disk, network)
 
-# Docker
-docker run -d --name aegisx-agent --restart always \
-  -e AEGISX_SERVER=https://aegisx.company.com \
-  -e AEGISX_KEY=YOUR_KEY \
-  -e AEGISX_TENANT=YOUR_TENANT \
-  ghcr.io/org/aegisx-agent:latest
+### Get Registration Key (Admin)
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://YOUR_SERVER:8001/api/v1/agent/registration-key
 ```
 
 ---
 
-## Features
+## Platform Overview
 
-### Security Operations
-- **Real-time Asset Monitoring** — Windows, Linux, macOS, cloud, containers, network devices
-- **Advanced Detection Engine** — Sigma, YARA, IOC matching, behavioral analytics, anomaly detection
-- **Incident Management** — Full lifecycle with timeline, evidence, MITRE ATT&CK mapping, AI-powered root cause analysis
-- **SOAR Playbooks** — Visual playbook builder with 26 built-in actions, templates, and approval workflows
+### Backend (21 API Routers — 330+ Endpoints)
 
-### Compliance & Risk
-- **PCI DSS v4.0** — 12 requirements, 60+ controls with automated assessments
-- **SOC 2** — All 5 trust service criteria with evidence collection
-- **ISO 27001:2022** — 14 domains, 40+ controls
-- **NIST CSF 2.0** — Govern, Identify, Protect, Detect, Respond, Recover
-- **HIPAA, GDPR, CIS Controls v8** — Built-in frameworks
+| Router | Endpoints | Description |
+|---|---|---|
+| `auth` | 18 | Login, MFA, password reset, API keys, WebAuthn |
+| `sso` | 12 | SAML, OIDC, LDAP, Microsoft Entra ID |
+| `tenants` | 9 | Multi-tenant management (super admin) |
+| `users` | 17 | User CRUD, roles, departments, sessions |
+| `assets` | 25 | Asset management, discovery, monitoring |
+| `incidents` | 30 | Full lifecycle, timeline, evidence, MITRE |
+| `detection` | 25 | Sigma/YARA/IOC rules, alerts, anomaly detection |
+| `soar` | 25 | Playbook CRUD, execution, integrations, 26 actions |
+| `threat_intel` | 20 | 26 actors, 15 campaigns, 50 MITRE techniques |
+| `vulnerabilities` | 30 | Scans, CVEs, misconfigurations, remediation |
+| `compliance` | 22 | PCI DSS, SOC 2, ISO 27001, NIST, HIPAA, GDPR |
+| `dashboards` | 22 | Executive, SOC, threat, asset, compliance dashboards |
+| `reports` | 23 | PDF/CSV generation, scheduling, templates |
+| `notifications` | 21 | Email, SMS, Slack, Teams, Discord, Telegram |
+| `search` | 18 | Global search, natural language, suggestions |
+| `audit` | 19 | Logs, exports, retention, sessions, analytics |
+| `ai` | 12 | Summarization, root cause, recommendations, Q&A |
+| `agent` | 7 | Registration, heartbeat, data push, commands |
+| `websocket` | 4 | Live dashboard, alerts, agent channel |
+| `health` | 3 | Liveness, readiness, health |
 
-### AI-Powered
-- Incident summarization and root cause analysis
-- Alert explanation and false positive classification
-- Playbook recommendations
-- Vulnerability fix suggestions
-- Natural language Q&A over security data
-- Automated report generation
+### Frontend (13 Pages)
 
-### Enterprise Features
-- **Multi-Tenant Architecture** — Row-level isolation, per-tenant quotas
-- **SSO Integration** — SAML 2.0, OIDC, LDAP/Active Directory, Microsoft Entra ID
-- **MFA & Passkeys** — TOTP, backup codes, WebAuthn
-- **RBAC** — 12 granular roles with permission-based access control
-- **Full Audit Trail** — Every action logged with CSV export and retention policies
-- **API-First Design** — REST + WebSocket + GraphQL, OpenAPI documentation
+| Page | Features |
+|---|---|
+| Executive Dashboard | Live KPIs, threat map, severity charts, AI insights |
+| SOC Dashboard | Real-time alerts, analyst workload, SLA tracking |
+| Assets | Full inventory, hardware/software details, tags |
+| Asset Detail | 7 tabs: Overview, Hardware, Software, Services, Vulns, Alerts, Ransomware |
+| Incidents | Lifecycle management, timeline, evidence, MITRE |
+| Alerts | Triage, bulk actions, severity filters |
+| Threat Intel | 5 tabs: Indicators, Feeds, Actors, Campaigns, MITRE |
+| Vulnerabilities | CVE tracking, scans, exploitation status |
+| Compliance | Framework assessments, control tracking, evidence |
+| SOAR Playbooks | CRUD, templates, executions, integrations |
+| Reports | Generate, schedule, templates, download |
+| Users | Admin management, roles, departments |
+| Settings | Profile, MFA, API keys, notifications |
 
----
+### Desktop Agent (7 Collectors)
 
-## Technology Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Celery |
-| **Frontend** | React 18, TypeScript, TailwindCSS, Framer Motion, Recharts |
-| **Database** | PostgreSQL 15 (asyncpg), Alembic migrations |
-| **Cache** | Redis 7 |
-| **Search** | OpenSearch 2.14 (full-text search + log analytics) |
-| **Queue** | RabbitMQ 3.12 / Celery |
-| **Agent** | Python 3 (cross-platform), psutil, asyncio, WebSocket |
-| **Infrastructure** | Docker, Docker Compose, Kubernetes (Helm), Nginx |
-| **CI/CD** | GitHub Actions (lint, test, build, security scan) |
-| **Security** | bcrypt (12 rounds), JWT HS256, Fernet encryption, HMAC, TLS 1.3 |
-
----
-
-## Project Structure
-
-```
-aegisx/
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── api/v1/         # 21 API routers (330+ endpoints)
-│   │   ├── core/           # Config, DB, security, cache, celery
-│   │   ├── models/         # 30 SQLAlchemy models
-│   │   ├── services/       # Business logic services
-│   │   ├── middleware/     # Auth, rate limiting, tenant isolation
-│   │   ├── tasks/          # Celery tasks (8 modules)
-│   │   ├── ai/             # AI/LLM services
-│   │   └── plugins/        # Detection, SOAR, threat intel plugins
-│   ├── tests/              # 448 test methods (unit + integration + performance)
-│   └── alembic/            # Database migrations
-├── frontend/               # React + TypeScript frontend
-│   ├── src/
-│   │   ├── pages/          # 13 pages (dashboard, incidents, alerts, etc.)
-│   │   ├── components/     # 18 UI components (dual light/dark theme)
-│   │   ├── stores/         # Zustand state management
-│   │   ├── services/       # API client with auto-refresh
-│   │   └── contexts/       # Auth + Theme providers
-│   └── tests/              # 39 Vitest tests
-├── agent/                  # Cross-platform desktop agent
-│   ├── core/collectors/   # 7 collectors (system, hardware, software, etc.)
-│   └── tests/              # 39 agent tests
-├── deploy/                 # Agent deployment scripts
-├── kubernetes/             # K8s manifests + Helm charts
-├── docker/                 # Nginx configuration
-├── docs/                   # Architecture, deployment, API reference
-└── docker-compose.yml      # 9-service orchestration
-```
+| Collector | Data |
+|---|---|
+| System | CPU, memory, disks, network, battery, uptime |
+| Hardware | Motherboard, BIOS, RAM, GPU, USB, TPM, Secure Boot |
+| Software | Installed apps, versions, certificates, extensions |
+| Services | Running services with risk flags (crypto miners, outdated) |
+| Processes | Running processes with port mapping, suspicious detection |
+| Logs | System logs with real-time tail |
+| Ransomware | File extension monitoring, ransom note detection, behavior analysis |
 
 ---
 
 ## API Reference
 
-Full API documentation is available:
-- **Interactive**: `http://localhost:8000/docs` (Swagger UI)
-- **Standalone**: `http://localhost:8000/redoc` (ReDoc)
-- **PDF/Markdown**: [docs/api/api-reference.md](docs/api/api-reference.md)
+- **Interactive:** http://localhost:8001/docs (Swagger UI)
+- **Standalone:** http://localhost:8001/redoc
+- **Markdown:** [docs/api/api-reference.md](docs/api/api-reference.md)
+- **Generate from code:** `cd docs/api && python generate_api_docs.py`
 
-Generate updated docs:
-```bash
-cd docs/api
-python generate_api_docs.py --format both
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    AEGISX Platform                      │
+├─────────────────────────────────────────────────────────┤
+│  Frontend (React 18 + TS)   │   Backend (FastAPI)       │
+│  TailwindCSS + Framer Motion│   Python 3.12 + async     │
+│  13 pages, dark/light theme │   21 routers, 330+ routes │
+├─────────────────────────────┼───────────────────────────┤
+│  Celery Workers             │   Desktop Agent           │
+│  8 queues, scheduled tasks  │   7 collectors, 3 OS      │
+├─────────────────────────────┴───────────────────────────┤
+│              Infrastructure                             │
+│  PostgreSQL │ Redis │ OpenSearch │ RabbitMQ │ Nginx     │
+│  Docker Compose │ Kubernetes │ Helm                    │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Testing
 
+**530+ tests across backend, frontend, and agent.**
+
 ```bash
-# Backend tests (448 methods)
+# Backend (448 tests)
 cd backend
-pytest tests/ -v
+pytest tests/ -v                     # All tests
+pytest tests/unit/ -v                # Unit tests (models, security, config, deps)
+pytest tests/integration/ -v         # Integration tests (API endpoints)
+pytest tests/security/ -v            # Security tests
+pytest tests/performance/ -v -m performance  # Load/performance tests
 
-# Specific test categories
-pytest tests/unit/ -v
-pytest tests/integration/ -v
-pytest tests/security/ -v
-pytest tests/performance/ -v -m performance
-
-# Frontend tests (39 methods)
+# Frontend (39 tests)
 cd frontend
-npm test
+npm test                             # Vitest runner
+npm run test:coverage                # With coverage
 
-# Agent tests (39 methods)
+# Agent (39 tests)
 cd agent
 pytest tests/ -v
-
-# All tests (526 methods total)
-# Run from project root
-(cd backend && pytest tests/ -v) && (cd frontend && npm test) && (cd agent && pytest tests/ -v)
 ```
-
----
-
-## Environment Variables
-
-See [.env.example](.env.example) for all configuration options. Key variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SECRET_KEY` | App encryption key | Required |
-| `JWT_SECRET_KEY` | JWT signing key | Required |
-| `POSTGRES_HOST` | PostgreSQL host | localhost |
-| `REDIS_HOST` | Redis host | localhost |
-| `AI_ENABLED` | Enable AI features | false |
-| `AGENT_REGISTRATION_KEY` | Agent enrollment key | Required |
 
 ---
 
 ## Security
 
-- **Zero Trust Architecture** — All endpoints authenticated, tenant-isolated
-- **Encryption** — bcrypt for passwords, Fernet for data at rest, TLS 1.3 in transit
-- **MFA** — TOTP + backup codes + WebAuthn passkeys
-- **RBAC + ABAC** — 12 granular roles with permission checking
-- **Audit Trail** — Every mutation logged with user, IP, and resource tracking
-- **Rate Limiting** — Configurable per-endpoint rate limits
-- **Security Headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+| Feature | Implementation |
+|---|---|
+| Password Hashing | bcrypt (12 rounds) |
+| JWT Tokens | HS256, jti, expiry, refresh rotation |
+| MFA | TOTP + backup codes |
+| Passkeys | WebAuthn |
+| SSO | SAML 2.0, OIDC, LDAP/AD, Microsoft Entra ID |
+| API Keys | SHA-256 hashing, scopes, expiration |
+| Encryption | Fernet symmetric |
+| RBAC | 12 roles with permission-based access |
+| Multi-Tenant | Row-level isolation (TenantMixin on all models) |
+| Audit Trail | Every mutation logged with user, IP, resource |
+| Rate Limiting | Per-IP, per-endpoint configurable |
+| Security Headers | CSP, HSTS, X-Frame-Options, XSS protection |
+| SQL Injection | Parameterized queries (SQLAlchemy ORM) |
+| CSRF | Token-based (JWT in Authorization header) |
 
 ---
 
-## Documentation
+## Environment Variables
 
-| Document | Description |
-|----------|-------------|
-| [Architecture Guide](docs/architecture/README.md) | System design, data flow, component breakdown |
-| [Deployment Guide](docs/deployment/README.md) | Docker, Kubernetes, agent deployment instructions |
-| [API Reference](docs/api/api-reference.md) | Complete API documentation (370+ endpoints) |
-| [Helm Charts](kubernetes/helm/aegisx/) | Production Kubernetes deployment |
+See [.env.example](.env.example) for all 152 configurable options. Key variables:
+
+| Variable | Required | Description |
+|---|---|---|
+| `SECRET_KEY` | Yes | App encryption key (64+ chars) |
+| `JWT_SECRET_KEY` | Yes | JWT signing key (64+ chars) |
+| `AGENT_REGISTRATION_KEY` | Yes | Agent enrollment key |
+| `POSTGRES_HOST` | Yes | PostgreSQL host |
+| `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
+| `AI_ENABLED` | No | Enable AI features (requires OpenAI key) |
+| `OPENAI_API_KEY` | No | OpenAI API key for AI features |
+
+---
+
+## Project Stats
+
+| Metric | Count |
+|---|---|
+| Total Files | 241 |
+| API Routers | 21 |
+| API Endpoints | 330+ |
+| Database Models | 30 |
+| Frontend Pages | 13 |
+| UI Components | 18 |
+| Agent Collectors | 7 |
+| Test Methods | 530+ |
+| Docker Services | 9 |
+| Helm Templates | 28 |
+| Unimplemented Stubs | 0 |
 
 ---
 
 ## License
 
-Proprietary. All rights reserved. Contact sales@aegisx.com for licensing.
+Proprietary. Contact sales@aegisx.com.
 
 ---
 
