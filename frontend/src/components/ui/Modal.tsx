@@ -29,33 +29,22 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.2 }}
-            className={clsx(
-              'relative w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden',
-              sizes[size],
-            )}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }} transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className={clsx('relative w-full bg-surface-card border border-surface-border rounded-modal shadow-modal', sizes[size])}>
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
-                <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <X className="w-5 h-5" />
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-surface-border">
+                <h2 className="text-base font-semibold text-white">{title}</h2>
+                <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-surface-hover transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             )}
-            <div className="p-6 overflow-y-auto max-h-[70vh]">{children}</div>
+            <div className="p-5">{children}</div>
           </motion.div>
         </div>
       )}

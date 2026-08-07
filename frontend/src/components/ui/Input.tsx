@@ -17,7 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor={inputId} className="block text-xs font-medium text-gray-400">
             {label}
             {required && <span className="text-red-400 ml-0.5" aria-hidden="true">*</span>}
           </label>
@@ -30,21 +30,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-required={required}
           required={required}
           className={clsx(
-            'w-full bg-white dark:bg-slate-900 border rounded-lg px-3.5 py-2.5 text-sm',
-            'text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500',
-            'focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200',
+            'w-full bg-surface-base border rounded-lg px-3.5 py-2.5 text-sm',
+            'text-gray-100 placeholder-gray-500',
+            'focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200',
             error
-              ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20 focus:border-red-500'
-              : 'border-slate-300 dark:border-slate-700',
+              ? 'border-red-800 focus:ring-red-500/30 focus:border-red-500'
+              : 'border-surface-border hover:border-surface-muted',
             className,
           )}
           {...props}
         />
-        {error && <p id={errorId} className="text-xs text-red-500" role="alert">{error}</p>}
-        {hint && !error && <p id={hintId} className="text-xs text-slate-500">{hint}</p>}
+        {error && <p id={errorId} className="text-xs text-red-400" role="alert">{error}</p>}
+        {hint && !error && <p id={hintId} className="text-xs text-gray-500">{hint}</p>}
       </div>
     );
   },
 );
-
 Input.displayName = 'Input';

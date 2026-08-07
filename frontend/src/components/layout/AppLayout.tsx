@@ -1,29 +1,15 @@
-import { motion } from 'framer-motion';
-import { useAppStore } from '@/store/appStore';
+import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
-import { Header } from './Header';
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
-  const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
-
+export function AppLayout({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen" style={{ background: '#0F1419' }}>
       <Sidebar />
-      <div
-        className={`flex flex-1 flex-col transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-20' : 'ml-64'
-        }`}
-      >
-        <Header />
-        <motion.main
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="flex-1 overflow-auto p-6 lg:p-8"
-        >
-          {children}
-        </motion.main>
-      </div>
+      <main className="pl-[248px] min-h-screen">
+        <div className="p-5">
+          {children || <Outlet />}
+        </div>
+      </main>
     </div>
   );
 }

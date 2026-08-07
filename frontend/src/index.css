@@ -2,139 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ═══════════════════════════════════════════════════════════════
-   BASE LAYER
-   ═══════════════════════════════════════════════════════════════ */
-@layer base {
-  * {
-    @apply border-slate-200 dark:border-slate-800;
-  }
-
-  html {
-    @apply antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-
-  body {
-    @apply text-slate-900 dark:bg-slate-950 dark:text-slate-100;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 30%, #7dd3fc 60%, #e0f2fe 100%);
-    min-height: 100vh;
-  }
-
-  /* ── Scrollbar ─────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-transparent; }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-600;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   COMPONENT LAYER
-   ═══════════════════════════════════════════════════════════════ */
-@layer components {
-  /* ── Cards ─────────────────────────────────────────────── */
-  .card {
-    @apply bg-white dark:bg-slate-900 rounded-card border border-slate-200 dark:border-slate-800 shadow-card dark:shadow-card-dark transition-all duration-300;
-  }
-  .card-hover {
-    @apply card hover:shadow-card-hover dark:hover:shadow-card-hover-dark hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-0.5;
-  }
-  .card-accent-blue   { @apply card border-l-4 border-l-accent-blue dark:border-l-blue-500; }
-  .card-accent-green  { @apply card border-l-4 border-l-accent-green dark:border-l-emerald-500; }
-  .card-accent-orange { @apply card border-l-4 border-l-accent-orange dark:border-l-orange-500; }
-  .card-accent-purple { @apply card border-l-4 border-l-accent-purple dark:border-l-purple-500; }
-  .card-accent-red    { @apply card border-l-4 border-l-accent-red dark:border-l-red-500; }
-  .card-accent-cyan   { @apply card border-l-4 border-l-accent-cyan dark:border-l-cyan-500; }
-
-  /* ── Buttons ───────────────────────────────────────────── */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 font-medium rounded-button transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97];
-  }
-  .btn-primary {
-    @apply btn bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow-md focus:ring-brand-500;
-  }
-  .btn-secondary {
-    @apply btn bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 focus:ring-brand-500;
-  }
-  .btn-danger {
-    @apply btn bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500;
-  }
-  .btn-success {
-    @apply btn bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm focus:ring-emerald-500;
-  }
-  .btn-ghost {
-    @apply btn text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-500;
-  }
-  .btn-sm { @apply px-3 py-1.5 text-xs rounded-lg; }
-  .btn-md { @apply px-4 py-2 text-sm; }
-  .btn-lg { @apply px-6 py-3 text-base; }
-
-  /* ── Inputs ────────────────────────────────────────────── */
-  .input {
-    @apply w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200;
-  }
-  .input-error {
-    @apply input border-red-300 dark:border-red-800 focus:ring-red-500/20 focus:border-red-500;
-  }
-
-  /* ── Badges ────────────────────────────────────────────── */
-  .badge {
-    @apply inline-flex items-center font-medium rounded-full px-2.5 py-0.5 text-xs transition-colors;
-  }
-
-  /* ── Typography ────────────────────────────────────────── */
-  .heading-xl { @apply text-2xl font-bold text-slate-900 dark:text-white tracking-tight; }
-  .heading-lg { @apply text-lg font-semibold text-slate-900 dark:text-white; }
-  .heading-md { @apply text-base font-semibold text-slate-800 dark:text-slate-100; }
-  .text-body  { @apply text-sm text-slate-600 dark:text-slate-400; }
-  .text-caption { @apply text-xs text-slate-500 dark:text-slate-500; }
-  .text-kpi   { @apply text-kpi text-slate-900 dark:text-white; }
+html, body, #root {
+  height: 100%;
+  background: #0F1419;
+  color: #E5E7EB;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   UTILITY LAYER
-   ═══════════════════════════════════════════════════════════════ */
-@layer utilities {
-  /* Glass effect */
-  .glass {
-    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50;
-  }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0F1419; }
+::-webkit-scrollbar-thumb { background: #252E3B; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #374151; }
 
-  /* Shimmer loading */
-  .shimmer {
-    background: linear-gradient(90deg, transparent 0%, rgba(148,163,184,0.1) 50%, transparent 100%);
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
-  }
-  .dark .shimmer {
-    background: linear-gradient(90deg, transparent 0%, rgba(148,163,184,0.08) 50%, transparent 100%);
-    background-size: 200% 100%;
-  }
-
-  /* Text gradient */
-  .text-gradient {
-    @apply bg-gradient-to-r from-brand-600 to-cyan-500 bg-clip-text text-transparent;
-  }
+/* Selection */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: #fff;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   THIRD-PARTY OVERRIDES
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Recharts tooltip */
-.recharts-tooltip-wrapper .recharts-default-tooltip {
-  @apply !bg-white dark:!bg-slate-800 !border !border-slate-200 dark:!border-slate-700 !rounded-xl !shadow-dropdown !px-3 !py-2;
-}
-
-/* Smooth theme transition */
-html {
-  transition: color 0.2s ease;
-}
-html * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+  border-radius: 4px;
 }

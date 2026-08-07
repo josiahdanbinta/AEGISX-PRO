@@ -1,4 +1,4 @@
-import { type ButtonHTMLAttributes, forwardRef, type ElementType } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type ElementType } from 'react';
 import { clsx } from 'clsx';
 import { Loader2 } from 'lucide-react';
 
@@ -13,18 +13,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow-md focus:ring-brand-500',
-  secondary: 'bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 focus:ring-brand-500',
-  danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500',
-  success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm focus:ring-emerald-500',
-  ghost: 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-500',
-  outline: 'border border-slate-300 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-brand-500',
+  primary:   'bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-glow-sm focus:ring-brand-500',
+  secondary: 'bg-surface-card border border-surface-border text-gray-200 hover:bg-surface-hover hover:border-brand-500/30 focus:ring-brand-500',
+  danger:    'bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500',
+  success:   'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm focus:ring-emerald-500',
+  ghost:     'text-gray-400 hover:text-gray-200 hover:bg-surface-hover focus:ring-brand-500',
+  outline:   'border border-surface-border bg-transparent text-gray-300 hover:bg-surface-hover hover:border-brand-500/50 focus:ring-brand-500',
 };
 
 const sizes: Record<Size, string> = {
   sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5 min-h-[32px]',
-  md: 'px-4 py-2 text-sm rounded-[10px] gap-2 min-h-[40px]',
-  lg: 'px-6 py-2.5 text-base rounded-[10px] gap-2 min-h-[48px]',
+  md: 'px-4 py-2 text-sm rounded-button gap-2 min-h-[40px]',
+  lg: 'px-6 py-2.5 text-base rounded-button gap-2 min-h-[48px]',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ref={ref}
       className={clsx(
         'inline-flex items-center justify-center font-medium transition-all duration-200',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900',
+        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-base',
         'disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]',
         variants[variant],
         sizes[size],
@@ -42,7 +42,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       disabled={disabled || loading}
       aria-disabled={disabled || loading}
       aria-busy={loading ? true : undefined}
-      role={props.onClick ? 'button' : undefined}
       type={props.type || 'button'}
       {...props}
     >
@@ -55,5 +54,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     </button>
   ),
 );
-
 Button.displayName = 'Button';
