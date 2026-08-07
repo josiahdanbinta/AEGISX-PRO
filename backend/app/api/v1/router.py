@@ -4,7 +4,7 @@ Safe imports — individual router failures don't crash the app.
 """
 from fastapi import APIRouter
 
-api_router = APIRouter(redirect_slashes=False)
+api_router = APIRouter()
 
 _routers = [
     ("auth", "/auth", "Authentication"),
@@ -33,5 +33,7 @@ for name, prefix, tag in _routers:
     try:
         mod = __import__(f"app.api.v1.{name}", fromlist=["router"])
         api_router.include_router(mod.router, prefix=prefix, tags=[tag])
+        if prefix and not prefix.endswith('/'):
+            api_router.include_router(mod.router, prefix=prefix + '/', tags=[tag])
     except Exception as e:
         print(f"  ⚠ Router '{name}' failed to load: {e} — skipping")
