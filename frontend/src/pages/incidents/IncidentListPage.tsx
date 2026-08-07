@@ -126,9 +126,8 @@ export function IncidentListPage() {
         setTotalPages(res.meta.total_pages);
       })
       .catch((err) => {
-        setError(err?.error?.message || 'Failed to load incidents');
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, [buildParams]);
 
   useEffect(() => {
@@ -323,17 +322,7 @@ export function IncidentListPage() {
           </div>
         )}
 
-        {error && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <AlertCircle className="w-10 h-10 text-red-400" />
-            <p className="text-red-600 font-medium">{error}</p>
-            <Button variant="secondary" size="sm" onClick={() => { setPage(1); setLoading(true); setError(null); }}>
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {!loading && !error && (
+        {!loading && (
           <Table
             columns={columns}
             data={(data as unknown) as Record<string, unknown>[]}
