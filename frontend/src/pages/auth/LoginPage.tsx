@@ -1,15 +1,13 @@
 import { useState, type FormEvent } from 'react';
-import { Shield, Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { Shield, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
   const { login } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tenantId, setTenantId] = useState('');
@@ -74,7 +72,7 @@ export function LoginPage() {
               label="Tenant ID"
               value={tenantId}
               onChange={(e) => setTenantId(e.target.value)}
-              placeholder="Optional â€” your tenant identifier"
+              placeholder="Optional Ã¢â‚¬â€ your tenant identifier"
             />
             <Input
               label="Email"
@@ -118,19 +116,9 @@ export function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
-          AEGIS Platform v2.0.0 â€” Protected by industry-standard encryption
+          AEGIS Platform v2.0.0 Ã¢â‚¬â€ Protected by industry-standard encryption
         </p>
 
-        {/* Theme Toggle */}
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 shadow-sm transition-colors"
-          >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            <span className="text-xs font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-          </button>
-        </div>
       </motion.div>
     </div>
   );

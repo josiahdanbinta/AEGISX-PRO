@@ -151,7 +151,7 @@ export function VulnerabilitiesPage() {
     setLoading(true);
     setError(null);
     api.get<PaginatedResponse<Vulnerability>>('/vulnerabilities', { params: buildParams() })
-      .then((res) => { setData(res.items); setTotal(res.total); })
+      .then((res) => { setData((res as any).items); setTotal(res.total); })
       .catch((err) => setError(err?.error?.message || 'Failed to load vulnerabilities'))
       .finally(() => setLoading(false));
   }, [buildParams]);
@@ -223,7 +223,7 @@ export function VulnerabilitiesPage() {
             <ExternalLink className="w-3 h-3" />
           </a>
         ) : (
-          <span className="text-xs text-slate-400">—</span>
+          <span className="text-xs text-slate-400">â€”</span>
         )
       ),
     },
@@ -255,7 +255,7 @@ export function VulnerabilitiesPage() {
             row.cvss_score ? cvssColor(row.cvss_score) : 'text-slate-400'
           }`}
         >
-          {row.cvss_score ? row.cvss_score.toFixed(1) : '—'}
+          {row.cvss_score ? row.cvss_score.toFixed(1) : 'â€”'}
         </span>
       ),
     },
@@ -264,7 +264,7 @@ export function VulnerabilitiesPage() {
       header: 'Software',
       width: '140px',
       render: (row: Vulnerability) => (
-        <span className="text-xs text-slate-600 truncate block max-w-[130px]">{row.affected_software || '—'}</span>
+        <span className="text-xs text-slate-600 truncate block max-w-[130px]">{row.affected_software || 'â€”'}</span>
       ),
     },
     {
@@ -273,7 +273,7 @@ export function VulnerabilitiesPage() {
       width: '110px',
       render: (row: Vulnerability) => (
         <span className="text-xs text-slate-600">
-          {row.affected_asset_id ? `AST-${row.affected_asset_id.substring(0, 6).toUpperCase()}` : '—'}
+          {row.affected_asset_id ? `AST-${row.affected_asset_id.substring(0, 6).toUpperCase()}` : 'â€”'}
         </span>
       ),
     },
@@ -299,7 +299,7 @@ export function VulnerabilitiesPage() {
             Yes
           </Badge>
         ) : (
-          <span className="text-xs text-slate-400">—</span>
+          <span className="text-xs text-slate-400">â€”</span>
         )
       ),
     },
@@ -478,7 +478,7 @@ export function VulnerabilitiesPage() {
                     <p className="text-sm font-medium text-slate-900">{scan.name}</p>
                     <p className="text-xs text-slate-400">
                       Started {new Date(scan.started_at).toLocaleString()}
-                      {scan.completed_at && ` — Completed ${new Date(scan.completed_at).toLocaleString()}`}
+                      {scan.completed_at && ` â€” Completed ${new Date(scan.completed_at).toLocaleString()}`}
                     </p>
                   </div>
                 </div>

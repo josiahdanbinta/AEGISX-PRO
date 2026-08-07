@@ -1,13 +1,14 @@
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Monitor, Shield, AlertTriangle, Workflow,
-  Globe, Bug, ClipboardCheck, FileText, Download,
-  Users, Building2, ScrollText, Settings, ChevronLeft, ChevronRight,
-  Radio, Crosshair, Activity,
+  LayoutDashboard, Monitor, Shield, AlertTriangle, Workflow, Globe,
+  Bug, ClipboardCheck, FileText, Bell, Download, Users, Building2,
+  ScrollText, Settings, ChevronLeft, ChevronRight, Sparkles,
 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { api } from '@/services/api';
+import { useState, useEffect } from 'react';
 
 interface NavSection {
   title: string;
@@ -58,6 +59,11 @@ export function Sidebar() {
   const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const user = useAuthStore((s) => s.user);
+  const [license, setLicense] = useState<{ customer?: string; edition?: string } | null>(null);
+
+  useEffect(() => {
+    api.get('/license/info').then(setLicense).catch(() => {});
+  }, []);
 
   return (
     <motion.aside
@@ -87,6 +93,14 @@ export function Sidebar() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Company Name from License */}
+      {license?.customer && !sidebarCollapsed && (
+        <div className="px-3 py-2 border-b border-surface-border">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Licensed to</p>
+          <p className="text-xs font-medium text-brand-400 truncate">{license.customer}</p>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-4">

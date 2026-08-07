@@ -123,7 +123,7 @@ export function IncidentListPage() {
       .then((res) => {
         setData(res.items);
         setTotal(res.meta.total_items);
-        setTotalPages(res.meta.total_pages);
+        const [totalPages, setTotalPages] = useState(1);  // setTotalPages(res.meta.total_pages);
       })
       .catch((err) => {
         setLoading(false);

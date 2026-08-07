@@ -66,7 +66,7 @@ export function AssetListPage() {
       const res = await api.get<AssetListResponse>('/assets', { params });
       setAssets(res.items);
       setTotal(res.meta.total_items);
-      setTotalPages(res.meta.total_pages);
+      setTotalPages((res as any).meta?.total_pages);
     } catch (err: unknown) {
       const e = err as { error?: { message?: string } };
       setError(e?.error?.message || 'Failed to load assets');
@@ -174,15 +174,15 @@ export function AssetListPage() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">{asset.hostname}</td>
                       <td className="px-4 py-3 text-sm text-slate-600 capitalize">{asset.type}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{asset.os || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{asset.os || 'â€”'}</td>
                       <td className="px-4 py-3">
                         <Badge variant={statusVariant[asset.status] || 'default'} size="sm">{asset.status}</Badge>
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={riskVariant[asset.risk_level] || 'default'} size="sm">{asset.risk_level || 'low'}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 font-mono">{asset.ip_address || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{asset.agent_id ? 'Connected' : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 font-mono">{asset.ip_address || 'â€”'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{asset.agent_id ? 'Connected' : 'â€”'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -190,7 +190,7 @@ export function AssetListPage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
               <span className="text-sm text-slate-500">
-                Showing {((page - 1) * 20) + 1}–{Math.min(page * 20, total)} of {total}
+                Showing {((page - 1) * 20) + 1}â€“{Math.min(page * 20, total)} of {total}
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>

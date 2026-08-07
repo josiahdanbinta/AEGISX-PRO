@@ -179,7 +179,7 @@ function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.FC<{classN
 
 function OverviewTab({ asset, hardware, software, vulnerabilities, alerts }: {
   asset: Asset; hardware: HardwareInfo | null; software: SoftwareInfo | null;
-  vulnerabilities: Vulnerability[]; alerts: Alert[];
+  vulnerabilities: Record<string, unknown>[]; alerts: Record<string, unknown>[];
 }) {
   return (
     <div className="space-y-6">
@@ -286,7 +286,7 @@ function HardwareTab({ hardware }: { hardware: HardwareInfo | null }) {
           <div className="space-y-2">
             <InfoRow label="Cores / Threads" value={`${hardware.cpu?.cores} / ${hardware.cpu?.threads}`} />
             <InfoRow label="Frequency" value={`${hardware.cpu?.frequency_mhz} MHz`} />
-            {hardware.temperatures && <InfoRow label="Temperature" value={`${hardware.temperatures.cpu}°C`} />}
+            {hardware.temperatures && <InfoRow label="Temperature" value={`${hardware.temperatures.cpu}Â°C`} />}
           </div>
         </Card>
         <Card>
@@ -327,7 +327,7 @@ function HardwareTab({ hardware }: { hardware: HardwareInfo | null }) {
           <div className="p-4 bg-slate-50 rounded-xl">
             <p className="text-sm font-medium text-slate-700 mb-2">TPM</p>
             {hardware.tpm?.present
-              ? <div><Badge variant="success">Present</Badge><p className="text-xs text-slate-500 mt-1">v{hardware.tpm?.version} — {hardware.tpm?.status}</p></div>
+              ? <div><Badge variant="success">Present</Badge><p className="text-xs text-slate-500 mt-1">v{hardware.tpm?.version} â€” {hardware.tpm?.status}</p></div>
               : <Badge variant="danger">Not Found</Badge>
             }
           </div>
@@ -397,7 +397,7 @@ function SoftwareTab({ software }: { software: SoftwareInfo | null }) {
                     {url && (
                       <a href={url} target="_blank" rel="noopener noreferrer"
                         className="text-brand-600 dark:text-brand-400 hover:underline font-medium text-[11px]">
-                        Download Fix →
+                        Download Fix â†’
                       </a>
                     )}
                   </div>
@@ -499,7 +499,7 @@ function ServicesTab({ services }: { services: Array<Record<string, unknown>> })
   );
 }
 
-function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Vulnerability[] }) {
+function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Record<string, unknown>[] }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-4">
@@ -537,7 +537,7 @@ function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Vulnerabilit
   );
 }
 
-function AlertsTab({ alerts }: { alerts: Alert[] }) {
+function AlertsTab({ alerts }: { alerts: Record<string, unknown>[] }) {
   return (
     <Table
       columns={[

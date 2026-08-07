@@ -4,7 +4,7 @@ import { clsx } from 'clsx';
 
 interface Column<T> {
   key: string;
-  header: string;
+  header: React.ReactNode;
   render?: (row: T) => React.ReactNode;
   sortable?: boolean;
   width?: string;
@@ -25,7 +25,7 @@ interface TableProps<T> {
   loading?: boolean;
 }
 
-export function Table<T extends Record<string, unknown>>({
+export function Table<T>({
   columns, data, keyExtractor, onRowClick,
   page = 1, pageSize = 20, total, onPageChange,
   sortBy, sortOrder = 'desc', onSort, loading,

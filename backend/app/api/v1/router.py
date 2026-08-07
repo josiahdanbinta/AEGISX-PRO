@@ -33,6 +33,7 @@ _routers = [
     ("slack_bot", "/slack", "Slack Bot"),
     ("chat", "", "Chat"),
     ("smart_ops", "/smart-ops", "Smart Operations"),
+    ("license", "/license", "License"),
 ]
 
 for name, prefix, tag in _routers:
