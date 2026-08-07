@@ -70,7 +70,30 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     setup_metrics(app)
 
-    # â”€â”€ Tracing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # License validation
+    if settings.LICENSE_KEY:
+        try:
+            from app.core.license_key import validate_license
+            result = validate_license(settings.LICENSE_KEY)
+            if result["valid"]:
+                settings.LICENSE_VALID = True
+                settings.LICENSE_CUSTOMER = result["customer"]
+                settings.LICENSE_EXPIRES = result["expires_at"]
+                settings.LICENSE_MAX_TENANTS = result["max_tenants"]
+                settings.LICENSE_MAX_ENDPOINTS = result["max_endpoints"]
+                settings.EDITION = "enterprise"
+                settings.FEATURE_AI_REMEDIATION = True
+                settings.FEATURE_SLACK_BOT = True
+                days = (result["expires_at"] - __import__('time').time()) // 86400
+                print(f"LICENSE: {result['customer']} (Enterprise, {days} days remaining)")
+            else:
+                print(f"LICENSE: INVALID - {result.get('error', 'unknown error')}")
+        except Exception as e:
+            print(f"LICENSE: Error validating - {e}")
+    else:
+        print(f"LICENSE: Community Edition (free)")
+        settings.EDITION = "community"
+
     if settings.TRACING_ENABLED:
         try:
             from app.services.tracing import setup_tracing
@@ -239,7 +262,24 @@ and Incident Response.
     # â”€â”€ Root endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     @app.get("/")
     async def root():
-        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION, "edition": settings.EDITION}
+
+    @app.get("/license")
+    async def license_info():
+        return {
+            "edition": settings.EDITION,
+            "customer": settings.LICENSE_CUSTOMER,
+            "valid": settings.LICENSE_VALID,
+            "expires_at": settings.LICENSE_EXPIRES,
+            "max_tenants": settings.LICENSE_MAX_TENANTS,
+            "max_endpoints": settings.LICENSE_MAX_ENDPOINTS,
+            "features": {
+                "ai_remediation": settings.FEATURE_AI_REMEDIATION,
+                "slack_bot": settings.FEATURE_SLACK_BOT,
+                "kafka": settings.FEATURE_KAFKA,
+                "ueba": settings.FEATURE_UEBA,
+            }
+        }
 
     @app.get("/debug", include_in_schema=False)
     async def debug(current_user: dict = Depends(get_current_user)):

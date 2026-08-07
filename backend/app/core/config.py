@@ -295,8 +295,16 @@ class Settings(BaseSettings):
     FEATURE_SLACK_BOT: bool = False
     FEATURE_AI_REMEDIATION: bool = False
 
-    # â”€â”€ Edition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    EDITION: str = "community"  # "community" | "enterprise"
+    # Licensing
+    LICENSE_KEY: Optional[str] = None
+    LICENSE_VALID: bool = False
+    LICENSE_CUSTOMER: str = "Community Edition"
+    LICENSE_EXPIRES: Optional[int] = None
+    LICENSE_MAX_TENANTS: int = 3
+    LICENSE_MAX_ENDPOINTS: int = 50
+
+    # Edition
+    EDITION: str = "community"
     MAX_TENANTS_COMMUNITY: int = 3
     MAX_ENDPOINTS_COMMUNITY: int = 50
     MAX_SOAR_PLAYBOOKS_COMMUNITY: int = 5
