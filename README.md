@@ -35,7 +35,7 @@ docker compose up -d
 - Frontend: http://localhost:5174
 - API Docs: http://localhost:8001/docs
 - Grafana: http://localhost:3000
-- Default login: admin@aegis.com / Admin123!@#
+- Default login: admin@joshwarescybertech.com / Admin123!@#
 
 ---
 
@@ -89,7 +89,7 @@ FEATURE_AI_REMEDIATION=true
 FEATURE_SLACK_BOT=true
 SLACK_BOT_TOKEN=xoxb-...
 SLACK_APP_TOKEN=xapp-...
-# Contact enterprise@aegis.com for license key
+# Contact sales@joshwarescybertech.com for license key
 ```
 
 ---
@@ -128,8 +128,8 @@ AGPL v3. Community contributions welcome.
 ## 📜 License
 
 - Community Edition: GNU AGPL v3 (LICENSE)
-- Enterprise Edition: Commercial License (contact enterprise@aegis.com)
+- Enterprise Edition: Commercial License (contact sales@joshwarescybertech.com)
 
 ---
 
-Built by Josiah Danbinta | enterprise@aegis.com
+Built by Josiah Danbinta | joshwarescybertech.com
