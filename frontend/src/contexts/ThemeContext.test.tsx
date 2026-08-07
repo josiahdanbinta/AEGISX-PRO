@@ -4,11 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider, useTheme } from './ThemeContext';
 
 function TestConsumer() {
-  const { theme, toggleTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   return (
     <div>
       <span data-testid="theme-value">{theme}</span>
-      <button data-testid="toggle-btn" onClick={toggleTheme}>Toggle</button>
       <button data-testid="set-dark" onClick={() => setTheme('dark')}>Set Dark</button>
     </div>
   );
@@ -24,39 +23,20 @@ function renderWithProvider() {
 
 describe('ThemeContext', () => {
   beforeEach(() => {
-    localStorage.clear();
     document.documentElement.classList.remove('light', 'dark');
   });
 
-  it('ThemeProvider sets theme class on document element', () => {
+  it('ThemeProvider forces dark theme on document element', () => {
     renderWithProvider();
     const theme = screen.getByTestId('theme-value').textContent;
-    expect(
-      document.documentElement.classList.contains('light') ||
-      document.documentElement.classList.contains('dark'),
-    ).toBe(true);
+    expect(theme).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('toggles theme between light and dark', async () => {
-    renderWithProvider();
-    const initial = screen.getByTestId('theme-value').textContent;
-    const toggleBtn = screen.getByTestId('toggle-btn');
-    await userEvent.click(toggleBtn);
-    expect(screen.getByTestId('theme-value').textContent).not.toBe(initial);
-  });
-
-  it('setTheme allows setting a specific theme', async () => {
+  it('theme value is fixed dark and setTheme keeps it dark', async () => {
     renderWithProvider();
     await userEvent.click(screen.getByTestId('set-dark'));
     expect(screen.getByTestId('theme-value').textContent).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  it('persists theme to localStorage after toggle', async () => {
-    renderWithProvider();
-    await userEvent.click(screen.getByTestId('toggle-btn'));
-    const stored = localStorage.getItem('AEGIS-theme');
-    expect(stored).toBeTruthy();
-    expect(stored === 'light' || stored === 'dark').toBe(true);
   });
 });

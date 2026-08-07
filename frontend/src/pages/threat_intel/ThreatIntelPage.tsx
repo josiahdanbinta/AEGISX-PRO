@@ -400,7 +400,7 @@ export function ThreatIntelPage() {
             <Card padding="none">
               <Table
                 columns={indicatorColumns}
-                data={(indicators as unknown) as Record<string, unknown>[]}
+                data={indicators}
                 keyExtractor={(row) => String(row.id)}
                 page={indicatorPage}
                 pageSize={20}

@@ -15,13 +15,13 @@ describe('Card', () => {
 
   it('applies accent border classes', () => {
     const { container } = render(<Card accent="red">Accent</Card>);
-    expect(container.firstChild).toHaveClass('border-l-4');
+    expect(container.firstChild).toHaveClass('border-l-2');
     expect(container.firstChild).toHaveClass('border-l-red-500');
   });
 
   it('applies hover class', () => {
     const { container } = render(<Card hover>Hoverable</Card>);
-    expect(container.firstChild).toHaveClass('hover:-translate-y-0.5');
+    expect(container.firstChild).toHaveClass('hover:shadow-card-hover');
   });
 });
 

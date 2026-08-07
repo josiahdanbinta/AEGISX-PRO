@@ -433,7 +433,7 @@ export function AlertsPage() {
         {!error && (
           <Table
             columns={columns}
-            data={(data as unknown) as Record<string, unknown>[]}
+            data={data}
             keyExtractor={(row) => String(row.id)}
             page={page}
             pageSize={20}

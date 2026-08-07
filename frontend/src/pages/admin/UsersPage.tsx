@@ -472,7 +472,7 @@ export function UsersPage() {
             {!usersError && (
               <Table
                 columns={columns}
-                data={(users as unknown) as Record<string, unknown>[]}
+                data={users}
                 keyExtractor={(row) => String(row.id)}
                 page={usersPage}
                 pageSize={20}

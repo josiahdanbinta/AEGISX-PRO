@@ -40,7 +40,7 @@ interface Note {
 const severityVariant: Record<string, 'danger' | 'warning' | 'info' | 'default'> = {
   critical: 'danger', high: 'warning', medium: 'warning', low: 'info',
 };
-const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
+const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
   open: 'warning', in_progress: 'info', resolved: 'success', closed: 'default',
 };
 

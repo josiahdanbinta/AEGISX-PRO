@@ -179,7 +179,7 @@ function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.FC<{classN
 
 function OverviewTab({ asset, hardware, software, vulnerabilities, alerts }: {
   asset: Asset; hardware: HardwareInfo | null; software: SoftwareInfo | null;
-  vulnerabilities: Record<string, unknown>[]; alerts: Record<string, unknown>[];
+  vulnerabilities: Vulnerability[]; alerts: Alert[];
 }) {
   return (
     <div className="space-y-6">
@@ -499,7 +499,7 @@ function ServicesTab({ services }: { services: Array<Record<string, unknown>> })
   );
 }
 
-function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Record<string, unknown>[] }) {
+function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Vulnerability[] }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-4">
@@ -512,19 +512,19 @@ function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Record<strin
         columns={[
           { key: 'cve_id', header: 'CVE', width: '12%' },
           { key: 'title', header: 'Title', width: '30%' },
-          { key: 'severity', header: 'Severity', render: (r: Record<string, unknown>) => (
+          { key: 'severity', header: 'Severity', render: (r: Vulnerability) => (
             <Badge variant={r.severity === 'critical' ? 'danger' : r.severity === 'high' ? 'warning' : r.severity === 'medium' ? 'warning' : 'info'} size="sm">
               {String(r.severity)}
             </Badge>
           ), width: '10%'},
           { key: 'cvss_score', header: 'CVSS', width: '8%' },
           { key: 'affected_software', header: 'Software', width: '15%' },
-          { key: 'status', header: 'Status', render: (r: Record<string, unknown>) => (
+          { key: 'status', header: 'Status', render: (r: Vulnerability) => (
             <Badge variant={r.status === 'open' ? 'danger' : r.status === 'remediated' ? 'success' : 'warning'} size="sm">
               {String(r.status)}
             </Badge>
           ), width: '12%'},
-          { key: 'exploit_available', header: 'Exploit', render: (r: Record<string, unknown>) => r.exploit_available
+          { key: 'exploit_available', header: 'Exploit', render: (r: Vulnerability) => r.exploit_available
             ? <Badge variant="danger" size="sm">Yes</Badge>
             : <span className="text-xs text-slate-400">No</span>,
             width: '8%'
@@ -537,17 +537,17 @@ function VulnerabilitiesTab({ vulnerabilities }: { vulnerabilities: Record<strin
   );
 }
 
-function AlertsTab({ alerts }: { alerts: Record<string, unknown>[] }) {
+function AlertsTab({ alerts }: { alerts: Alert[] }) {
   return (
     <Table
       columns={[
         { key: 'title', header: 'Alert', width: '30%' },
-        { key: 'severity', header: 'Severity', render: (r: Record<string, unknown>) => (
+        { key: 'severity', header: 'Severity', render: (r: Alert) => (
           <Badge variant={r.severity === 'critical' ? 'danger' : r.severity === 'high' ? 'warning' : 'info'} size="sm">
             {String(r.severity)}
           </Badge>
         ), width: '10%'},
-        { key: 'status', header: 'Status', render: (r: Record<string, unknown>) => (
+        { key: 'status', header: 'Status', render: (r: Alert) => (
           <Badge variant={r.status === 'new' ? 'danger' : r.status === 'resolved' ? 'success' : 'warning'} size="sm">
             {String(r.status)}
           </Badge>

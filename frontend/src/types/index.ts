@@ -4,11 +4,11 @@ export interface User {
   email: string;
   full_name: string;
   roles: string[];
-  department?: string;
-  title?: string;
+  department?: string | null;
+  title?: string | null;
   status: 'active' | 'suspended' | 'locked' | 'inactive';
   mfa_enabled: boolean;
-  last_login_at?: string;
+  last_login_at?: string | null;
   created_at: string;
 }
 

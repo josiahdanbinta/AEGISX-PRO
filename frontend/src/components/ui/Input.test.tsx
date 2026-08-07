@@ -15,7 +15,7 @@ describe('Input', () => {
 
   it('applies error styles', () => {
     const { container } = render(<Input error="Invalid" />);
-    expect(container.querySelector('input')).toHaveClass('border-red-300');
+    expect(container.querySelector('input')).toHaveClass('border-red-800');
   });
 
   it('shows hint text when no error', () => {

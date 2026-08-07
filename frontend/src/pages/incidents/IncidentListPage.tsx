@@ -325,7 +325,7 @@ export function IncidentListPage() {
         {!loading && (
           <Table
             columns={columns}
-            data={(data as unknown) as Record<string, unknown>[]}
+            data={data}
             keyExtractor={(row) => String(row.id)}
             page={page}
             pageSize={20}
@@ -334,7 +334,7 @@ export function IncidentListPage() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSort={handleSort}
-            onRowClick={(row: Record<string, unknown>) => navigate(`/incidents/${row.id}`)}
+            onRowClick={(row: Incident) => navigate(`/incidents/${row.id}`)}
           />
         )}
       </Card>

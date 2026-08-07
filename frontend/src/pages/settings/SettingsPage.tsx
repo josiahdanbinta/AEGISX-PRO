@@ -465,7 +465,7 @@ export function SettingsPage() {
                       { key: "teams_enabled", label: "Microsoft Teams", icon: MessageSquare },
                     ].map((channel) => {
                       const ChannelIcon = channel.icon;
-                      const enabled = !!(notifications as Record<string, boolean>)[channel.key];
+                      const enabled = !!(notifications as unknown as Record<string, boolean>)[channel.key];
                       return (
                         <div key={channel.key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                           <div className="flex items-center gap-3">

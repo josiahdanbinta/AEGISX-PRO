@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Monitor, Shield, AlertTriangle, Workflow, Globe,
   Bug, ClipboardCheck, FileText, Bell, Download, Users, Building2,
   ScrollText, Settings, ChevronLeft, ChevronRight, Sparkles,
+  Activity, Radio, Crosshair,
 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
@@ -62,7 +63,9 @@ export function Sidebar() {
   const [license, setLicense] = useState<{ customer?: string; edition?: string } | null>(null);
 
   useEffect(() => {
-    api.get('/license/info').then(setLicense).catch(() => {});
+    api.get<{ customer?: string; edition?: string }>('/license/info')
+      .then((d) => setLicense(d ?? null))
+      .catch(() => {});
   }, []);
 
   return (

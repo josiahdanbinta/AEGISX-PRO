@@ -10,7 +10,7 @@ describe('Badge', () => {
 
   it('applies variant classes', () => {
     const { container } = render(<Badge variant="danger">Danger</Badge>);
-    expect(container.firstChild).toHaveClass('bg-red-50');
+    expect(container.firstChild).toHaveClass('bg-red-900/50');
   });
 
   it('applies size classes', () => {

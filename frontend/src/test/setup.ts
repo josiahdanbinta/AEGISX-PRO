@@ -15,7 +15,7 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-global.IntersectionObserver = class IntersectionObserver {
+globalThis.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   observe() { return null; }
   unobserve() { return null; }
