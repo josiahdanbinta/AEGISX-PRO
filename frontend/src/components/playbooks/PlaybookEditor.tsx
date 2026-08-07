@@ -7,7 +7,7 @@ import {
   Shield, UserCheck, FileText, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Modal from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
   send_email: <Mail size={14} />,

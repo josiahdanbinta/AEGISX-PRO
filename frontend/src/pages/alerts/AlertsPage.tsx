@@ -107,8 +107,8 @@ export function AlertsPage() {
     setError(null);
     api.get<PaginatedResponse<Alert>>('/detection/alerts', { params: buildParams() })
       .then((res) => {
-        setData(res.items);
-        setTotal(res.total);
+        setData((res as any).items || (res as any).data || []);
+        setTotal((res as any).total || 0);
       })
       .catch((err) => {
         setError(err?.error?.message || 'Failed to load alerts');

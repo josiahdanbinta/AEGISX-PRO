@@ -405,7 +405,7 @@ function SoftwareTab({ software }: { software: SoftwareInfo | null }) {
               }},
               { key: 'severity', header: 'Risk', width: '10%', render: (r: Record<string, unknown>) => (
                 <Badge variant={r.severity === 'critical' ? 'danger' : r.severity === 'high' ? 'warning' : 'info'} size="sm">
-                  {String(r.severity || r.risk_flags?.[0] || 'outdated')}
+                  {String(r.severity || (r.risk_flags as any)?.[0] || 'outdated')}
                 </Badge>
               )},
               { key: 'action', header: '', width: '10%', render: (r: Record<string, unknown>) => {
