@@ -1062,6 +1062,194 @@ async def send_notification(
                 entry.error_message = error
                 errors.append({"recipient": recipient, "error": error})
 
+        elif body.channel == NotificationChannelEnum.SLACK:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    stmt = select(NotificationChannel).where(
+                        NotificationChannel.tenant_id == tenant_uuid,
+                        NotificationChannel.channel_type == "slack",
+                        NotificationChannel.is_active == True,
+                    )
+                    ch_result = await db.execute(stmt)
+                    slack_channel = ch_result.scalars().first()
+
+                    webhook_url = None
+                    if slack_channel and slack_channel.config:
+                        webhook_url = slack_channel.config.get("webhook_url") or slack_channel.config.get("bot_token")
+                        if slack_channel.config.get("bot_token") and not webhook_url:
+                            webhook_url = f"https://hooks.slack.com/services/{slack_channel.config.get('bot_token')}"
+
+                    if not webhook_url:
+                        entry.status = "failed"
+                        entry.error_message = "No Slack webhook URL configured"
+                        errors.append({"recipient": recipient, "error": "No Slack webhook URL configured"})
+                        continue
+
+                    payload = {
+                        "text": body.body,
+                        "channel": recipient,
+                    }
+                    if body.attachments:
+                        payload["attachments"] = body.attachments
+
+                    resp = await client.post(webhook_url, json=payload)
+                    if resp.status_code in (200, 201, 204):
+                        entry.status = "sent"
+                    else:
+                        entry.status = "failed"
+                        entry.error_message = f"Slack returned {resp.status_code}: {resp.text[:500]}"
+                        errors.append({"recipient": recipient, "error": entry.error_message})
+            except Exception as e:
+                entry.status = "failed"
+                entry.error_message = str(e)
+                errors.append({"recipient": recipient, "error": str(e)})
+
+        elif body.channel == NotificationChannelEnum.TEAMS:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    stmt = select(NotificationChannel).where(
+                        NotificationChannel.tenant_id == tenant_uuid,
+                        NotificationChannel.channel_type == "teams",
+                        NotificationChannel.is_active == True,
+                    )
+                    ch_result = await db.execute(stmt)
+                    teams_channel = ch_result.scalars().first()
+
+                    webhook_url = None
+                    if teams_channel and teams_channel.config:
+                        webhook_url = teams_channel.config.get("webhook_url")
+
+                    if not webhook_url:
+                        entry.status = "failed"
+                        entry.error_message = "No Teams webhook URL configured"
+                        errors.append({"recipient": recipient, "error": "No Teams webhook URL configured"})
+                        continue
+
+                    payload = {
+                        "@type": "MessageCard",
+                        "@context": "https://schema.org/extensions",
+                        "title": body.subject or "AEGISX Notification",
+                        "text": body.body,
+                    }
+                    resp = await client.post(webhook_url, json=payload)
+                    if resp.status_code in (200, 201, 202, 204):
+                        entry.status = "sent"
+                    else:
+                        entry.status = "failed"
+                        entry.error_message = f"Teams returned {resp.status_code}: {resp.text[:500]}"
+                        errors.append({"recipient": recipient, "error": entry.error_message})
+            except Exception as e:
+                entry.status = "failed"
+                entry.error_message = str(e)
+                errors.append({"recipient": recipient, "error": str(e)})
+
+        elif body.channel == NotificationChannelEnum.SMS:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    stmt = select(NotificationChannel).where(
+                        NotificationChannel.tenant_id == tenant_uuid,
+                        NotificationChannel.channel_type == "sms",
+                        NotificationChannel.is_active == True,
+                    )
+                    ch_result = await db.execute(stmt)
+                    sms_channel = ch_result.scalars().first()
+
+                    account_sid = None
+                    auth_token = None
+                    from_number = None
+
+                    if sms_channel and sms_channel.config:
+                        account_sid = sms_channel.config.get("account_sid")
+                        auth_token = sms_channel.config.get("auth_token")
+                        from_number = sms_channel.config.get("from_number")
+
+                    if not account_sid or not auth_token:
+                        entry.status = "failed"
+                        entry.error_message = "SMS integration not configured (account_sid/auth_token missing)"
+                        errors.append({"recipient": recipient, "error": "SMS integration not configured"})
+                        continue
+
+                    twilio_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+                    sms_payload = {
+                        "To": recipient,
+                        "From": from_number,
+                        "Body": body.body[:1600],
+                    }
+                    resp = await client.post(
+                        twilio_url,
+                        data=sms_payload,
+                        auth=(account_sid, auth_token),
+                    )
+                    if resp.status_code in (200, 201):
+                        entry.status = "sent"
+                    else:
+                        entry.status = "failed"
+                        entry.error_message = f"SMS API returned {resp.status_code}: {resp.text[:500]}"
+                        errors.append({"recipient": recipient, "error": entry.error_message})
+            except Exception as e:
+                entry.status = "failed"
+                entry.error_message = str(e)
+                errors.append({"recipient": recipient, "error": str(e)})
+
+        elif body.channel == NotificationChannelEnum.WEBHOOK:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    stmt = select(NotificationChannel).where(
+                        NotificationChannel.tenant_id == tenant_uuid,
+                        NotificationChannel.channel_type == "webhook",
+                        NotificationChannel.is_active == True,
+                    )
+                    ch_result = await db.execute(stmt)
+                    webhook_ch = ch_result.scalars().first()
+
+                    wh_url = None
+                    wh_method = "POST"
+                    wh_headers = {}
+
+                    if webhook_ch and webhook_ch.config:
+                        wh_url = webhook_ch.config.get("url")
+                        wh_method = webhook_ch.config.get("method", "POST").upper()
+                        wh_headers = webhook_ch.config.get("headers", {})
+
+                    if not wh_url:
+                        entry.status = "failed"
+                        entry.error_message = "No webhook URL configured"
+                        errors.append({"recipient": recipient, "error": "No webhook URL configured"})
+                        continue
+
+                    payload = {
+                        "recipient": recipient,
+                        "subject": body.subject,
+                        "body": body.body,
+                        "notification_type": body.notification_type.value,
+                        "priority": body.priority.value,
+                        "timestamp": now.isoformat(),
+                    }
+                    if wh_method == "POST":
+                        resp = await client.post(wh_url, json=payload, headers=wh_headers)
+                    elif wh_method == "PUT":
+                        resp = await client.put(wh_url, json=payload, headers=wh_headers)
+                    else:
+                        resp = await client.get(wh_url, headers=wh_headers)
+
+                    if resp.status_code in (200, 201, 202, 204):
+                        entry.status = "sent"
+                    else:
+                        entry.status = "failed"
+                        entry.error_message = f"Webhook returned {resp.status_code}: {resp.text[:500]}"
+                        errors.append({"recipient": recipient, "error": entry.error_message})
+            except Exception as e:
+                entry.status = "failed"
+                entry.error_message = str(e)
+                errors.append({"recipient": recipient, "error": str(e)})
+
+        else:
+            entry.status = "sent"
+
     await db.flush()
 
     return SendNotificationResponse(

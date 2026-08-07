@@ -26,6 +26,7 @@ _routers = [
     ("sso", "/sso", "SSO"),
     ("websocket", "", "WebSocket"),
     ("agent", "/agent", "Agent"),
+    ("ingestion", "/ingestion", "Ingestion"),
 ]
 
 for name, prefix, tag in _routers:
