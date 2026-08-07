@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Bot, Users } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
+import { useAuthStore } from '../../store/authStore';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 
 interface ChatMessage {
   id: string;

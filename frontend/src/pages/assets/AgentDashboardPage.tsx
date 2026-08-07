@@ -120,13 +120,12 @@ export default function AgentDashboard() {
               </Card>
             ) : (
               agents.map((agent) => (
-                <Card
-                  key={agent.id}
-                  className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-                    selectedAgent?.id === agent.id ? 'border-brand-500 ring-1 ring-brand-200 bg-brand-50' : ''
-                  }`}
-                  onClick={() => selectAgent(agent)}
-                >
+                <div key={agent.id} onClick={() => selectAgent(agent)} className="cursor-pointer">
+                  <Card
+                    className={`p-3 transition-all hover:shadow-md ${
+                      selectedAgent?.id === agent.id ? 'border-brand-500 ring-1 ring-brand-200 bg-brand-50' : ''
+                    }`}
+                  >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${agent.platform === 'windows' ? 'bg-blue-50' : agent.platform === 'darwin' ? 'bg-gray-50' : 'bg-emerald-50'}`}>
@@ -143,8 +142,9 @@ export default function AgentDashboard() {
                       )}
                       <span className={`w-2 h-2 rounded-full ${agent.status === 'online' ? 'bg-emerald-400' : 'bg-gray-300'}`} />
                     </div>
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </div>
               ))
             )}
           </div>
