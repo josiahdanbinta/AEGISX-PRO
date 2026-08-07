@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # ── Application ──────────────────────────────────────────────
     APP_NAME: str = "AEGISX"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.0.0"
     APP_ENV: str = "development"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production-use-secrets-manager"

@@ -35,6 +35,7 @@ AEGISX PRO replaces Splunk ($150K), CrowdStrike ($60K), Palo Alto XSOAR ($100K),
 # Clone
 git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
 cd AEGISX-PRO
+docker compose up -d
 
 # Set secrets
 cp .env.example .env  # Edit all REQUIRED values
