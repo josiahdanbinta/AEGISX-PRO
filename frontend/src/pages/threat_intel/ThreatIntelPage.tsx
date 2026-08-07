@@ -42,10 +42,10 @@ interface ThreatCampaign {
   id: string;
   name: string;
   description: string;
-  start_date: string;
-  end_date: string | null;
-  status: 'active' | 'historical';
-  associated_actors: string[];
+  first_seen: string;
+  last_seen: string | null;
+  status: string;
+  threat_actors: Array<{ actor_id: string; name: string }>;
   targeted_sectors: string[];
 }
 
@@ -594,21 +594,21 @@ export function ThreatIntelPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{new Date(campaign.start_date).toLocaleDateString()}</span>
-                        {campaign.end_date && (
-                          <span> – {new Date(campaign.end_date).toLocaleDateString()}</span>
-                        )}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{new Date(campaign.first_seen).toLocaleDateString()}</span>
+                    {campaign.last_seen && (
+                      <span> – {new Date(campaign.last_seen).toLocaleDateString()}</span>
+                    )}
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                    {campaign.associated_actors.length > 0 && (
+                    {campaign.threat_actors?.length > 0 && (
                       <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <Users className="w-3.5 h-3.5" />
                         <span className="font-medium">Actors:</span>
-                        {campaign.associated_actors.join(', ')}
+                        {campaign.threat_actors.map((a: { name: string }) => a.name).join(', ')}
                       </div>
                     )}
                     {campaign.targeted_sectors.length > 0 && (
