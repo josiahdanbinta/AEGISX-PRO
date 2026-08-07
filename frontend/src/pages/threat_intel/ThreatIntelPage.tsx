@@ -331,13 +331,11 @@ export function ThreatIntelPage() {
   }, {});
 
   function getHeatColor(count: number): string {
-    if (ratio === 0) return 'bg-slate-50';
-    if (ratio < 0.2) return 'bg-emerald-100';
-    if (ratio < 0.4) return 'bg-yellow-100';
-    if (ratio < 0.6) return 'bg-orange-200';
-    if (ratio < 0.8) return 'bg-red-200';
-    return 'bg-red-400';
-  };
+    if (count === 0) return 'bg-slate-50';
+    if (count <= 1) return 'bg-emerald-100 text-emerald-800';
+    if (count <= 3) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  }
 
   return (
     <div className="space-y-6">
