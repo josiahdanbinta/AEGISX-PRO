@@ -147,7 +147,7 @@ export function ThreatIntelPage() {
 
   // MITRE state
   const [mitreData, setMitreData] = useState<MitreTechnique[]>([]);
-  const [mitreTactics, setMitreTactics] = useState<MitreTactic[]>([]);
+  const [mitreTacticsList, setMitreTacticsList] = useState<MitreTactic[]>([]);
   const [mitreLoading, setMitreLoading] = useState(true);
   const [mitreError, setMitreError] = useState<string | null>(null);
 
@@ -232,7 +232,7 @@ export function ThreatIntelPage() {
       .then((res) => {
         const data = res as unknown as { techniques: MitreTechnique[]; tactics: MitreTactic[] };
         if (data.techniques) setMitreData(data.techniques);
-        if (data.tactics) setMitreTactics(data.tactics);
+        if (data.tactics) setMitreTacticsList(data.tactics);
       })
       .catch((err) => setMitreError(err?.error?.message || 'Failed to load MITRE data'))
       .finally(() => setMitreLoading(false));
@@ -322,7 +322,7 @@ export function ThreatIntelPage() {
   // Group MITRE data by tactic
   const mitreByTactic = mitreData.reduce<Record<string, MitreTechnique[]>>((acc, item) => {
     for (const tid of item.tactics) {
-      const tactic = mitreTactics.find((t) => t.id === tid);
+      const tactic = mitreTacticsList.find((t) => t.id === tid);
       const name = tactic?.name || tid;
       if (!acc[name]) acc[name] = [];
       acc[name].push(item);
@@ -330,11 +330,7 @@ export function ThreatIntelPage() {
     return acc;
   }, {});
 
-  const mitreTactics = Object.keys(mitreByTactic);
-  const maxCount = Math.max(1, ...mitreData.map((d) => d.incident_count));
-
-  const getHeatColor = (count: number): string => {
-    const ratio = count / maxCount;
+  function getHeatColor(count: number): string {
     if (ratio === 0) return 'bg-slate-50';
     if (ratio < 0.2) return 'bg-emerald-100';
     if (ratio < 0.4) return 'bg-yellow-100';
