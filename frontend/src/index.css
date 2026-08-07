@@ -16,8 +16,10 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+    @apply text-slate-900 dark:bg-slate-950 dark:text-slate-100;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 30%, #7dd3fc 60%, #e0f2fe 100%);
+    min-height: 100vh;
   }
 
   /* ── Scrollbar ─────────────────────────────────────────── */

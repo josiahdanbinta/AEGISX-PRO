@@ -41,7 +41,7 @@ export default {
         // ── Semantic Surfaces ─────────────────────────────────
         surface: {
           // Light mode
-          page:      '#f7fafc',
+          page:      'rgba(224, 242, 254, 0.4)',
           card:      '#ffffff',
           hover:     '#f1f5f9',
           elevated:  '#ffffff',
