@@ -50,11 +50,21 @@ interface ThreatCampaign {
 }
 
 interface MitreTechnique {
-  tactic_id: string;
-  tactic_name: string;
-  technique_id: string;
-  technique_name: string;
-  incident_count: number;
+  id: string;
+  name: string;
+  description: string;
+  tactics: string[];
+  platforms: string[];
+}
+
+interface MitreTactic {
+  id: string;
+  name: string;
+}
+
+interface MitreResponse {
+  tactics: MitreTactic[];
+  techniques: MitreTechnique[];
 }
 
 const indicatorTypeIcons: Record<string, typeof Globe> = {
@@ -137,6 +147,7 @@ export function ThreatIntelPage() {
 
   // MITRE state
   const [mitreData, setMitreData] = useState<MitreTechnique[]>([]);
+  const [mitreTactics, setMitreTactics] = useState<MitreTactic[]>([]);
   const [mitreLoading, setMitreLoading] = useState(true);
   const [mitreError, setMitreError] = useState<string | null>(null);
 
@@ -217,10 +228,11 @@ export function ThreatIntelPage() {
   const fetchMitre = useCallback(() => {
     setMitreLoading(true);
     setMitreError(null);
-    api.get<MitreTechnique[]>('/threat-intel/mitre')
+    api.get<MitreResponse>('/threat-intel/mitre')
       .then((res) => {
-        const data = (res as unknown as { techniques: MitreTechnique[] }).techniques;
-        if (Array.isArray(data)) setMitreData(data);
+        const data = res as unknown as { techniques: MitreTechnique[]; tactics: MitreTactic[] };
+        if (data.techniques) setMitreData(data.techniques);
+        if (data.tactics) setMitreTactics(data.tactics);
       })
       .catch((err) => setMitreError(err?.error?.message || 'Failed to load MITRE data'))
       .finally(() => setMitreLoading(false));
@@ -309,8 +321,12 @@ export function ThreatIntelPage() {
 
   // Group MITRE data by tactic
   const mitreByTactic = mitreData.reduce<Record<string, MitreTechnique[]>>((acc, item) => {
-    if (!acc[item.tactic_name]) acc[item.tactic_name] = [];
-    acc[item.tactic_name].push(item);
+    for (const tid of item.tactics) {
+      const tactic = mitreTactics.find((t) => t.id === tid);
+      const name = tactic?.name || tid;
+      if (!acc[name]) acc[name] = [];
+      acc[name].push(item);
+    }
     return acc;
   }, {});
 
@@ -665,7 +681,7 @@ export function ThreatIntelPage() {
                       <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2 bg-slate-50 border-b border-slate-200 sticky left-0 z-10">
                         Technique
                       </th>
-                      {mitreTactics.map((tactic) => (
+                      {mitreTacticsList.map((tactic) => (
                         <th
                           key={tactic}
                           className="text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2 py-2 bg-slate-50 border-b border-slate-200"
@@ -678,22 +694,22 @@ export function ThreatIntelPage() {
                   </thead>
                   <tbody>
                     {mitreData.map((item) => (
-                      <tr key={`${item.tactic_id}-${item.technique_id}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="px-3 py-2 sticky left-0 bg-white">
                           <div className="flex items-center gap-2">
                             <code className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 whitespace-nowrap">
-                              {item.technique_id}
+                              {item.id}
                             </code>
-                            <span className="text-xs text-slate-700 truncate max-w-[180px]">{item.technique_name}</span>
+                            <span className="text-xs text-slate-700 truncate max-w-[180px]" title={item.name}>{item.name}</span>
                           </div>
                         </td>
-                        {mitreTactics.map((tactic) => {
-                          const match = mitreByTactic[tactic]?.find((m) => m.technique_id === item.technique_id);
+                        {mitreTacticsList.map((tactic) => {
+                          const match = mitreByTactic[tactic]?.find((m) => m.id === item.id);
                           return (
                             <td key={tactic} className="px-2 py-2 text-center" style={{ minWidth: '90px' }}>
                               {match ? (
-                                <div className={`w-full h-7 rounded ${getHeatColor(match.incident_count)} flex items-center justify-center text-xs font-medium text-slate-700`}>
-                                  {match.incident_count}
+                                <div className="w-full h-7 rounded bg-brand-100 flex items-center justify-center">
+                                  <span className="w-3 h-3 rounded-full bg-brand-500" />
                                 </div>
                               ) : (
                                 <div className="w-full h-7 rounded bg-slate-50" />
