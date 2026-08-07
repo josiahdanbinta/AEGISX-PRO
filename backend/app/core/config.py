@@ -295,6 +295,12 @@ class Settings(BaseSettings):
     FEATURE_SLACK_BOT: bool = False
     FEATURE_AI_REMEDIATION: bool = False
 
+    # ── Edition ──────────────────────────────────────────────────
+    EDITION: str = "community"  # "community" | "enterprise"
+    MAX_TENANTS_COMMUNITY: int = 3
+    MAX_ENDPOINTS_COMMUNITY: int = 50
+    MAX_SOAR_PLAYBOOKS_COMMUNITY: int = 5
+
     # ── Slack Bot ─────────────────────────────────────────────────
     SLACK_BOT_TOKEN: Optional[str] = None
     SLACK_APP_TOKEN: Optional[str] = None
