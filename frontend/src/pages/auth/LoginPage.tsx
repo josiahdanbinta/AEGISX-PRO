@@ -118,7 +118,7 @@ export function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
-          AEGISX Platform v1.0.0 — Protected by industry-standard encryption
+          AEGISX Platform v2.0.0 — Protected by industry-standard encryption
         </p>
 
         {/* Theme Toggle */}

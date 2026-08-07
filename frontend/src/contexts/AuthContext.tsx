@@ -1,6 +1,17 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 import { authService } from '@/services/auth';
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return {};
+  }
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -37,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.requires_mfa) {
         setLoading(false);
         throw { mfaRequired: true, mfa_session_token: res.mfa_session_token };
+      }
+      useAuthStore.getState().setToken(res.access_token);
+      const payload = decodeJwtPayload(res.access_token);
+      if (payload.tenant_id) {
+        useAppStore.getState().setSelectedTenant(payload.tenant_id as string);
       }
       const user = await authService.getMe();
       setAuth(user, res.access_token, res.refresh_token);

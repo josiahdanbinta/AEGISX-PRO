@@ -514,6 +514,22 @@ class NotificationHistory(TenantMixin, Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class NotificationTemplate(TenantMixin, TimestampMixin, Base):
+    __tablename__ = "notification_templates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="system", nullable=False)
+    subject: Mapped[str] = mapped_column(String(500), nullable=False)
+    body_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    body_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    variables: Mapped[Optional[list]] = mapped_column(ARRAY(String), default=[])
+    channels: Mapped[Optional[list]] = mapped_column(ARRAY(String), default=["email"])
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
+
 class NotificationPreference(TenantMixin, Base):
     __tablename__ = "notification_preferences"
 
@@ -525,6 +541,21 @@ class NotificationPreference(TenantMixin, Base):
     report_ready: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     daily_digest: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     quiet_hours_start: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
-    quiet_hours_end: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class AgentCommand(Base):
+    """Commands queued for agent execution (kill process, isolate, scan, etc)."""
+    __tablename__ = "agent_commands"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agents.id"), nullable=False, index=True)
+    command: Mapped[str] = mapped_column(String(100), nullable=False)
+    params: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="queued", nullable=False)
+    output: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
+    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -151,7 +151,7 @@ export function VulnerabilitiesPage() {
     setLoading(true);
     setError(null);
     api.get<PaginatedResponse<Vulnerability>>('/vulnerabilities', { params: buildParams() })
-      .then((res) => { setData(res.data); setTotal(res.total); })
+      .then((res) => { setData(res.items); setTotal(res.total); })
       .catch((err) => setError(err?.error?.message || 'Failed to load vulnerabilities'))
       .finally(() => setLoading(false));
   }, [buildParams]);

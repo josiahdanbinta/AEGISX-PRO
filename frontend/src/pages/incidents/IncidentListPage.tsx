@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Shield, Search, Plus, AlertTriangle, AlertCircle, AlertOctagon,
   Info, BarChart3, ChevronDown, Filter, X,
@@ -82,6 +83,7 @@ const severityOptions: { value: string; label: string }[] = [
 ];
 
 export function IncidentListPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,15 +119,15 @@ export function IncidentListPage() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    api.get<PaginatedResponse<Incident>>('/incidents', { params: buildParams() })
+    api.get<{ items: Incident[]; meta: { total_items: number; page: number; page_size: number; total_pages: number } }>('/incidents', { params: buildParams() })
       .then((res) => {
-        setData(res.data);
-        setTotal(res.total);
+        setData(res.items);
+        setTotal(res.meta.total_items);
+        setTotalPages(res.meta.total_pages);
       })
       .catch((err) => {
-        setError(err?.error?.message || 'Failed to load incidents');
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, [buildParams]);
 
   useEffect(() => {
@@ -228,7 +230,7 @@ export function IncidentListPage() {
             {hasActiveFilters && ' (filtered)'}
           </p>
         </div>
-        <Button size="md">
+        <Button size="md" onClick={() => navigate('/incidents/new')}>
           <Plus className="w-4 h-4" />
           New Incident
         </Button>
@@ -320,17 +322,7 @@ export function IncidentListPage() {
           </div>
         )}
 
-        {error && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <AlertCircle className="w-10 h-10 text-red-400" />
-            <p className="text-red-600 font-medium">{error}</p>
-            <Button variant="secondary" size="sm" onClick={() => { setPage(1); setLoading(true); setError(null); }}>
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {!loading && !error && (
+        {!loading && (
           <Table
             columns={columns}
             data={(data as unknown) as Record<string, unknown>[]}
@@ -342,7 +334,7 @@ export function IncidentListPage() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSort={handleSort}
-            onRowClick={() => {}}
+            onRowClick={(row: Record<string, unknown>) => navigate(`/incidents/${row.id}`)}
           />
         )}
       </Card>

@@ -344,7 +344,7 @@ class IncidentStatsResponse(BaseModel):
 @router.post("/", response_model=IncidentResponse, status_code=status.HTTP_201_CREATED)
 async def create_incident(
     body: IncidentCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireIncidentResponder),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -405,9 +405,33 @@ async def create_incident(
     )
 
 
+@router.get("/severity-counts")
+async def severity_counts(
+    current_user: dict = Depends(RequireSOCAnalyst),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    result = await db.execute(
+        select(Incident.severity, func.count(Incident.id))
+        .where(Incident.tenant_id == tid)
+        .group_by(Incident.severity)
+    )
+    sevs = dict(result.all())
+    return {
+        "counts": {
+            "critical": sevs.get("critical", 0),
+            "high": sevs.get("high", 0),
+            "medium": sevs.get("medium", 0),
+            "low": sevs.get("low", 0),
+            "info": sevs.get("info", 0),
+        }
+    }
+
+
 @router.get("/", response_model=IncidentListResponse)
 async def list_incidents(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireSOCAnalyst),
     tenant_id: str = Depends(require_tenant),
     pagination: PaginationParams = Depends(),
     status: Optional[IncidentStatus] = Query(default=None),
@@ -482,7 +506,7 @@ async def list_incidents(
 @router.get("/{incident_id}", response_model=IncidentDetailResponse)
 async def get_incident(
     incident_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireSOCAnalyst),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -557,7 +581,7 @@ async def get_incident(
 async def update_incident(
     incident_id: str,
     body: IncidentUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireIncidentResponder),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -644,7 +668,7 @@ async def update_incident(
 @router.delete("/{incident_id}", response_model=MessageResponse)
 async def delete_incident(
     incident_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireSOCManager),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -678,7 +702,7 @@ async def delete_incident(
 async def assign_incident(
     incident_id: str,
     body: AssignRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireSOCManager),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -736,7 +760,7 @@ async def assign_incident(
 async def escalate_incident(
     incident_id: str,
     body: EscalateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireIncidentResponder),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -795,7 +819,7 @@ async def escalate_incident(
 async def close_incident(
     incident_id: str,
     body: CloseRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireIncidentResponder),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -858,7 +882,7 @@ async def close_incident(
 async def reopen_incident(
     incident_id: str,
     body: Optional[ReopenRequest] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireIncidentResponder),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):
@@ -917,7 +941,7 @@ async def reopen_incident(
 async def merge_incident(
     incident_id: str,
     body: MergeRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(RequireSOCManager),
     tenant_id: str = Depends(require_tenant),
     db: AsyncSession = Depends(get_db),
 ):

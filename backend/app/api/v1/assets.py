@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.models import Asset, AssetGroup, Agent, Vulnerability, Alert, Incident, IncidentAsset, AuditLog
+from app.models import Asset, AssetGroup, Agent, Vulnerability, Alert, Incident, IncidentAsset, AuditLog, Tenant
 
 from app.api.deps import (
     PaginationParams,
@@ -337,6 +337,18 @@ async def create_asset(
 ):
     tid = uuid.UUID(tenant_id)
     uid = uuid.UUID(current_user["user_id"])
+
+    # Quota enforcement
+    tenant = (await db.execute(select(Tenant).where(Tenant.id == tid))).scalar_one_or_none()
+    if tenant:
+        asset_count = (await db.execute(
+            select(func.count(Asset.id)).where(Asset.tenant_id == tid)
+        )).scalar() or 0
+        if asset_count >= tenant.quota_assets:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Asset quota exceeded ({tenant.quota_assets}). Contact your administrator to upgrade.",
+            )
 
     existing = (await db.execute(
         select(Asset).where(

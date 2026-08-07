@@ -53,6 +53,14 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.agent_tasks.check_agent_heartbeats",
         "schedule": 60.0,
     },
+    "sigma-rule-evaluation": {
+        "task": "app.tasks.detection_tasks.evaluate_all_rules",
+        "schedule": 300.0,
+    },
+    "event-correlation": {
+        "task": "app.tasks.detection_tasks.run_correlation",
+        "schedule": 600.0,
+    },
     "vulnerability-scan-schedule": {
         "task": "app.tasks.vulnerability_tasks.schedule_scans",
         "schedule": 3600.0,

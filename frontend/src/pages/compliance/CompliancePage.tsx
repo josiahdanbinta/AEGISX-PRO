@@ -110,7 +110,7 @@ export function CompliancePage() {
 
   useEffect(() => {
     api.get<ComplianceGap[]>("/compliance/gaps")
-      .then((res) => setGaps(res))
+      .then((res) => setGaps((res as unknown as { items: ComplianceGap[] }).items))
       .catch(() => {});
   }, []);
 

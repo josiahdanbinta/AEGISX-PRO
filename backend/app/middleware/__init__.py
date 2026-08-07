@@ -99,14 +99,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https:; "
-            "font-src 'self'; "
-            "connect-src 'self' ws: wss:;"
-        )
+        if settings.APP_ENV == "development":
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self'; "
+                "connect-src 'self' ws: wss:;"
+            )
+        else:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self'; "
+                "style-src 'self'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self'; "
+                "connect-src 'self' ws: wss:;"
+            )
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = (
             "camera=(), microphone=(), geolocation=(), payment=()"
@@ -128,10 +138,16 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 def setup_middleware(app: FastAPI) -> None:
     """Configure all middleware for the FastAPI application."""
 
+    cors_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+    if not cors_origins and settings.APP_ENV == "production":
+        cors_origins = []
+    elif not cors_origins:
+        cors_origins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:8080"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS] or ["*"],
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=True if cors_origins else False,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "Authorization",
@@ -141,6 +157,7 @@ def setup_middleware(app: FastAPI) -> None:
             "X-Request-ID",
             "Accept",
             "Origin",
+            "X-API-Key",
         ],
         expose_headers=[
             "X-Correlation-ID",
@@ -151,10 +168,15 @@ def setup_middleware(app: FastAPI) -> None:
         max_age=600,
     )
 
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["*"],
-    )
+    trusted_hosts_env = getattr(settings, 'TRUSTED_HOSTS', None)
+    if trusted_hosts_env:
+        import json as _json
+        try:
+            trusted_hosts = _json.loads(trusted_hosts_env) if isinstance(trusted_hosts_env, str) else trusted_hosts_env
+        except (_json.JSONDecodeError, TypeError):
+            trusted_hosts = [trusted_hosts_env]
+        if trusted_hosts:
+            app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(TenantContextMiddleware)

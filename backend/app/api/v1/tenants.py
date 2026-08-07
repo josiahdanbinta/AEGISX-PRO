@@ -220,7 +220,27 @@ async def list_tenants(
     items = result.scalars().all()
 
     return TenantListResponse(
-        items=[TenantResponse.model_validate(row) for row in items],
+        items=[
+            TenantResponse(
+                id=str(row.id),
+                name=row.name,
+                display_name=row.display_name,
+                domain=row.domain,
+                subscription_tier=row.subscription_tier,
+                status=row.status,
+                settings=row.settings,
+                quota_assets=row.quota_assets,
+                quota_users=row.quota_users,
+                quota_storage_gb=row.quota_storage_gb,
+                contact_email=row.contact_email,
+                contact_phone=row.contact_phone,
+                address=row.address,
+                metadata=row.meta_data,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+            )
+            for row in items
+        ],
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
@@ -242,7 +262,14 @@ async def get_tenant(
     t = (await db.execute(select(Tenant).where(Tenant.id == uuid.UUID(tenant_id)))).scalar_one_or_none()
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
-    return TenantResponse.model_validate(t)
+    return TenantResponse(
+        id=str(t.id), name=t.name, display_name=t.display_name, domain=t.domain,
+        subscription_tier=t.subscription_tier, status=t.status, settings=t.settings,
+        quota_assets=t.quota_assets, quota_users=t.quota_users,
+        quota_storage_gb=t.quota_storage_gb, contact_email=t.contact_email,
+        contact_phone=t.contact_phone, address=t.address, metadata=t.meta_data,
+        created_at=t.created_at, updated_at=t.updated_at,
+    )
 
 
 @router.patch(

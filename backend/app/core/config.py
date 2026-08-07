@@ -252,5 +252,25 @@ class Settings(BaseSettings):
     FEATURE_AUDIT: bool = True
     FEATURE_GRAPHQL: bool = True
 
+    _INSECURE_DEFAULTS = [
+        "change-me-in-production-use-secrets-manager",
+        "change-me-jwt-secret-use-strong-random",
+        "change-me-agent-key",
+        "change-me-postgres-password",
+    ]
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self):
+        if self.APP_ENV == "production":
+            for name, value in self.__dict__.items():
+                if isinstance(value, str):
+                    for insecure in self._INSECURE_DEFAULTS:
+                        if insecure in value.lower():
+                            raise ValueError(
+                                f"Insecure default detected for '{name}'. "
+                                f"Set a strong value via environment variable in production."
+                            )
+        return self
+
 
 settings = Settings()

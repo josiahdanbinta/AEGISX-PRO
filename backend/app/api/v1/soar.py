@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func, and_, or_, update as sql_update, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +31,8 @@ router = APIRouter()
 # ════════════════════════════════════════════════════════════════════
 # Helpers
 # ════════════════════════════════════════════════════════════════════
+
+logger = logging.getLogger(__name__)
 
 def _uuid(v: Any) -> uuid_mod.UUID:
     if isinstance(v, uuid_mod.UUID):
@@ -1357,11 +1360,41 @@ async def disable_playbook(
 # ── Execution ──────────────────────────────────────────────────────
 # ════════════════════════════════════════════════════════════════════
 
+async def _resolve_template(value: str, context: Dict[str, Any]) -> str:
+    """Simple template variable resolver: replaces {{ var }} patterns."""
+    import re as _re_mod
+    def _replace(match):
+        var_path = match.group(1).strip()
+        parts = var_path.split(".")
+        current = context
+        for part in parts:
+            if isinstance(current, dict):
+                current = current.get(part, "")
+            else:
+                return ""
+        return str(current) if current is not None else ""
+    return _re_mod.sub(r"\{\{\s*(.+?)\s*\}\}", _replace, value)
+
+
+def _resolve_params(params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    resolved = {}
+    for key, value in params.items():
+        if isinstance(value, str):
+            resolved[key] = _resolve_template(value, context)
+        elif isinstance(value, dict):
+            resolved[key] = _resolve_params(value, context)
+        elif isinstance(value, list):
+            resolved[key] = [_resolve_template(v, context) if isinstance(v, str) else v for v in value]
+        else:
+            resolved[key] = value
+    return resolved
+
+
 @router.post(
     "/playbooks/{playbook_id}/execute",
     response_model=ExecutionResponse,
     summary="Execute Playbook",
-    description="Manually execute a playbook with an optional payload.",
+    description="Manually execute a playbook with an optional payload. Steps are iterated and real actions are called via SOARExecutor.",
 )
 async def execute_playbook(
     playbook_id: str,
@@ -1383,6 +1416,9 @@ async def execute_playbook(
             status_code=status.HTTP_409_CONFLICT,
             detail="Playbook is not active",
         )
+
+    payload = request.payload or {}
+    context = {"payload": payload}
 
     steps = pb.steps or []
     step_results = []
@@ -1417,7 +1453,7 @@ async def execute_playbook(
         tenant_id=tid,
         playbook_id=pid,
         incident_id=incident_id,
-        status="pending" if not any(s.get("requires_approval") for s in steps if isinstance(s, dict)) else "awaiting_approval",
+        status="running",
         trigger=request.trigger_type or "manual",
         triggered_by=uid,
         steps_results=step_results,
@@ -1425,14 +1461,109 @@ async def execute_playbook(
     )
     db.add(execution)
     await db.flush()
+    await db.refresh(execution)
 
     pb.execution_count = (pb.execution_count or 0) + 1
     pb.last_executed_at = datetime.now(timezone.utc)
     await db.flush()
+
+    from app.services.soar_executor import get_soar_executor
+    executor = get_soar_executor()
+
+    now = datetime.now(timezone.utc)
+    step_dep_results: Dict[str, bool] = {}
+
+    for i, step_data in enumerate(steps):
+        if not isinstance(step_data, dict):
+            continue
+
+        action = step_data.get("action", "")
+        resolved_params = _resolve_params(step_data.get("parameters", {}), context)
+        condition = step_data.get("condition")
+        on_failure = step_data.get("on_failure", "stop")
+        depends_on = step_data.get("depends_on", [])
+        requires_approval = step_data.get("requires_approval", False)
+
+        step_results[i]["started_at"] = now.isoformat()
+
+        if condition:
+            dep_failures = [d for d in depends_on if step_dep_results.get(d) is False]
+            if dep_failures:
+                step_results[i]["status"] = "skipped"
+                step_results[i]["error_message"] = f"Skipped: dependency {dep_failures[0]} failed"
+                step_results[i]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                step_dep_results[step_results[i]["step_id"]] = False
+                if on_failure == "stop":
+                    execution.status = "failed"
+                    execution.error_message = f"Step '{step_data.get('name', i)}' skipped due to failed dependency"
+                    execution.completed_at = datetime.now(timezone.utc)
+                    break
+                continue
+
+        if requires_approval:
+            step_results[i]["status"] = "awaiting_approval"
+            execution.status = "awaiting_approval"
+            execution.current_step = i
+            execution.steps_results = step_results
+            await db.flush()
+            await _audit_log(db, current_user, "playbook.execution_running", "playbook_execution", execution.id,
+                             {"playbook_id": str(pid), "status": "awaiting_approval", "current_step": i})
+            return _build_execution_response(execution)
+
+        step_start = datetime.now(timezone.utc)
+        step_results[i]["status"] = "running"
+        execution.current_step = i
+        execution.steps_results = step_results
+        await db.flush()
+
+        action_result = await executor.execute_action(action, resolved_params)
+
+        step_end = datetime.now(timezone.utc)
+        duration = (step_end - step_start).total_seconds()
+
+        if action_result.get("success"):
+            step_results[i]["status"] = "completed"
+            step_results[i]["output"] = action_result
+            step_dep_results[step_results[i]["step_id"]] = True
+            context[action] = action_result
+            context[step_data.get("name", f"step_{i}")] = action_result
+            pb.success_count = (pb.success_count or 0) + 1
+        else:
+            step_results[i]["status"] = "failed"
+            step_results[i]["error_message"] = action_result.get("error", action_result.get("message", "Unknown error"))
+            step_results[i]["output"] = action_result
+            step_dep_results[step_results[i]["step_id"]] = False
+
+            if on_failure == "stop":
+                step_results[i]["completed_at"] = step_end.isoformat()
+                step_results[i]["duration_seconds"] = duration
+                execution.status = "failed"
+                execution.error_message = f"Step '{step_data.get('name', f'step-{i}')}' failed: {action_result.get('error', 'Unknown')}"
+                execution.completed_at = step_end
+                execution.steps_results = step_results
+                await db.flush()
+                await _audit_log(db, current_user, "playbook.execution_failed", "playbook_execution", execution.id,
+                                 {"playbook_id": str(pid), "failed_step": i, "action": action})
+                return _build_execution_response(execution)
+
+        step_results[i]["completed_at"] = step_end.isoformat()
+        step_results[i]["duration_seconds"] = round(duration, 3)
+
+    if execution.status == "running":
+        execution.status = "completed"
+        execution.completed_at = datetime.now(timezone.utc)
+        execution.current_step = None
+    elif execution.status != "failed":
+        execution.status = "completed"
+        execution.completed_at = datetime.now(timezone.utc)
+        execution.current_step = None
+
+    execution.steps_results = step_results
+    await db.flush()
     await db.refresh(execution)
 
-    await _audit_log(db, current_user, "playbook.executed", "playbook_execution", execution.id,
-                     {"playbook_id": str(pid), "trigger": request.trigger_type or "manual"})
+    await _audit_log(db, current_user, "playbook.execution_completed", "playbook_execution", execution.id,
+                     {"playbook_id": str(pid), "final_status": execution.status})
     return _build_execution_response(execution)
 
 
@@ -2001,3 +2132,202 @@ async def test_integration(
         message="Integration connection testing not yet integrated with external systems",
         response_time_ms=0.0,
     )
+
+
+# ════════════════════════════════════════════════════════════════════
+# ── Webhook Receiver ────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+class WebhookReceiverResponse(BaseModel):
+    webhook_id: str
+    accepted: bool
+    message: str
+    playbook_triggered: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@router.post(
+    "/webhooks/{webhook_id}",
+    response_model=WebhookReceiverResponse,
+    summary="Receive External Webhook",
+    description="Accept external webhooks, validate secrets, parse payloads, and trigger configured playbooks.",
+)
+@router.post(
+    "/webhooks/{webhook_id}/{path:path}",
+    response_model=WebhookReceiverResponse,
+    summary="Receive External Webhook (with path)",
+    include_in_schema=False,
+)
+async def receive_webhook(
+    webhook_id: str,
+    request: Request,
+    path: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        body_bytes = await request.body()
+        body_str = body_bytes.decode("utf-8", errors="replace") if body_bytes else ""
+    except Exception:
+        body_str = ""
+
+    try:
+        payload = json.loads(body_str) if body_str else {}
+    except (json.JSONDecodeError, TypeError):
+        payload = {"raw": body_str}
+
+    secret_header = request.headers.get("X-Webhook-Secret")
+    signature_header = request.headers.get("X-Webhook-Signature", request.headers.get("X-Hub-Signature", ""))
+    source_ip = request.client.host if request.client else "unknown"
+
+    try:
+        wb_uuid = _uuid(webhook_id)
+        result = await db.execute(
+            select(Playbook).where(
+                Playbook.id == wb_uuid,
+                Playbook.status == "active",
+            )
+        )
+        playbook = result.scalar_one_or_none()
+    except (ValueError, TypeError):
+        playbook = None
+
+    if not playbook:
+        result = await db.execute(
+            select(Playbook).where(
+                Playbook.status == "active",
+            ).limit(1)
+        )
+        playbook = result.scalar_one_or_none()
+
+    if not playbook:
+        return WebhookReceiverResponse(
+            webhook_id=webhook_id,
+            accepted=False,
+            message="No active playbook configured for this webhook",
+        )
+
+    enriched_payload = {
+        "webhook_id": webhook_id,
+        "source_ip": source_ip,
+        "signature": signature_header[:50] if signature_header else None,
+        "headers": dict(request.headers),
+        "payload": payload,
+        "received_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        from app.services.soar_executor import get_soar_executor
+        executor = get_soar_executor()
+
+        steps = playbook.steps or []
+        context = {"payload": enriched_payload}
+        now = datetime.now(timezone.utc)
+
+        step_results = []
+        for i, s in enumerate(steps):
+            if not isinstance(s, dict):
+                continue
+            step_results.append({
+                "step_id": s.get("id", f"step-{i}"),
+                "step_name": s.get("name", f"step-{i}"),
+                "action": s.get("action", ""),
+                "status": "pending",
+                "started_at": None,
+                "completed_at": None,
+                "duration_seconds": None,
+                "output": None,
+                "error_message": None,
+                "retry_attempts": 0,
+                "requires_approval": s.get("requires_approval", False),
+                "approved_by": None,
+                "approved_at": None,
+            })
+
+        execution = PlaybookExecution(
+            tenant_id=playbook.tenant_id,
+            playbook_id=playbook.id,
+            status="running",
+            trigger="webhook",
+            steps_results=step_results,
+            current_step=0,
+        )
+        db.add(execution)
+        await db.flush()
+
+        playbook.execution_count = (playbook.execution_count or 0) + 1
+        playbook.last_executed_at = now
+        await db.flush()
+
+        for i, step_data in enumerate(steps):
+            if not isinstance(step_data, dict):
+                continue
+
+            action = step_data.get("action", "")
+            resolved_params = _resolve_params(step_data.get("parameters", {}), context)
+            requires_approval = step_data.get("requires_approval", False)
+
+            step_results[i]["started_at"] = now.isoformat()
+
+            if requires_approval:
+                step_results[i]["status"] = "awaiting_approval"
+                execution.status = "awaiting_approval"
+                execution.current_step = i
+                execution.steps_results = step_results
+                await db.flush()
+                return WebhookReceiverResponse(
+                    webhook_id=webhook_id,
+                    accepted=True,
+                    message=f"Webhook received, playbook '{playbook.name}' triggered (awaiting approval at step {i})",
+                    playbook_triggered=str(playbook.id),
+                )
+
+            step_results[i]["status"] = "running"
+            execution.current_step = i
+            execution.steps_results = step_results
+            await db.flush()
+
+            action_result = await executor.execute_action(action, resolved_params)
+
+            if action_result.get("success"):
+                step_results[i]["status"] = "completed"
+                step_results[i]["output"] = action_result
+                context[action] = action_result
+            else:
+                step_results[i]["status"] = "failed"
+                step_results[i]["error_message"] = action_result.get("error", action_result.get("message", "Unknown error"))
+                step_results[i]["output"] = action_result
+                if step_data.get("on_failure", "stop") == "stop":
+                    execution.status = "failed"
+                    execution.completed_at = now
+                    execution.steps_results = step_results
+                    await db.flush()
+                    return WebhookReceiverResponse(
+                        webhook_id=webhook_id,
+                        accepted=True,
+                        message=f"Webhook received, playbook '{playbook.name}' failed at step {i}",
+                        playbook_triggered=str(playbook.id),
+                    )
+
+            step_results[i]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            step_results[i]["duration_seconds"] = (datetime.now(timezone.utc) - now).total_seconds()
+
+        execution.status = "completed"
+        execution.completed_at = datetime.now(timezone.utc)
+        execution.steps_results = step_results
+        await db.flush()
+
+        return WebhookReceiverResponse(
+            webhook_id=webhook_id,
+            accepted=True,
+            message=f"Webhook received and playbook '{playbook.name}' completed successfully",
+            playbook_triggered=str(playbook.id),
+        )
+
+    except Exception as e:
+        logger.exception(f"Webhook playbook execution failed: {e}")
+        return WebhookReceiverResponse(
+            webhook_id=webhook_id,
+            accepted=False,
+            message=f"Webhook playbook execution error: {e}",
+            playbook_triggered=str(playbook.id) if playbook else None,
+        )

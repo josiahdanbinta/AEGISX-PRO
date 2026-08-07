@@ -42,19 +42,29 @@ interface ThreatCampaign {
   id: string;
   name: string;
   description: string;
-  start_date: string;
-  end_date: string | null;
-  status: 'active' | 'historical';
-  associated_actors: string[];
+  first_seen: string;
+  last_seen: string | null;
+  status: string;
+  threat_actors: Array<{ actor_id: string; name: string }>;
   targeted_sectors: string[];
 }
 
 interface MitreTechnique {
-  tactic_id: string;
-  tactic_name: string;
-  technique_id: string;
-  technique_name: string;
-  incident_count: number;
+  id: string;
+  name: string;
+  description: string;
+  tactics: string[];
+  platforms: string[];
+}
+
+interface MitreTactic {
+  id: string;
+  name: string;
+}
+
+interface MitreResponse {
+  tactics: MitreTactic[];
+  techniques: MitreTechnique[];
 }
 
 const indicatorTypeIcons: Record<string, typeof Globe> = {
@@ -137,6 +147,7 @@ export function ThreatIntelPage() {
 
   // MITRE state
   const [mitreData, setMitreData] = useState<MitreTechnique[]>([]);
+  const [mitreTacticsList, setMitreTacticsList] = useState<MitreTactic[]>([]);
   const [mitreLoading, setMitreLoading] = useState(true);
   const [mitreError, setMitreError] = useState<string | null>(null);
 
@@ -148,7 +159,12 @@ export function ThreatIntelPage() {
     if (indicatorSearch) params.search = indicatorSearch;
     if (indicatorType) params.type = indicatorType;
     api.get<PaginatedResponse<ThreatIndicator>>('/threat-intel/indicators', { params })
-      .then((res) => { setIndicators(res.data); setIndicatorTotal(res.total); })
+      .then((res) => {
+        const data = (res as unknown as { items: ThreatIndicator[] }).items;
+        const meta = (res as unknown as { meta: { total_items: number } }).meta;
+        if (Array.isArray(data)) setIndicators(data);
+        if (meta) setIndicatorTotal(meta.total_items);
+      })
       .catch((err) => setIndicatorError(err?.error?.message || 'Failed to load indicators'))
       .finally(() => setIndicatorLoading(false));
   }, [indicatorPage, indicatorSearch, indicatorType]);
@@ -162,7 +178,10 @@ export function ThreatIntelPage() {
     setFeedLoading(true);
     setFeedError(null);
     api.get<ThreatFeed[]>('/threat-intel/feeds')
-      .then((res) => setFeeds(res))
+      .then((res) => {
+        const data = (res as unknown as { items: ThreatFeed[] }).items;
+        if (Array.isArray(data)) setFeeds(data);
+      })
       .catch((err) => setFeedError(err?.error?.message || 'Failed to load feeds'))
       .finally(() => setFeedLoading(false));
   }, []);
@@ -176,7 +195,10 @@ export function ThreatIntelPage() {
     setActorLoading(true);
     setActorError(null);
     api.get<ThreatActor[]>('/threat-intel/actors')
-      .then((res) => setActors(res))
+      .then((res) => {
+        const data = (res as unknown as { items: ThreatActor[] }).items;
+        if (Array.isArray(data)) setActors(data);
+      })
       .catch((err) => setActorError(err?.error?.message || 'Failed to load threat actors'))
       .finally(() => setActorLoading(false));
   }, []);
@@ -190,7 +212,10 @@ export function ThreatIntelPage() {
     setCampaignLoading(true);
     setCampaignError(null);
     api.get<ThreatCampaign[]>('/threat-intel/campaigns')
-      .then((res) => setCampaigns(res))
+      .then((res) => {
+        const data = (res as unknown as { items: ThreatCampaign[] }).items;
+        if (Array.isArray(data)) setCampaigns(data);
+      })
       .catch((err) => setCampaignError(err?.error?.message || 'Failed to load campaigns'))
       .finally(() => setCampaignLoading(false));
   }, []);
@@ -203,8 +228,12 @@ export function ThreatIntelPage() {
   const fetchMitre = useCallback(() => {
     setMitreLoading(true);
     setMitreError(null);
-    api.get<MitreTechnique[]>('/threat-intel/mitre')
-      .then((res) => setMitreData(res))
+    api.get<MitreResponse>('/threat-intel/mitre')
+      .then((res) => {
+        const data = res as unknown as { techniques: MitreTechnique[]; tactics: MitreTactic[] };
+        if (data.techniques) setMitreData(data.techniques);
+        if (data.tactics) setMitreTacticsList(data.tactics);
+      })
       .catch((err) => setMitreError(err?.error?.message || 'Failed to load MITRE data'))
       .finally(() => setMitreLoading(false));
   }, []);
@@ -292,23 +321,21 @@ export function ThreatIntelPage() {
 
   // Group MITRE data by tactic
   const mitreByTactic = mitreData.reduce<Record<string, MitreTechnique[]>>((acc, item) => {
-    if (!acc[item.tactic_name]) acc[item.tactic_name] = [];
-    acc[item.tactic_name].push(item);
+    for (const tid of item.tactics) {
+      const tactic = mitreTacticsList.find((t) => t.id === tid);
+      const name = tactic?.name || tid;
+      if (!acc[name]) acc[name] = [];
+      acc[name].push(item);
+    }
     return acc;
   }, {});
 
-  const mitreTactics = Object.keys(mitreByTactic);
-  const maxCount = Math.max(1, ...mitreData.map((d) => d.incident_count));
-
-  const getHeatColor = (count: number): string => {
-    const ratio = count / maxCount;
-    if (ratio === 0) return 'bg-slate-50';
-    if (ratio < 0.2) return 'bg-emerald-100';
-    if (ratio < 0.4) return 'bg-yellow-100';
-    if (ratio < 0.6) return 'bg-orange-200';
-    if (ratio < 0.8) return 'bg-red-200';
-    return 'bg-red-400';
-  };
+  function getHeatColor(count: number): string {
+    if (count === 0) return 'bg-slate-50';
+    if (count <= 1) return 'bg-emerald-100 text-emerald-800';
+    if (count <= 3) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  }
 
   return (
     <div className="space-y-6">
@@ -577,21 +604,21 @@ export function ThreatIntelPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{new Date(campaign.start_date).toLocaleDateString()}</span>
-                        {campaign.end_date && (
-                          <span> – {new Date(campaign.end_date).toLocaleDateString()}</span>
-                        )}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{new Date(campaign.first_seen).toLocaleDateString()}</span>
+                    {campaign.last_seen && (
+                      <span> – {new Date(campaign.last_seen).toLocaleDateString()}</span>
+                    )}
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                    {campaign.associated_actors.length > 0 && (
+                    {campaign.threat_actors?.length > 0 && (
                       <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <Users className="w-3.5 h-3.5" />
                         <span className="font-medium">Actors:</span>
-                        {campaign.associated_actors.join(', ')}
+                        {campaign.threat_actors.map((a: { name: string }) => a.name).join(', ')}
                       </div>
                     )}
                     {campaign.targeted_sectors.length > 0 && (
@@ -648,35 +675,35 @@ export function ThreatIntelPage() {
                       <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2 bg-slate-50 border-b border-slate-200 sticky left-0 z-10">
                         Technique
                       </th>
-                      {mitreTactics.map((tactic) => (
+                      {mitreTacticsList.map((tactic) => (
                         <th
-                          key={tactic}
+                          key={tactic.id}
                           className="text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2 py-2 bg-slate-50 border-b border-slate-200"
-                          style={{ minWidth: '90px', maxWidth: '90px', writingMode: 'horizontal-tb' }}
+                          style={{ minWidth: '90px', maxWidth: '90px' }}
                         >
-                          {tactic}
+                          {tactic.name}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {mitreData.map((item) => (
-                      <tr key={`${item.tactic_id}-${item.technique_id}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="px-3 py-2 sticky left-0 bg-white">
                           <div className="flex items-center gap-2">
                             <code className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 whitespace-nowrap">
-                              {item.technique_id}
+                              {item.id}
                             </code>
-                            <span className="text-xs text-slate-700 truncate max-w-[180px]">{item.technique_name}</span>
+                            <span className="text-xs text-slate-700 truncate max-w-[180px]" title={item.name}>{item.name}</span>
                           </div>
                         </td>
-                        {mitreTactics.map((tactic) => {
-                          const match = mitreByTactic[tactic]?.find((m) => m.technique_id === item.technique_id);
+                        {mitreTacticsList.map((tactic) => {
+                          const match = mitreByTactic[tactic.name]?.find((m) => m.id === item.id);
                           return (
-                            <td key={tactic} className="px-2 py-2 text-center" style={{ minWidth: '90px' }}>
+                            <td key={tactic.id} className="px-2 py-2 text-center" style={{ minWidth: '90px' }}>
                               {match ? (
-                                <div className={`w-full h-7 rounded ${getHeatColor(match.incident_count)} flex items-center justify-center text-xs font-medium text-slate-700`}>
-                                  {match.incident_count}
+                                <div className="w-full h-7 rounded bg-brand-100 flex items-center justify-center">
+                                  <span className="w-3 h-3 rounded-full bg-brand-500" />
                                 </div>
                               ) : (
                                 <div className="w-full h-7 rounded bg-slate-50" />

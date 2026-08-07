@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, RequireSOCAnalyst, RequireTenantAdmin
+from app.api.deps import get_current_user, RequireSOCAnalyst, RequireTenantAdmin, require_tenant
 from app.core.config import settings
 from app.core.database import get_db
 from app.models import Agent, Asset, AuditLog
@@ -453,3 +453,123 @@ async def get_registration_key(
             "windows_cmd": f"curl -o aegisx-agent.zip http://SERVER_IP:8000/api/v1/agent/download && tar -xf aegisx-agent.zip && cd agent && python -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt && python agent.py --server http://SERVER_IP:8000 --key {settings.AGENT_REGISTRATION_KEY} --tenant {current_user['tenant_id']}",
         },
     }
+
+
+# ── EDR Response Endpoints ───────────────────────────────────────
+
+@router.get("/commands", summary="Get pending commands for authenticated agent")
+async def get_pending_commands(
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    agent_id = current_user.get("user_id")
+    commander = AgentCommander(db)
+    commands = await commander.get_pending_commands(agent_id)
+    return {"commands": commands, "count": len(commands)}
+
+
+@router.post("/command-result", summary="Agent reports command result")
+async def report_command_result(
+    body: dict,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    result = await commander.report_command_result(
+        command_id=body.get("command_id", ""),
+        success=body.get("success", False),
+        output_data=body.get("output", ""),
+        error=body.get("error", ""),
+    )
+    return result
+
+
+@router.post("/{agent_id}/kill-process", summary="Kill process on endpoint")
+async def kill_process(
+    agent_id: str,
+    body: dict,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    result = await commander.kill_process(agent_id, body.get("pid", 0), body.get("process_name", ""))
+    return result
+
+
+@router.post("/{agent_id}/isolate", summary="Isolate endpoint from network")
+async def isolate_endpoint(
+    agent_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.isolate_endpoint(agent_id)
+
+
+@router.post("/{agent_id}/release", summary="Release isolated endpoint")
+async def release_endpoint(
+    agent_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.release_endpoint(agent_id)
+
+
+@router.post("/{agent_id}/quarantine-file", summary="Quarantine file on endpoint")
+async def quarantine_file(
+    agent_id: str,
+    body: dict,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.quarantine_file(agent_id, body.get("filepath", ""))
+
+
+@router.post("/{agent_id}/forensics", summary="Collect forensic data")
+async def collect_forensics(
+    agent_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.collect_forensics(agent_id)
+
+
+@router.post("/{agent_id}/scan", summary="Trigger full endpoint scan")
+async def scan_endpoint(
+    agent_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.scan_endpoint(agent_id)
+
+
+@router.get("/{agent_id}/command-history", summary="Get agent command history")
+async def get_command_history(
+    agent_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.agent_commander import AgentCommander
+    commander = AgentCommander(db)
+    return await commander.get_command_history(agent_id)
