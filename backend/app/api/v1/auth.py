@@ -725,6 +725,83 @@ async def request_password_reset(
     return MessageResponse(
         message="Password reset request submitted",
         detail="A tenant administrator must approve this request before the reset can proceed.",
+        request_id=str(prt.id),  # type: ignore
+    )
+
+
+@router.get(
+    "/password/reset-requests",
+    summary="List Pending Reset Requests",
+    description="Super admin or tenant admin lists pending password reset requests.",
+)
+async def list_reset_requests(
+    current_user: dict = Depends(RequireTenantAdmin),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    tid = uuid.UUID(tenant_id)
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.is_used == False,
+        ).join(User, User.id == PasswordResetToken.user_id).where(
+            User.tenant_id == tid,
+        ).order_by(desc(PasswordResetToken.created_at)).limit(50)
+    )
+    tokens = result.scalars().all()
+
+    requests = []
+    for t in tokens:
+        user_result = await db.execute(select(User).where(User.id == t.user_id))
+        user = user_result.scalar_one_or_none()
+        requests.append({
+            "request_id": str(t.id),
+            "user_email": user.email if user else "unknown",
+            "user_name": user.full_name if user else "unknown",
+            "requested_at": t.created_at.isoformat() if t.created_at else None,
+            "expires_at": t.expires_at.isoformat() if t.expires_at else None,
+            "approved_at": t.approved_at.isoformat() if t.approved_at else None,
+            "status": "approved" if t.approved_at else "pending",
+            "is_expired": t.expires_at < datetime.now(timezone.utc) if t.expires_at else False,
+        })
+
+    return {"total": len(requests), "requests": requests}
+
+
+@router.post(
+    "/password/reset-reject/{request_id}",
+    response_model=MessageResponse,
+    summary="Reject Password Reset",
+    description="Super admin or tenant admin rejects a password reset request.",
+)
+async def reject_password_reset(
+    request_id: str,
+    current_user: dict = Depends(RequireTenantAdmin),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        prt_id = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
+
+    prt_result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.id == prt_id,
+            PasswordResetToken.is_used == False,
+        )
+    )
+    prt = prt_result.scalar_one_or_none()
+    if not prt:
+        raise HTTPException(status_code=404, detail="Reset request not found")
+
+    prt.is_used = True
+    await db.flush()
+
+    await _audit_auth(db, current_user, "password_reset_rejected",
+                       details={"request_id": str(prt_id), "user_id": str(prt.user_id)})
+
+    return MessageResponse(
+        message="Password reset request rejected",
+        detail="The reset request has been denied.",
     )
 
 
