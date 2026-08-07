@@ -541,7 +541,7 @@ class NotificationPreference(TenantMixin, Base):
     report_ready: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     daily_digest: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     quiet_hours_start: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
-     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class AgentCommand(Base):
