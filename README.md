@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)]()
 [![Tests](https://img.shields.io/badge/tests-530+-green)]()
 [![API](https://img.shields.io/badge/endpoints-330+-blue)]()
-[![Stubs](https://img.shields.io/badge/unimplemented-0-success)]()
+[![Architecture](https://img.shields.io/badge/tiers-9-orange)]()
 
 ---
 
@@ -27,9 +27,7 @@ Open **http://localhost:8080** — Login: `admin@aegisx.com` / `Admin123!@#`
 
 1. [Installation](#installation)
    - [Docker (Recommended)](#docker-recommended)
-   - [Native Windows](#native-windows)
-   - [Native Linux](#native-linux)
-   - [Native macOS](#native-macos)
+   - [Native Windows / Linux / macOS](#native-windows)
 2. [Kubernetes Deployment](#kubernetes-deployment)
 3. [Agent Deployment](#agent-deployment)
 4. [Platform Overview](#platform-overview)
@@ -55,30 +53,28 @@ cd AEGISX-PRO
 cp .env.example backend/.env
 # Edit backend/.env and set SECRET_KEY + JWT_SECRET_KEY + AGENT_REGISTRATION_KEY
 
-# 3. Start all services (PostgreSQL, Redis, OpenSearch, RabbitMQ, Backend, Celery, Frontend, Nginx)
+# 3. Start all services
 docker-compose up -d
 
 # 4. Initialize database (creates tenant, admin user, roles)
 docker-compose exec backend python setup.py
 ```
 
-**Access the platform:**
+**Services started by Docker Compose (16 containers):**
 
-| Service | URL |
-|---|---|
-| Dashboard | http://localhost:8080 |
-| API Docs | http://localhost:8080/docs |
-| API Health | http://localhost:8001/health |
-| Redis Insight | http://localhost:8001/api/v1/health/ready |
-
-**Startup script (auto-detects your IP):**
-```bash
-# Windows
-.\start.bat
-
-# Linux / macOS
-chmod +x start.sh && ./start.sh
-```
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Dashboard | http://localhost:8080 | AEGISX Platform UI |
+| API Docs | http://localhost:8080/docs | Swagger UI |
+| API Health | http://localhost:8001/health | Backend health check |
+| Kafka | localhost:9092 | Event streaming broker |
+| TimescaleDB | localhost:5434 | Time-series event storage |
+| MinIO API | http://localhost:9000 | S3 object storage |
+| MinIO Console | http://localhost:9001 | MinIO web UI |
+| Prometheus | http://localhost:9090 | Metrics collection |
+| Grafana | http://localhost:3000 | Dashboards |
+| Jaeger | http://localhost:16686 | Distributed tracing |
+| RabbitMQ Admin | http://localhost:15672 | Message broker UI |
 
 ---
 
@@ -122,70 +118,15 @@ Open **http://192.168.2.34:5173** — Login: `admin@aegisx.com` / `Admin123!@#`
 
 ---
 
-### Native Linux
-
-**Prerequisites:** PostgreSQL 15+, Python 3.12+, Redis (optional)
-
-```bash
-# 1. Install PostgreSQL
-sudo apt update
-sudo apt install -y postgresql postgresql-client python3 python3-pip python3-venv
-
-# 2. Create database
-sudo -u postgres createdb aegisx
-sudo -u postgres psql -c "CREATE USER aegisx WITH PASSWORD 'aegisx' SUPERUSER;"
-
-# 3. Clone and setup
-git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
-cd AEGISX-PRO/backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp ../.env.example .env
-# Edit .env with your keys
-
-# 4. Initialize
-python setup.py
-
-# 5. Start
-uvicorn app.main:app --host 0.0.0.0 --port 8001
-```
-
----
-
-### Native macOS
-
-```bash
-# 1. Install PostgreSQL
-brew install postgresql@17
-brew services start postgresql@17
-createdb aegisx
-psql -c "CREATE USER aegisx WITH PASSWORD 'aegisx' SUPERUSER;"
-
-# 2. Clone and setup (same as Linux above)
-git clone https://github.com/josiahdanbinta/AEGISX-PRO.git
-cd AEGISX-PRO/backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp ../.env.example .env
-
-# 3. Initialize and start
-python setup.py
-uvicorn app.main:app --host 0.0.0.0 --port 8001
-```
-
----
-
 ## Kubernetes Deployment
 
 ```bash
-# Deploy with Helm
+# Deploy full 9-tier stack with Helm
 helm install aegisx ./kubernetes/helm/aegisx \
   --namespace aegisx --create-namespace \
   -f ./kubernetes/helm/aegisx/values-prod.yaml
 
-# Development
+# Development (reduced resources, fewer replicas)
 helm install aegisx-dev ./kubernetes/helm/aegisx \
   --namespace aegisx-dev --create-namespace \
   -f ./kubernetes/helm/aegisx/values-dev.yaml
@@ -193,8 +134,23 @@ helm install aegisx-dev ./kubernetes/helm/aegisx \
 
 **Post-install:**
 ```bash
-kubectl exec -it deployment/aegisx-backend -n aegisx -- python setup.py
+kubectl exec -it statefulset/aegisx-postgresql -n aegisx -- \
+  python setup.py
 ```
+
+### Infrastructure Overview
+
+| Tier | Components | Description |
+|------|-----------|-------------|
+| **1** | Nginx, FastAPI Auth, Redis Rate Limiter | API Gateway & Authentication |
+| **2** | Kafka (3-broker StatefulSet), Schema Registry | Data Ingestion pipeline |
+| **3** | Apache Flink (JM + 3 TM, 8 slots each) | Stream processing |
+| **4** | Sigma/YARA Engine, SIEM Correlator, UEBA | Analytics & Detection |
+| **5** | TimescaleDB, ClickHouse, PostgreSQL, MinIO, Redis | Data Storage |
+| **6** | SOC API, Agent Mgmt, Rules Mgmt, Threat Intel | Application Services |
+| **7** | React SPA (13 pages, dark theme) | Frontend & Dashboards |
+| **8** | Kubernetes, Helm, StatefulSets, ArgoCD | Orchestration & Deployment |
+| **9** | Prometheus, Grafana, OpenSearch, Jaeger | Monitoring & Observability |
 
 ---
 
@@ -207,11 +163,6 @@ Deploy the AEGISX agent to monitor endpoints (Windows, Linux, macOS).
 **Windows (PowerShell):**
 ```powershell
 .\deploy\install.ps1 -Server http://YOUR_SERVER:8001 -Key YOUR_REG_KEY -Tenant YOUR_TENANT_ID
-```
-
-**Windows (CMD):**
-```cmd
-deploy\install.cmd http://YOUR_SERVER:8001 YOUR_REG_KEY YOUR_TENANT_ID
 ```
 
 **Linux / macOS:**
@@ -231,12 +182,6 @@ curl -sSL http://YOUR_SERVER:8001/deploy/install.sh | bash -s -- \
 - Detects ransomware activity (file extensions, ransom notes, shadow copy deletion)
 - Real-time system metrics (CPU, memory, disk, network)
 
-### Get Registration Key (Admin)
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  http://YOUR_SERVER:8001/api/v1/agent/registration-key
-```
-
 ---
 
 ## Platform Overview
@@ -244,7 +189,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ### Backend (21 API Routers — 330+ Endpoints)
 
 | Router | Endpoints | Description |
-|---|---|---|
+|--------|-----------|-------------|
 | `auth` | 18 | Login, MFA, password reset, API keys, WebAuthn |
 | `sso` | 12 | SAML, OIDC, LDAP, Microsoft Entra ID |
 | `tenants` | 9 | Multi-tenant management (super admin) |
@@ -269,7 +214,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ### Frontend (13 Pages)
 
 | Page | Features |
-|---|---|
+|------|----------|
 | Executive Dashboard | Live KPIs, threat map, severity charts, AI insights |
 | SOC Dashboard | Real-time alerts, analyst workload, SLA tracking |
 | Assets | Full inventory, hardware/software details, tags |
@@ -287,7 +232,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ### Desktop Agent (7 Collectors)
 
 | Collector | Data |
-|---|---|
+|-----------|------|
 | System | CPU, memory, disks, network, battery, uptime |
 | Hardware | Motherboard, BIOS, RAM, GPU, USB, TPM, Secure Boot |
 | Software | Installed apps, versions, certificates, extensions |
@@ -303,28 +248,14 @@ curl -H "Authorization: Bearer $TOKEN" \
 - **Interactive:** http://localhost:8001/docs (Swagger UI)
 - **Standalone:** http://localhost:8001/redoc
 - **Markdown:** [docs/api/api-reference.md](docs/api/api-reference.md)
-- **Generate from code:** `cd docs/api && python generate_api_docs.py`
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    AEGISX Platform                      │
-├─────────────────────────────────────────────────────────┤
-│  Frontend (React 18 + TS)   │   Backend (FastAPI)       │
-│  TailwindCSS + Framer Motion│   Python 3.12 + async     │
-│  13 pages, dark/light theme │   21 routers, 330+ routes │
-├─────────────────────────────┼───────────────────────────┤
-│  Celery Workers             │   Desktop Agent           │
-│  8 queues, scheduled tasks  │   7 collectors, 3 OS      │
-├─────────────────────────────┴───────────────────────────┤
-│              Infrastructure                             │
-│  PostgreSQL │ Redis │ OpenSearch │ RabbitMQ │ Nginx     │
-│  Docker Compose │ Kubernetes │ Helm                    │
-└─────────────────────────────────────────────────────────┘
-```
+AEGISX follows a 9-tier production architecture. For the full architecture document, see [docs/architecture/README.md](docs/architecture/README.md).
+
+For a detailed gap analysis comparing the current implementation against the target architecture, see [docs/architecture/gap-analysis.md](docs/architecture/gap-analysis.md).
 
 ---
 
@@ -335,16 +266,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```bash
 # Backend (448 tests)
 cd backend
-pytest tests/ -v                     # All tests
-pytest tests/unit/ -v                # Unit tests (models, security, config, deps)
-pytest tests/integration/ -v         # Integration tests (API endpoints)
-pytest tests/security/ -v            # Security tests
-pytest tests/performance/ -v -m performance  # Load/performance tests
+pytest tests/ -v
 
 # Frontend (39 tests)
 cd frontend
-npm test                             # Vitest runner
-npm run test:coverage                # With coverage
+npm test
 
 # Agent (39 tests)
 cd agent
@@ -356,7 +282,7 @@ pytest tests/ -v
 ## Security
 
 | Feature | Implementation |
-|---|---|
+|---------|---------------|
 | Password Hashing | bcrypt (12 rounds) |
 | JWT Tokens | HS256, jti, expiry, refresh rotation |
 | MFA | TOTP + backup codes |
@@ -370,41 +296,22 @@ pytest tests/ -v
 | Rate Limiting | Per-IP, per-endpoint configurable |
 | Security Headers | CSP, HSTS, X-Frame-Options, XSS protection |
 | SQL Injection | Parameterized queries (SQLAlchemy ORM) |
-| CSRF | Token-based (JWT in Authorization header) |
 
 ---
 
 ## Environment Variables
 
-See [.env.example](.env.example) for all 152 configurable options. Key variables:
+See [.env.example](.env.example) for all configurable options. Key variables:
 
 | Variable | Required | Description |
-|---|---|---|
+|----------|----------|-------------|
 | `SECRET_KEY` | Yes | App encryption key (64+ chars) |
 | `JWT_SECRET_KEY` | Yes | JWT signing key (64+ chars) |
 | `AGENT_REGISTRATION_KEY` | Yes | Agent enrollment key |
 | `POSTGRES_HOST` | Yes | PostgreSQL host |
 | `POSTGRES_PASSWORD` | Yes | PostgreSQL password |
+| `KAFKA_BOOTSTRAP_SERVERS` | No | Kafka event streaming (Docker only) |
 | `AI_ENABLED` | No | Enable AI features (requires OpenAI key) |
-| `OPENAI_API_KEY` | No | OpenAI API key for AI features |
-
----
-
-## Project Stats
-
-| Metric | Count |
-|---|---|
-| Total Files | 241 |
-| API Routers | 21 |
-| API Endpoints | 330+ |
-| Database Models | 30 |
-| Frontend Pages | 13 |
-| UI Components | 18 |
-| Agent Collectors | 7 |
-| Test Methods | 530+ |
-| Docker Services | 9 |
-| Helm Templates | 28 |
-| Unimplemented Stubs | 0 |
 
 ---
 

@@ -4,6 +4,7 @@ global:
 config:
   appEnv: "development"
   logLevel: "DEBUG"
+  corsOrigins: "*"
 
 backend:
   replicaCount: 1
@@ -25,12 +26,32 @@ frontend:
   autoscaling:
     enabled: false
 
-ingress:
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+# ── Development: reduced replicas and resources ──────────────────
+postgresql:
+  replicaCount: 1
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+redis:
+  replicaCount: 1
+  maxmemory: "512mb"
+  persistence:
+    size: 5Gi
 
 opensearch:
   replicaCount: 1
+  javaOpts:
+    xms: "512m"
+    xmx: "1g"
+  persistence:
+    size: 20Gi
   resources:
     requests:
       cpu: "500m"
@@ -38,3 +59,49 @@ opensearch:
     limits:
       cpu: "1"
       memory: "2Gi"
+
+rabbitmq:
+  replicaCount: 1
+  persistence:
+    size: 5Gi
+
+# ── Development: disable resource-heavy services ─────────────────
+kafka:
+  enabled: false
+
+schemaRegistry:
+  enabled: false
+
+timescaledb:
+  enabled: false
+
+clickhouse:
+  enabled: false
+
+minio:
+  enabled: false
+
+flink:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+jaeger:
+  enabled: false
+
+argocd:
+  enabled: false
+
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+monitoring:
+  prometheus:
+    enabled: false
+    serviceMonitor:
+      enabled: false

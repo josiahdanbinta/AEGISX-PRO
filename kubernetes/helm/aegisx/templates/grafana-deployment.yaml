@@ -1,0 +1,219 @@
+{{- if .Values.grafana.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-grafana-datasources
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ include "aegisx.fullname" . }}-prometheus:9090
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: "15s"
+      - name: PostgreSQL
+        type: postgres
+        access: proxy
+        url: {{ include "aegisx.fullname" . }}-postgresql-lb:5432
+        database: aegisx
+        user: aegisx
+        editable: true
+        secureJsonData:
+          password: ${POSTGRES_PASSWORD}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  dashboard-provider.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: true
+        updateIntervalSeconds: 10
+        editable: false
+        options:
+          path: /etc/grafana/dashboards
+  platform-health.json: |
+    {
+      "title": "AEGISX Platform Health",
+      "uid": "aegisx-platform-health",
+      "panels": []
+    }
+  per-tenant-metrics.json: |
+    {
+      "title": "AEGISX Per-Tenant Metrics",
+      "uid": "aegisx-tenant-metrics",
+      "panels": []
+    }
+  analyst-workload.json: |
+    {
+      "title": "AEGISX Analyst Workload",
+      "uid": "aegisx-analyst-workload",
+      "panels": []
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-grafana
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+---
+{{- if .Values.grafana.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aegisx.fullname" . }}-grafana
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.grafana.persistence.storageClass }}
+  storageClassName: {{ .Values.grafana.persistence.storageClass }}
+  {{- else if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.grafana.persistence.size }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aegisx.fullname" . }}-grafana
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+spec:
+  replicas: {{ .Values.grafana.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: grafana
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: grafana
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: grafana
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.grafana.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: {{ .Values.grafana.adminUser | quote }}
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: GRAFANA_ADMIN_PASSWORD
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_SERVER_ROOT_URL
+              value: "%(protocol)s://%(domain)s/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: /etc/grafana/dashboards/platform-health.json
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: POSTGRES_PASSWORD
+          ports:
+            - name: http
+              containerPort: 3000
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+            - name: data
+              mountPath: /var/lib/grafana
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 472
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: datasources
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-grafana-datasources
+        - name: dashboards-provider
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+            items:
+              - key: dashboard-provider.yaml
+                path: default.yaml
+        - name: dashboards
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+            items:
+              - key: platform-health.json
+                path: platform-health.json
+              - key: per-tenant-metrics.json
+                path: per-tenant-metrics.json
+              - key: analyst-workload.json
+                path: analyst-workload.json
+        - name: data
+          {{- if .Values.grafana.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "aegisx.fullname" . }}-grafana
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

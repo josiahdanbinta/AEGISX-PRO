@@ -1,14 +1,14 @@
 version: "3.9"
 
 services:
-  # ── PostgreSQL 15 ───────────────────────────────────────────────
+  # ── PostgreSQL 15 (OLTP) ────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: aegisx-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-aegisx}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegisx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       POSTGRES_DB: ${POSTGRES_DB:-aegisx}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -23,13 +23,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    logging:
+    logging: &log-defaults
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  # ── Redis 7 ────────────────────────────────────────────────────
+  # ── Redis 7 (Cache + Session Store) ─────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: aegisx-redis
@@ -38,7 +38,7 @@ services:
       redis-server
       --save 60 1
       --loglevel warning
-      --maxmemory 512mb
+      --maxmemory 1gb
       --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
@@ -52,13 +52,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
-  # ── OpenSearch 2.x ─────────────────────────────────────────────
+  # ── OpenSearch 2.x (Search + Log Index) ─────────────────────────
   opensearch:
     image: opensearchproject/opensearch:2.14.0
     container_name: aegisx-opensearch
@@ -67,7 +63,7 @@ services:
       discovery.type: single-node
       DISABLE_SECURITY_PLUGIN: "true"
       DISABLE_INSTALL_DEMO_CONFIG: "true"
-      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "AEGISXos123!@#"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD:?OPENSEARCH_PASSWORD must be set}
       OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
       cluster.name: aegisx-opensearch-cluster
       node.name: aegisx-opensearch-node
@@ -92,20 +88,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
-  # ── RabbitMQ 3.12 Management ───────────────────────────────────
+  # ── RabbitMQ 3.12 (Message Broker) ──────────────────────────────
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: aegisx-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -120,11 +112,195 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
+
+  # ── Kafka (Event Streaming) ────────────────────────────────────
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: aegisx-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_NUM_PARTITIONS: 12
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_COMPRESSION_TYPE: snappy
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    ports:
+      - "127.0.0.1:9092:9092"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    logging: *log-defaults
+
+  # ── Schema Registry ────────────────────────────────────────────
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    container_name: aegisx-schema-registry
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 1
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: full_transitive
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/subjects || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    logging: *log-defaults
+
+  # ── TimescaleDB (Time-Series Events) ───────────────────────────
+  timescaledb:
+    image: timescale/timescaledb:2.14.2-pg15
+    container_name: aegisx-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TIMESCALEDB_USER:-aegisx}
+      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD:-aegisx}
+      POSTGRES_DB: ${TIMESCALEDB_DB:-aegisx_tsdb}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TIMESCALEDB_TELEMETRY: "off"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5434:5432"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER:-aegisx} -d ${TIMESCALEDB_DB:-aegisx_tsdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *log-defaults
+
+  # ── MinIO (S3-Compatible Object Storage) ───────────────────────
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: aegisx-minio
+    restart: unless-stopped
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-aegisx}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD must be set}
+      MINIO_BROWSER: "on"
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    logging: *log-defaults
+
+  # ── Prometheus (Metrics) ───────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: aegisx-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging: *log-defaults
+
+  # ── Grafana (Dashboards) ───────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: aegisx-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *log-defaults
+
+  # ── Jaeger (Distributed Tracing) ───────────────────────────────
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: aegisx-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: "false"
+      BADGER_DIRECTORY_VALUE: /data/badger/value
+      BADGER_DIRECTORY_KEY: /data/badger/key
+      MEMORY_MAX_TRACES: "50000"
+    volumes:
+      - jaeger_data:/data
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:14250:14250"
+      - "127.0.0.1:14268:14268"
+    networks:
+      - aegisx-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:14269/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging: *log-defaults
 
   # ── Backend (FastAPI) ──────────────────────────────────────────
   backend:
@@ -151,9 +327,15 @@ services:
       - ./backend/.env
     environment:
       - POSTGRES_HOST=postgres
+      - TIMESCALEDB_HOST=timescaledb
       - REDIS_HOST=redis
       - OPENSEARCH_HOST=opensearch
       - RABBITMQ_HOST=rabbitmq
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+      - MINIO_ENDPOINT=minio:9000
+      - PROMETHEUS_URL=http://prometheus:9090
+      - JAEGER_AGENT_HOST=jaeger
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - APP_ENV=docker
@@ -166,13 +348,11 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - aegisx-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
   # ── Celery Worker ──────────────────────────────────────────────
   celery_worker:
@@ -197,6 +377,7 @@ services:
       - REDIS_HOST=redis
       - OPENSEARCH_HOST=opensearch
       - RABBITMQ_HOST=rabbitmq
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - APP_ENV=docker
@@ -209,11 +390,7 @@ services:
         condition: service_healthy
     networks:
       - aegisx-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
   # ── Celery Beat ────────────────────────────────────────────────
   celery_beat:
@@ -249,11 +426,7 @@ services:
         condition: service_healthy
     networks:
       - aegisx-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
   # ── Frontend (React + Vite) ────────────────────────────────────
   frontend:
@@ -268,7 +441,6 @@ services:
       - ./frontend/src:/app/src:ro
       - ./frontend/public:/app/public:ro
       - ./frontend/index.html:/app/index.html:ro
-      # vite.config.ts baked into image for writability
       - ./frontend/tsconfig.json:/app/tsconfig.json:ro
       - ./frontend/tailwind.config.js:/app/tailwind.config.js:ro
       - ./frontend/postcss.config.js:/app/postcss.config.js:ro
@@ -281,11 +453,7 @@ services:
       - backend
     networks:
       - aegisx-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
   # ── Nginx Reverse Proxy ────────────────────────────────────────
   nginx:
@@ -302,6 +470,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - grafana
     networks:
       - aegisx-network
     healthcheck:
@@ -309,11 +478,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *log-defaults
 
 networks:
   aegisx-network:
@@ -323,12 +488,24 @@ networks:
 volumes:
   postgres_data:
     name: aegisx-postgres-data
+  timescaledb_data:
+    name: aegisx-timescaledb-data
   redis_data:
     name: aegisx-redis-data
   opensearch_data:
     name: aegisx-opensearch-data
   rabbitmq_data:
     name: aegisx-rabbitmq-data
+  kafka_data:
+    name: aegisx-kafka-data
+  minio_data:
+    name: aegisx-minio-data
+  prometheus_data:
+    name: aegisx-prometheus-data
+  grafana_data:
+    name: aegisx-grafana-data
+  jaeger_data:
+    name: aegisx-jaeger-data
   uploads_data:
     name: aegisx-uploads-data
   celery_beat_data:

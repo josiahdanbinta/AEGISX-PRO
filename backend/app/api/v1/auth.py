@@ -19,6 +19,7 @@ from app.api.deps import (
 )
 from app.core.config import settings
 from app.core.database import get_db
+from app.models.audit import AuditLog
 from app.core.security import (
     hash_password,
     verify_password,
@@ -144,6 +145,24 @@ def _generate_backup_codes(count: int = 8) -> List[str]:
     return [generate_secure_token(10) for _ in range(count)]
 
 
+async def _audit_auth(db: AsyncSession, user, action: str, success: bool = True,
+                       details: Optional[dict] = None, ip: Optional[str] = None):
+    try:
+        db.add(AuditLog(
+            tenant_id=user.tenant_id if hasattr(user, 'tenant_id') else None,
+            user_id=user.id if hasattr(user, 'id') else None,
+            action=f"auth.{action}",
+            resource_type="auth",
+            details=details or {},
+            ip_address=ip,
+            status="success" if success else "failure",
+            severity="info",
+        ))
+        await db.flush()
+    except Exception:
+        pass
+
+
 # ── Login ────────────────────────────────────────────────────────
 
 @router.post(
@@ -199,6 +218,7 @@ async def login(
             user.status = "locked"
             user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=settings.PASSWORD_LOCKOUT_MINUTES)
         await db.flush()
+        await _audit_auth(db, user, "login_failed", success=False, details={"reason": "bad_password"})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -390,6 +410,7 @@ async def logout(
             )
         await db.flush()
 
+    await _audit_auth(db, current_user, "logout")
     return MessageResponse(message="Logged out successfully")
 
 
@@ -643,6 +664,7 @@ async def disable_mfa(
     user.mfa_backup_codes = None
     await db.flush()
 
+    await _audit_auth(db, current_user, "mfa_disabled")
     return MessageResponse(message="MFA has been disabled successfully")
 
 
@@ -688,6 +710,17 @@ async def request_password_reset(
         )
     )
     await db.flush()
+
+    try:
+        from app.services.reset_email import send_reset_email
+        await send_reset_email(
+            to_email=request.email,
+            reset_token=reset_token,
+            reset_url="https://aegisx.local/reset-password",
+            username=user.full_name or user.username,
+        )
+    except Exception:
+        pass
 
     return MessageResponse(
         message="Password reset request submitted",
@@ -924,6 +957,7 @@ async def change_password(
     )
     await db.flush()
 
+    await _audit_auth(db, current_user, "password_changed")
     return MessageResponse(message="Password changed successfully")
 
 
@@ -1198,6 +1232,7 @@ async def revoke_api_key(
     api_key_entry.is_active = False
     await db.flush()
 
+    await _audit_auth(db, current_user, "api_key_revoked", details={"key_id": str(key_id)})
     return MessageResponse(message="API key revoked")
 
 

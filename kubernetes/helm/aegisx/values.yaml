@@ -28,7 +28,14 @@ secrets:
   redisPassword: ""
   agentRegistrationKey: ""
   openaiApiKey: ""
+  timescaledbPassword: ""
+  minioRootPassword: ""
+  clickhousePassword: ""
+  grafanaAdminPassword: ""
+  opensearchAdminPassword: ""
+  rabbitmqErlangCookie: ""
 
+# ── PostgreSQL (OLTP) ──────────────────────────────────────────
 postgresql:
   enabled: true
   image:
@@ -53,18 +60,29 @@ postgresql:
   postgresUser: aegisx
   postgresDb: aegisx
 
+# ── Redis (Cache + Session Store) ──────────────────────────────
 redis:
   enabled: true
   image:
     repository: redis
     tag: "7-alpine"
     pullPolicy: IfNotPresent
+  replicaCount: 1
   service:
     type: ClusterIP
     port: 6379
   persistence:
     enabled: true
     size: 10Gi
+    storageClass: ""
+  maxmemory: "1gb"
+  maxmemoryPolicy: "allkeys-lru"
+  exporter:
+    enabled: true
+    image:
+      repository: oliver006/redis_exporter
+      tag: v1.58.0
+      pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: "100m"
@@ -73,19 +91,26 @@ redis:
       cpu: "500m"
       memory: "1Gi"
 
+# ── OpenSearch (Search + Log Aggregation) ──────────────────────
 opensearch:
   enabled: true
   image:
     repository: opensearchproject/opensearch
     tag: "2.14.0"
     pullPolicy: IfNotPresent
-  replicaCount: 1
+  clusterName: aegisx-opensearch
+  replicaCount: 3
+  securityDisabled: "true"
+  javaOpts:
+    xms: "1g"
+    xmx: "2g"
   service:
     type: ClusterIP
     port: 9200
   persistence:
     enabled: true
-    size: 50Gi
+    size: 100Gi
+    storageClass: ""
   resources:
     requests:
       cpu: "1"
@@ -94,19 +119,24 @@ opensearch:
       cpu: "4"
       memory: "8Gi"
 
+# ── RabbitMQ (Message Broker) ──────────────────────────────────
 rabbitmq:
   enabled: true
   image:
     repository: rabbitmq
     tag: "3.12-management-alpine"
     pullPolicy: IfNotPresent
+  replicaCount: 3
+  defaultUser: aegisx
+  defaultVhost: "/"
   service:
     type: ClusterIP
     port: 5672
     managementPort: 15672
   persistence:
     enabled: true
-    size: 10Gi
+    size: 20Gi
+    storageClass: ""
   resources:
     requests:
       cpu: "250m"
@@ -115,6 +145,147 @@ rabbitmq:
       cpu: "1"
       memory: "1Gi"
 
+# ── Kafka (Event Streaming) ────────────────────────────────────
+kafka:
+  enabled: true
+  image:
+    repository: apache/kafka
+    tag: "3.7.0"
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: ""
+  config:
+    defaultPartitions: 12
+    defaultReplicationFactor: 3
+    minInSyncReplicas: 2
+    retentionHours: 168
+    retentionBytes: "107374182400"
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+# ── Schema Registry (Kafka) ────────────────────────────────────
+schemaRegistry:
+  enabled: true
+  image:
+    repository: confluentinc/cp-schema-registry
+    tag: "7.6.0"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  replicationFactor: 3
+  compatibilityLevel: "full_transitive"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+# ── TimescaleDB (Time-Series Events) ───────────────────────────
+timescaledb:
+  enabled: true
+  image:
+    repository: timescale/timescaledb
+    tag: "2.14.2-pg15"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  postgresUser: aegisx
+  postgresDb: aegisx_tsdb
+  persistence:
+    enabled: true
+    size: 200Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+# ── ClickHouse (Columnar Analytics) ────────────────────────────
+clickhouse:
+  enabled: true
+  image:
+    repository: clickhouse/clickhouse-server
+    tag: "24.3"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  username: aegisx
+  password: ""
+  dbName: aegisx_analytics
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+# ── MinIO (S3-Compatible Object Storage) ───────────────────────
+minio:
+  enabled: true
+  image:
+    repository: minio/minio
+    tag: "RELEASE.2024-06-13T22-53-53Z"
+    pullPolicy: IfNotPresent
+  replicaCount: 4
+  rootUser: aegisx
+  persistence:
+    enabled: true
+    size: 250Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+# ── Apache Flink (Stream Processing) ───────────────────────────
+flink:
+  enabled: true
+  image:
+    repository: flink
+    tag: "1.18.1-scala_2.12-java11"
+    pullPolicy: IfNotPresent
+  parallelism: 8
+  jobmanager:
+    replicas: 2
+    memory: "2g"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+  taskmanager:
+    replicas: 3
+    slots: 8
+    memory: "4g"
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+
+# ── Backend (FastAPI) ──────────────────────────────────────────
 backend:
   replicaCount: 3
   image:
@@ -158,6 +329,12 @@ celeryWorker:
     limits:
       cpu: "1"
       memory: "1Gi"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
 celeryBeat:
   replicaCount: 1
@@ -169,6 +346,7 @@ celeryBeat:
       cpu: "500m"
       memory: "512Mi"
 
+# ── Frontend (React SPA) ───────────────────────────────────────
 frontend:
   replicaCount: 2
   image:
@@ -191,6 +369,82 @@ frontend:
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
 
+# ── Prometheus (Metrics) ───────────────────────────────────────
+prometheus:
+  enabled: true
+  image:
+    repository: prom/prometheus
+    tag: v2.52.0
+    pullPolicy: IfNotPresent
+  scrapeInterval: "15s"
+  retentionTime: "15d"
+  retentionSize: "50GB"
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+# ── Grafana (Dashboards) ───────────────────────────────────────
+grafana:
+  enabled: true
+  image:
+    repository: grafana/grafana
+    tag: "11.0.0"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  adminUser: admin
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# ── Jaeger (Distributed Tracing) ───────────────────────────────
+jaeger:
+  enabled: true
+  image:
+    repository: jaegertracing/all-in-one
+    tag: "1.57"
+    pullPolicy: IfNotPresent
+  storageType: badger
+  maxTraces: 50000
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+# ── ArgoCD (GitOps) ────────────────────────────────────────────
+argocd:
+  enabled: false
+  repoURL: https://github.com/org/aegisx
+  targetRevision: main
+  path: kubernetes/helm/aegisx
+  valuesFile: values-prod.yaml
+
+sealedSecrets:
+  enabled: false
+
+# ── Ingress ────────────────────────────────────────────────────
 ingress:
   enabled: true
   className: nginx
@@ -198,8 +452,8 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
   hosts:
     - host: aegisx.example.com
       paths:
@@ -215,18 +469,27 @@ ingress:
         - path: /ws
           pathType: Prefix
           service: backend
+        - path: /grafana
+          pathType: Prefix
+          service: grafana
   tls:
     - secretName: aegisx-tls
       hosts:
         - aegisx.example.com
 
+# ── Network Policies ───────────────────────────────────────────
 networkPolicy:
   enabled: true
   backendEgress:
     - postgresql
+    - timescaledb
+    - clickhouse
     - redis
     - opensearch
     - rabbitmq
+    - kafka
+    - minio
+    - schema-registry
 
 serviceAccount:
   create: true
@@ -236,8 +499,32 @@ serviceAccount:
 podSecurityContext:
   fsGroup: 1001
 
+# ── Pod Disruption Budgets ───────────────────────────────────────
+podDisruptionBudget:
+  enabled: true
+  components:
+    - name: postgresql
+      maxUnavailable: 0
+    - name: timescaledb
+      maxUnavailable: 1
+    - name: clickhouse
+      maxUnavailable: 1
+    - name: redis
+      maxUnavailable: 1
+    - name: opensearch
+      maxUnavailable: 1
+    - name: rabbitmq
+      maxUnavailable: 1
+    - name: kafka
+      maxUnavailable: 1
+    - name: minio
+      maxUnavailable: 2
+    - name: backend
+      minAvailable: 2
+
+# ── Monitoring (Legacy — now using dedicated Prometheus/Grafana)
 monitoring:
   prometheus:
-    enabled: false
+    enabled: true
     serviceMonitor:
-      enabled: false
+      enabled: true

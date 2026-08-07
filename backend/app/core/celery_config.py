@@ -81,4 +81,12 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.cleanup_tasks.cleanup_expired_tokens",
         "schedule": 3600.0,
     },
+    "cold-archive-events": {
+        "task": "app.tasks.cleanup_tasks.cold_archive_events",
+        "schedule": 86400.0,
+    },
+    "flush-tsdb-buffers": {
+        "task": "app.tasks.cleanup_tasks.flush_tsdb_buffers",
+        "schedule": 30.0,
+    },
 }

@@ -1,0 +1,88 @@
+{{- if .Values.schemaRegistry.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-schema-registry
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: schema-registry
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: schema-registry
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aegisx.fullname" . }}-schema-registry
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: schema-registry
+spec:
+  replicas: {{ .Values.schemaRegistry.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: schema-registry
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: schema-registry
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: schema-registry
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.schemaRegistry.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.schemaRegistry.image.pullPolicy }}
+          env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: PLAINTEXT://{{ include "aegisx.fullname" . }}-kafka-bootstrap:9092
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: http://0.0.0.0:8081
+            - name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC
+              value: _schemas
+            - name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR
+              value: "{{ .Values.schemaRegistry.replicationFactor }}"
+            - name: SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL
+              value: {{ .Values.schemaRegistry.compatibilityLevel }}
+            - name: SCHEMA_REGISTRY_MASTER_ELIGIBILITY
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8081
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /subjects
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.schemaRegistry.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+{{- end }}

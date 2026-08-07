@@ -19,13 +19,16 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Radio,
+  Crosshair,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 
 interface NavSection {
   title: string;
-  items: { to: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; label: string }[];
+  items: { to: string; icon: LucideIcon; label: string }[];
 }
 
 const navSections: NavSection[] = [
@@ -36,6 +39,8 @@ const navSections: NavSection[] = [
       { to: '/assets', icon: Monitor, label: 'Assets' },
       { to: '/incidents', icon: Shield, label: 'Incidents' },
       { to: '/detection', icon: AlertTriangle, label: 'Detection' },
+      { to: '/detection/live', icon: Radio, label: 'Live Alerts' },
+      { to: '/threat-hunting', icon: Crosshair, label: 'Threat Hunting' },
       { to: '/soar', icon: Workflow, label: 'SOAR' },
     ],
   },
@@ -132,19 +137,20 @@ export function Sidebar() {
             </div>
             <div className="space-y-0.5">
               {section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-150 relative ${
-                      sidebarCollapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
-                    } ${
-                      isActive
-                        ? 'bg-brand-600/20 text-brand-400'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                    }`
-                  }
-                >
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    aria-label={sidebarCollapsed ? item.label : undefined}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-150 relative focus:outline-none focus:ring-2 focus:ring-brand-500/40 ${
+                        sidebarCollapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
+                      } ${
+                        isActive
+                          ? 'bg-brand-600/20 text-brand-400'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`
+                    }
+                  >
                   {({ isActive }) => (
                     <>
                       {isActive && (

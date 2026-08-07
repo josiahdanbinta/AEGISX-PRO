@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8001
     WORKERS: int = 4
-    RELOAD: bool = True
+    RELOAD: bool = False
 
     # ── CORS ─────────────────────────────────────────────────────
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -241,6 +241,44 @@ class Settings(BaseSettings):
     KUBERNETES_ENABLED: bool = False
     KUBERNETES_NAMESPACE: str = "aegisx"
 
+    # ── Kafka ────────────────────────────────────────────────────
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    SCHEMA_REGISTRY_URL: str = "http://localhost:8081"
+
+    # ── ClickHouse ───────────────────────────────────────────────
+    CLICKHOUSE_HOST: str = "localhost"
+    CLICKHOUSE_PORT: int = 8123
+    CLICKHOUSE_USER: str = "aegisx"
+    CLICKHOUSE_PASSWORD: str = "aegisx"
+    CLICKHOUSE_DB: str = "aegisx"
+
+    # ── MinIO ────────────────────────────────────────────────────
+    MINIO_ENDPOINT: str = "localhost:9002"
+    MINIO_ROOT_USER: str = "aegisx-admin"
+    MINIO_ROOT_PASSWORD: str = "aegisx-minio-secure"
+    MINIO_SECURE: bool = False
+
+    # ── Observability ───────────────────────────────────────────
+    PROMETHEUS_ENABLED: bool = True
+    PROMETHEUS_METRICS_PORT: int = 9090
+
+    # ── Elasticsearch (ELK) ──────────────────────────────────────
+    ELASTICSEARCH_HOST: str = "localhost"
+    ELASTICSEARCH_PORT: int = 9201
+
+    # ── Jaeger Tracing ───────────────────────────────────────────
+    JAEGER_HOST: str = "localhost"
+    JAEGER_PORT: int = 6831
+    JAEGER_SAMPLING_RATE: float = 0.1
+    TRACING_ENABLED: bool = True
+    OTEL_SERVICE_NAME: str = "aegisx-backend"
+
+    # ── UEBA ─────────────────────────────────────────────────────
+    UEBA_ENABLED: bool = True
+    UEBA_ANOMALY_THRESHOLD: float = 0.7
+    UEBA_CRITICAL_THRESHOLD: float = 0.85
+    UEBA_BASELINE_WINDOW_DAYS: int = 30
+
     # ── Feature Flags ────────────────────────────────────────────
     FEATURE_SOAR: bool = True
     FEATURE_THREAT_INTEL: bool = True
@@ -251,6 +289,16 @@ class Settings(BaseSettings):
     FEATURE_AGENT: bool = True
     FEATURE_AUDIT: bool = True
     FEATURE_GRAPHQL: bool = True
+    FEATURE_KAFKA: bool = True
+    FEATURE_CLICKHOUSE: bool = True
+    FEATURE_UEBA: bool = True
+    FEATURE_SLACK_BOT: bool = False
+    FEATURE_AI_REMEDIATION: bool = False
+
+    # ── Slack Bot ─────────────────────────────────────────────────
+    SLACK_BOT_TOKEN: Optional[str] = None
+    SLACK_APP_TOKEN: Optional[str] = None
+    SLACK_SIGNING_SECRET: Optional[str] = None
 
     _INSECURE_DEFAULTS = [
         "change-me-in-production-use-secrets-manager",
@@ -258,18 +306,39 @@ class Settings(BaseSettings):
         "change-me-agent-key",
         "change-me-postgres-password",
     ]
+    _INSECURE_PASSWORDS = {
+        "POSTGRES_PASSWORD": ["aegisx", "postgres", "password", "change-me"],
+        "OPENSEARCH_PASSWORD": ["admin", "password", "change-me"],
+        "RABBITMQ_PASSWORD": ["guest", "password", "change-me"],
+        "CLICKHOUSE_PASSWORD": ["aegisx", "password", "change-me"],
+        "MINIO_ROOT_PASSWORD": ["aegisx-minio-secure", "minioadmin", "password", "change-me"],
+        "REDIS_PASSWORD": [],
+        "GRAFANA_PASSWORD": ["admin", "aegisx-grafana", "password"],
+    }
 
     @model_validator(mode="after")
     def validate_production_secrets(self):
-        if self.APP_ENV == "production":
-            for name, value in self.__dict__.items():
-                if isinstance(value, str):
-                    for insecure in self._INSECURE_DEFAULTS:
-                        if insecure in value.lower():
-                            raise ValueError(
-                                f"Insecure default detected for '{name}'. "
-                                f"Set a strong value via environment variable in production."
-                            )
+        if self.APP_ENV != "production":
+            return self
+
+        errors = []
+        for name, value in self.__dict__.items():
+            if not isinstance(value, str):
+                continue
+            v = value.lower()
+            for insecure in self._INSECURE_DEFAULTS:
+                if insecure in v:
+                    errors.append(f"'{name}' contains insecure default value")
+            if name in self._INSECURE_PASSWORDS:
+                for weak in self._INSECURE_PASSWORDS[name]:
+                    if v == weak:
+                        errors.append(f"'{name}' is set to a well-known default password")
+
+        if errors:
+            raise ValueError(
+                f"Insecure production configuration detected:\n  " + "\n  ".join(errors) +
+                "\nSet strong values via environment variables in production."
+            )
         return self
 
 

@@ -10,11 +10,14 @@ import { AssetDetailPage } from '@/pages/assets/AssetDetailPage';
 import { IncidentListPage } from '@/pages/incidents/IncidentListPage';
 import { IncidentDetailPage } from '@/pages/incidents/IncidentDetailPage';
 import { AlertsPage } from '@/pages/alerts/AlertsPage';
+import RealTimeAlertsPage from '@/pages/alerts/RealTimeAlertsPage';
 import { ThreatIntelPage } from '@/pages/threat_intel/ThreatIntelPage';
+import ThreatHuntingPage from '@/pages/threat_intel/ThreatHuntingPage';
 import { VulnerabilitiesPage } from '@/pages/vulnerabilities/VulnerabilitiesPage';
 import { CompliancePage } from '@/pages/compliance/CompliancePage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { PlaybooksPage } from '@/pages/soar/PlaybooksPage';
+import PlaybookBuilderPage from '@/pages/soar/PlaybookBuilderPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { TenantListPage } from '@/pages/admin/TenantListPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogsPage';
@@ -50,8 +53,11 @@ export default function App() {
       <Route path="/incidents" element={<ProtectedRoute><IncidentListPage /></ProtectedRoute>} />
       <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetailPage /></ProtectedRoute>} />
       <Route path="/detection" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
+      <Route path="/detection/live" element={<ProtectedRoute><RealTimeAlertsPage /></ProtectedRoute>} />
       <Route path="/soar" element={<ProtectedRoute><PlaybooksPage /></ProtectedRoute>} />
+      <Route path="/soar/builder" element={<ProtectedRoute><PlaybookBuilderPage /></ProtectedRoute>} />
       <Route path="/threat-intel" element={<ProtectedRoute><ThreatIntelPage /></ProtectedRoute>} />
+      <Route path="/threat-hunting" element={<ProtectedRoute><ThreatHuntingPage /></ProtectedRoute>} />
       <Route path="/vulnerabilities" element={<ProtectedRoute><VulnerabilitiesPage /></ProtectedRoute>} />
       <Route path="/compliance" element={<ProtectedRoute><CompliancePage /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />

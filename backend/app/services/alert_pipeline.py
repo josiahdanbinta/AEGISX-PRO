@@ -4,6 +4,7 @@ Creates Alert records from Sigma matches with deduplication,
 severity mapping, MITRE enrichment, and asset context.
 """
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -173,10 +174,16 @@ class AlertPipeline:
         if not matches:
             return []
 
+        from app.services.dedup_service import dedup_service
+        from app.services.metrics_instrument import record_alert_created
+        import time as _time
+
         created_alerts: List[Alert] = []
         now = datetime.now(timezone.utc)
         severity = _map_severity(rule)
         dedup_count = 0
+
+        tenant_str = str(self.tenant_id)
 
         for event in matches:
             fields = _extract_event_fields(event)
@@ -189,6 +196,13 @@ class AlertPipeline:
                 rule.name, source_ip, hostname,
             )
             if is_duplicate:
+                dedup_count += 1
+                continue
+
+            bloom_dup = await dedup_service.is_alert_duplicate(
+                tenant_str, str(rule.id), source_ip, hostname,
+            )
+            if bloom_dup:
                 dedup_count += 1
                 continue
 
@@ -219,13 +233,98 @@ class AlertPipeline:
             )
             self.db.add(alert)
             await self.db.flush()
+            record_alert_created(str(self.tenant_id), severity, rule.name)
             created_alerts.append(alert)
 
         logger.info(
             "AlertPipeline generated %d alerts for rule '%s' (deduped: %d)",
             len(created_alerts), rule.name, dedup_count,
         )
+
+        if created_alerts:
+            await self._run_ueba_scoring(created_alerts)
+            await self._publish_to_eventbus(created_alerts)
+
         return created_alerts
+
+    async def _run_ueba_scoring(self, alerts: List[Alert]) -> None:
+        """Run UEBA scoring on generated alerts. Publish anomalies above threshold."""
+        try:
+            from app.services.ueba_scorer import ueba_scorer
+            from app.services.event_bus import event_bus
+
+            tenant_str = str(self.tenant_id)
+            threshold = settings.UEBA_ANOMALY_THRESHOLD
+
+            for alert in alerts:
+                event = alert.raw_event or {}
+                if not event:
+                    continue
+
+                enriched = {
+                    "event_id": str(alert.id),
+                    "tenant_id": tenant_str,
+                    "severity": alert.severity,
+                    "source_ip": alert.source_ip,
+                    "hostname": getattr(alert, "source_asset_id", None),
+                    "enrichment": {},
+                    "tags": [],
+                }
+                if isinstance(event, dict):
+                    enriched.update(event)
+
+                try:
+                    ueba_result = await ueba_scorer.score_event(tenant_str, enriched)
+                    anomaly_score = ueba_result.get("anomaly_score", 0)
+
+                    if anomaly_score >= threshold:
+                        alert.confidence = max(
+                            alert.confidence or 0.5,
+                            ueba_result.get("confidence", 0.5),
+                        )
+                        alert.ueba_score = anomaly_score
+
+                        await event_bus.anomaly_detected(tenant_str, {
+                            "alert_id": str(alert.id),
+                            "title": alert.title,
+                            "severity": "critical" if anomaly_score >= settings.UEBA_CRITICAL_THRESHOLD else "high",
+                            "anomaly_score": round(anomaly_score, 4),
+                            "entity_scores": ueba_result.get("entity_scores", {}),
+                            "mitre_techniques": ueba_result.get("mitre_techniques", []),
+                            "details": ueba_result.get("details", {}),
+                        })
+                        logger.info(
+                            "UEBA anomaly detected: alert=%s score=%.4f entities=%s",
+                            str(alert.id), anomaly_score,
+                            list(ueba_result.get("entity_scores", {}).keys()),
+                        )
+                except Exception as e:
+                    logger.debug("UEBA scoring skipped for alert %s: %s", str(alert.id), e)
+        except Exception as e:
+            logger.warning("UEBA scoring pipeline error: %s", e)
+
+    async def _publish_to_eventbus(self, alerts: List[Alert]) -> None:
+        """Publish generated alerts to EventBus for real-time WebSocket push."""
+        try:
+            from app.services.event_bus import event_bus
+            tenant_str = str(self.tenant_id)
+
+            for alert in alerts:
+                await event_bus.alert_created(tenant_str, {
+                    "id": str(alert.id),
+                    "title": alert.title,
+                    "severity": alert.severity,
+                    "status": alert.status,
+                    "rule_name": alert.rule_name,
+                    "source_ip": alert.source_ip or "",
+                    "destination_ip": alert.destination_ip or "",
+                    "description": alert.description or "",
+                    "confidence": alert.confidence or 0.5,
+                    "ueba_score": getattr(alert, "ueba_score", None),
+                    "triggered_at": alert.created_at.isoformat() if alert.created_at else None,
+                })
+        except Exception:
+            pass
 
     def _build_alert_title(
         self, rule: DetectionRule, fields: Dict[str, Any], event: Dict[str, Any]

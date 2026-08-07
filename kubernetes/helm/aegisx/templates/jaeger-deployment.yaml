@@ -1,0 +1,142 @@
+{{- if .Values.jaeger.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-jaeger-collector
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 14250
+      targetPort: 14250
+    - name: http
+      port: 14268
+      targetPort: 14268
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-jaeger-query
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 16686
+      targetPort: 16686
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aegisx.fullname" . }}-jaeger
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: jaeger
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: jaeger
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: jaeger
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.jaeger.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.jaeger.image.pullPolicy }}
+          args:
+            - --memory.max-traces={{ .Values.jaeger.maxTraces }}
+            - --query.max-clock-skew-adjustment=10s
+          env:
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+            - name: SPAN_STORAGE_TYPE
+              value: {{ .Values.jaeger.storageType }}
+            - name: BADGER_EPHEMERAL
+              value: "false"
+            - name: BADGER_DIRECTORY_VALUE
+              value: /data/badger/value
+            - name: BADGER_DIRECTORY_KEY
+              value: /data/badger/key
+          ports:
+            - name: collector-grpc
+              containerPort: 14250
+            - name: collector-http
+              containerPort: 14268
+            - name: query-http
+              containerPort: 16686
+            - name: admin
+              containerPort: 14269
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.jaeger.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: data
+          {{- if .Values.jaeger.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "aegisx.fullname" . }}-jaeger
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+{{- if .Values.jaeger.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aegisx.fullname" . }}-jaeger
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.jaeger.persistence.storageClass }}
+  storageClassName: {{ .Values.jaeger.persistence.storageClass }}
+  {{- else if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.jaeger.persistence.size }}
+{{- end }}
+{{- end }}

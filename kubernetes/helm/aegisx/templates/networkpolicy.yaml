@@ -22,6 +22,13 @@ spec:
       ports:
         - port: http
           protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: http
+          protocol: TCP
   egress:
     {{- if has "postgresql" .Values.networkPolicy.backendEgress }}
     - to:
@@ -30,6 +37,26 @@ spec:
               app.kubernetes.io/component: postgresql
       ports:
         - port: {{ .Values.postgresql.service.port }}
+          protocol: TCP
+    {{- end }}
+    {{- if has "timescaledb" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: timescaledb
+      ports:
+        - port: 5432
+          protocol: TCP
+    {{- end }}
+    {{- if has "clickhouse" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: clickhouse
+      ports:
+        - port: 8123
+          protocol: TCP
+        - port: 9000
           protocol: TCP
     {{- end }}
     {{- if has "redis" .Values.networkPolicy.backendEgress }}
@@ -49,6 +76,8 @@ spec:
       ports:
         - port: {{ .Values.opensearch.service.port }}
           protocol: TCP
+        - port: 9300
+          protocol: TCP
     {{- end }}
     {{- if has "rabbitmq" .Values.networkPolicy.backendEgress }}
     - to:
@@ -57,6 +86,33 @@ spec:
               app.kubernetes.io/component: rabbitmq
       ports:
         - port: {{ .Values.rabbitmq.service.port }}
+          protocol: TCP
+    {{- end }}
+    {{- if has "kafka" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: kafka
+      ports:
+        - port: 9092
+          protocol: TCP
+    {{- end }}
+    {{- if has "minio" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: minio
+      ports:
+        - port: 9000
+          protocol: TCP
+    {{- end }}
+    {{- if has "schema-registry" .Values.networkPolicy.backendEgress }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: schema-registry
+      ports:
+        - port: 8081
           protocol: TCP
     {{- end }}
 ---
@@ -97,9 +153,14 @@ spec:
         operator: In
         values:
           - postgresql
+          - timescaledb
           - redis
           - opensearch
           - rabbitmq
+          - kafka
+          - minio
+          - clickhouse
+          - schema-registry
   policyTypes:
     - Ingress
   ingress:
@@ -110,6 +171,12 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/component: celery-worker
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: flink-jobmanager
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: flink-taskmanager
     - from:
         - namespaceSelector:
             matchLabels:

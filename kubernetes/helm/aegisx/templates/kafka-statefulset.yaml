@@ -1,0 +1,184 @@
+{{- if .Values.kafka.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-kafka
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: internal
+      port: 9092
+      targetPort: 9092
+    - name: controller
+      port: 9093
+      targetPort: 9093
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-kafka-bootstrap
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  type: ClusterIP
+  ports:
+    - name: kafka
+      port: 9092
+      targetPort: 9092
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-kafka-config
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+data:
+  server.properties: |
+    process.roles=broker,controller
+    node.id=${KAFKA_NODE_ID}
+    controller.quorum.voters={{- range $i := until (int .Values.kafka.replicaCount) }}{{ if $i }},{{ end }}{{ $i }}@{{ include "aegisx.fullname" $ }}-kafka-{{ $i }}.{{ include "aegisx.fullname" $ }}-kafka.{{ include "aegisx.namespace" $ }}.svc.cluster.local:9093{{- end }}
+    listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+    advertised.listeners=PLAINTEXT://${KAFKA_ADVERTISED_HOSTNAME}:9092
+    listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+    inter.broker.listener.name=PLAINTEXT
+    controller.listener.names=CONTROLLER
+    num.network.threads=8
+    num.io.threads=16
+    socket.send.buffer.bytes=1048576
+    socket.receive.buffer.bytes=1048576
+    socket.request.max.bytes=104857600
+    num.partitions={{ .Values.kafka.config.defaultPartitions }}
+    default.replication.factor={{ .Values.kafka.config.defaultReplicationFactor }}
+    min.insync.replicas={{ .Values.kafka.config.minInSyncReplicas }}
+    log.retention.hours={{ .Values.kafka.config.retentionHours }}
+    log.retention.bytes={{ .Values.kafka.config.retentionBytes }}
+    log.segment.bytes=1073741824
+    log.retention.check.interval.ms=300000
+    offsets.topic.replication.factor={{ .Values.kafka.config.defaultReplicationFactor }}
+    transaction.state.log.replication.factor={{ .Values.kafka.config.defaultReplicationFactor }}
+    transaction.state.log.min.isr={{ .Values.kafka.config.minInSyncReplicas }}
+    group.initial.rebalance.delay.ms=3000
+    auto.create.topics.enable=false
+    delete.topic.enable=true
+    compression.type=snappy
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aegisx.fullname" . }}-kafka
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  serviceName: {{ include "aegisx.fullname" . }}-kafka
+  replicas: {{ .Values.kafka.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: kafka
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: kafka
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1001
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["kafka"]
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: kafka
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.kafka.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.kafka.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              export KAFKA_NODE_ID=${HOSTNAME##*-}
+              export KAFKA_ADVERTISED_HOSTNAME=${HOSTNAME}.{{ include "aegisx.fullname" . }}-kafka.{{ include "aegisx.namespace" . }}.svc.cluster.local
+              export KAFKA_HEAP_OPTS="-Xms{{ .Values.kafka.resources.requests.memory }} -Xmx{{ .Values.kafka.resources.limits.memory }}"
+              export KAFKA_JVM_PERFORMANCE_OPTS="-server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+DisableExplicitGC -Djava.awt.headless=true"
+              exec /opt/kafka/bin/kafka-server-start.sh /mnt/config/server.properties
+          ports:
+            - name: internal
+              containerPort: 9092
+            - name: controller
+              containerPort: 9093
+          env:
+            - name: KAFKA_LOG_DIRS
+              value: /var/lib/kafka/data
+          volumeMounts:
+            - name: config
+              mountPath: /mnt/config
+            - name: data
+              mountPath: /var/lib/kafka/data
+          livenessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.kafka.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-kafka-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "aegisx.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.kafka.persistence.storageClass }}
+        storageClassName: {{ .Values.kafka.persistence.storageClass }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.kafka.persistence.size }}
+{{- end }}

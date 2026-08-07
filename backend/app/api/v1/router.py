@@ -27,6 +27,11 @@ _routers = [
     ("websocket", "", "WebSocket"),
     ("agent", "/agent", "Agent"),
     ("ingestion", "/ingestion", "Ingestion"),
+    ("osquery", "/osquery", "Osquery"),
+    ("remediation", "/remediation", "AI Remediation"),
+    ("slack_bot", "/slack", "Slack Bot"),
+    ("chat", "", "Chat"),
+    ("smart_ops", "/smart-ops", "Smart Operations"),
 ]
 
 for name, prefix, tag in _routers:

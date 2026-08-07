@@ -195,6 +195,7 @@ class Alert(TenantMixin, Base):
     indicator_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     indicator_value: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     confidence: Mapped[float] = mapped_column(Float, default=0.5, nullable=False)
+    ueba_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     raw_event: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     assigned_to: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     acknowledged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

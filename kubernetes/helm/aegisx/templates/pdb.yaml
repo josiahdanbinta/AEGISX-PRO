@@ -1,0 +1,22 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+{{- range $component := .Values.podDisruptionBudget.components }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "aegisx.fullname" $ }}-{{ $component.name }}
+  labels:
+    {{- include "aegisx.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component.name }}
+spec:
+  {{- if $component.minAvailable }}
+  minAvailable: {{ $component.minAvailable }}
+  {{- else if $component.maxUnavailable }}
+  maxUnavailable: {{ $component.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $component.name }}
+{{- end }}
+{{- end }}

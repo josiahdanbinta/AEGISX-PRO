@@ -257,6 +257,30 @@ async def ingest_syslog(
     indexed = await _bulk_index_syslog(search, documents)
     errors = len(documents) - indexed
 
+    for doc in documents:
+        try:
+            from app.services.kafka_messaging import kafka_service
+            from app.services.dedup_service import dedup_service
+            import asyncio
+
+            fingerprint = await dedup_service._compute_event_fingerprint({
+                "source": "syslog",
+                "source_type": "rfc5424",
+                "hostname": doc.get("hostname", ""),
+                "raw_data": doc.get("raw_message", ""),
+            })
+            is_dup = await dedup_service.is_event_duplicate(fingerprint)
+            if not is_dup:
+                asyncio.create_task(kafka_service.produce_raw_event({
+                    "event_id": doc.get("id", ""),
+                    "tenant_id": getattr(req.state, "tenant_id", "default"),
+                    "source": "syslog",
+                    "source_type": "rfc5424",
+                    "data": doc,
+                }))
+        except Exception:
+            pass
+
     return IngestionResponse(
         accepted=len(request.messages),
         indexed=indexed,
@@ -414,6 +438,70 @@ async def ingest_beats(
         indexed=indexed,
         errors=errors,
         message=f"Indexed {indexed}/{len(documents)} beats events into '{index_name}'",
+    )
+
+
+class BatchEventRequest(BaseModel):
+    events: List[Dict[str, Any]] = Field(..., min_length=1, max_length=10000,
+                                          description="List of event objects (any format)")
+    source: str = Field("api", description="Event source identifier")
+    source_type: str = Field("generic", description="Source type for classification")
+    index_suffix: Optional[str] = Field("events", description="OpenSearch index suffix")
+
+
+@router.post(
+    "/batch",
+    response_model=IngestionResponse,
+    summary="Ingest Batch Events",
+    description="Accept arbitrary events in batch, index in OpenSearch, and publish to Kafka for streaming.",
+)
+async def ingest_batch(
+    request: BatchEventRequest,
+    background_tasks: BackgroundTasks,
+    req: Request,
+):
+    search = get_search_service()
+    now = datetime.now(timezone.utc).isoformat()
+    index_name = f"{settings.OPENSEARCH_INDEX_PREFIX}-{request.index_suffix or 'events'}".lower()
+
+    documents = []
+    for event in request.events:
+        if not isinstance(event, dict):
+            continue
+        if "id" not in event:
+            event["id"] = str(uuid.uuid4())
+        if "timestamp" not in event:
+            event["timestamp"] = now
+        event["ingested_at"] = now
+        event["source"] = request.source
+        event["source_type"] = request.source_type
+        documents.append(event)
+
+    if not documents:
+        return IngestionResponse(accepted=len(request.events), indexed=0, errors=0,
+                                  message="No valid events to index")
+
+    indexed = await _bulk_index_custom(search, index_name, documents)
+    errors = len(documents) - indexed
+
+    for doc in documents[:20]:
+        try:
+            import asyncio as _asyncio
+            _asyncio.create_task(kafka_service.produce_raw_event({
+                "event_id": doc.get("id", ""),
+                "tenant_id": getattr(req.state, "tenant_id", "default"),
+                "source": request.source,
+                "source_type": request.source_type,
+                "data": doc,
+            }))
+        except Exception:
+            pass
+
+    return IngestionResponse(
+        accepted=len(request.events),
+        indexed=indexed,
+        errors=errors,
+        message=f"Batch ingested {indexed}/{len(documents)} events into '{index_name}'",
     )
 
 

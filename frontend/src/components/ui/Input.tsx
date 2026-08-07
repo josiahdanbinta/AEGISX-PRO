@@ -8,18 +8,27 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, id, ...props }, ref) => {
+  ({ label, error, hint, className, id, required, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    const errorId = error ? `${inputId}-error` : undefined;
+    const hintId = hint && !error ? `${inputId}-hint` : undefined;
+    const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined;
+
     return (
       <div className="space-y-1.5">
         {label && (
           <label htmlFor={inputId} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             {label}
+            {required && <span className="text-red-400 ml-0.5" aria-hidden="true">*</span>}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          aria-required={required}
+          required={required}
           className={clsx(
             'w-full bg-white dark:bg-slate-900 border rounded-lg px-3.5 py-2.5 text-sm',
             'text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500',
@@ -31,8 +40,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-500">{error}</p>}
-        {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
+        {error && <p id={errorId} className="text-xs text-red-500" role="alert">{error}</p>}
+        {hint && !error && <p id={hintId} className="text-xs text-slate-500">{hint}</p>}
       </div>
     );
   },

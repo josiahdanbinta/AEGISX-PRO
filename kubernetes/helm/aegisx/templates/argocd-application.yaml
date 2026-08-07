@@ -1,0 +1,42 @@
+{{- if .Values.argocd.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ include "aegisx.fullname" . }}
+  namespace: argocd
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.argocd.repoURL }}
+    targetRevision: {{ .Values.argocd.targetRevision }}
+    path: {{ .Values.argocd.path }}
+    helm:
+      valueFiles:
+        - {{ .Values.argocd.valuesFile }}
+      parameters:
+        - name: global.environment
+          value: {{ .Values.global.environment | quote }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ include "aegisx.namespace" . }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+{{- end }}

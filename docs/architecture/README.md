@@ -1,210 +1,108 @@
-# AEGISX Architecture
-
-## System Overview
-
-AEGISX is an enterprise cybersecurity operations platform combining SIEM, SOAR, XDR, Vulnerability Management, Asset Management, Threat Intelligence, Compliance, and Incident Response into a unified multi-tenant platform.
+# AEGISX PRO — 9-Tier Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         AEGISX PLATFORM                              │
-│                                                                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐                │
-│  │   Frontend   │  │   Backend   │  │    Agents     │               │
-│  │  (React+Vite)│  │  (FastAPI)  │  │  (Win/Lin/Mac)│               │
-│  └──────┬───────┘  └──────┬──────┘  └──────┬────────┘               │
-│         │                 │                 │                        │
-│         └──────────┬──────┴─────────────────┘                        │
-│                    │                                                 │
-│  ┌─────────────────┴──────────────────────────────┐                 │
-│  │              NGINX Reverse Proxy                │                 │
-│  └─────────────────┬──────────────────────────────┘                 │
-│                    │                                                 │
-│     ┌──────────────┼──────────────┬──────────────────┐              │
-│     │              │              │                  │              │
-│  ┌──▼───┐   ┌──────▼─────┐  ┌────▼────┐   ┌───────▼──────┐        │
-│  │ API  │   │   Celery   │  │  Redis  │   │  PostgreSQL  │        │
-│  │Svcs  │   │  Workers   │  │         │   │     15       │        │
-│  └──────┘   └────────────┘  └─────────┘   └──────────────┘        │
-│                                                                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐          │
-│  │  OpenSearch  │  │   RabbitMQ   │  │ External APIs    │          │
-│  │ (Log Index)  │  │  (Msg Bus)   │  │ (VT, MISP, CTI) │          │
-│  └──────────────┘  └──────────────┘  └──────────────────┘          │
-└──────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             TIER 7: FRONTEND & DASHBOARDS                         │
+│  React 18 SPA (TypeScript) · Dark Theme · WCAG 2.1 AA                            │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
+│  │ Alert        │ │ Threat       │ │ SOAR Builder │ │ Admin Panels             │ │
+│  │ Dashboard    │ │ Hunting UI   │ │ (drag & drop)│ │ (Users, Tenants, Audit)  │ │
+│  │ (WebSocket)  │ │ (saved query)│ │ 14 actions   │ │                          │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └────────────┬─────────────┘ │
+├─────────┼────────────────┼────────────────┼──────────────────────┼───────────────┤
+│         │          TIER 6: APPLICATION SERVICES                    │               │
+│         │  FastAPI · Celery Workers · Redis Cache                  │               │
+│  ┌──────┴───────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┴─────────────┐ │
+│  │ SOC API      │ │ Agent Mgmt   │ │ Rules Mgmt   │ │ Threat Intel Service     │ │
+│  │ Case Mgmt    │ │ Osquery Sched│ │ Sigma/Falco  │ │ MISP / OpenCTI Pipeline  │ │
+│  │ Playbook Exec│ │ EDR Commands │ │ Shadow A/B   │ │ VT + AbuseIPDB + Shodan  │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └────────────┬─────────────┘ │
+├─────────┼────────────────┼────────────────┼──────────────────────┼───────────────┤
+│         │          TIER 5: DATA STORAGE                           │               │
+│  ┌──────┴───────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┴─────────────┐ │
+│  │ TimescaleDB  │ │ ClickHouse   │ │ MinIO (S3)   │ │ Redis + OpenSearch       │ │
+│  │ Hypertables  │ │ Columnar     │ │ Immutable    │ │ Bloom Filter + Cache     │ │
+│  │ 90d hot/7yr  │ │ Analytics    │ │ Evidence     │ │ Full-text Search         │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └────────────┬─────────────┘ │
+├─────────┼────────────────┼────────────────┼──────────────────────┼───────────────┤
+│         │          TIER 4: ANALYTICS & DETECTION                  │               │
+│  ┌──────┴───────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┴─────────────┐ │
+│  │ Sigma Engine │ │ Falco Rules  │ │ UEBA Scorer  │ │ SIEM Correlator          │ │
+│  │ 477-line     │ │ 25 kernel    │ │ Welford Stats│ │ Temporal + Behavioral    │ │
+│  │ parser       │ │ rules        │ │ Anomaly Score│ │ Auto-incident creation   │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └────────────┬─────────────┘ │
+├─────────┼────────────────┼────────────────┼──────────────────────┼───────────────┤
+│         │          TIER 3: STREAM PROCESSING                      │               │
+│  ┌──────┴─────────────────┴───────┐  ┌────────────────────────────┴─────────────┐ │
+│  │ Apache Flink (PyFlink SQL)     │  │ Stream Processor (Python)                 │ │
+│  │ 5 jobs: normalize · aggregate  │  │ Normalize · Enrich · Dedup · Window Ops  │ │
+│  │ dedup · UEBA · telemetry       │  │ Redis Bloom Filters · 5min/1hr Windows   │ │
+│  │ State: RocksDB + PG checkpoints│  │ State: RocksDB Store (SQLite fallback)   │ │
+│  └──────────────┬─────────────────┘  └────────────────────────────┬─────────────┘ │
+├─────────────────┼─────────────────────────────────────────────────┼───────────────┤
+│                 │          TIER 2: DATA INGESTION                 │               │
+│  ┌──────────────┴─────────────────┐  ┌────────────────────────────┴─────────────┐ │
+│  │ Kafka Cluster (3 brokers)      │  │ Ingestion API                            │ │
+│  │ Topics: events.raw · .normalized│  │ POST /batch · /syslog · /json · /beats  │ │
+│  │ alerts.triggered · telemetry   │  │ Avro Schema Registry                    │ │
+│  │ RF=3 · 7-day retention         │  │ Redis Bloom Dedup (1hr window)          │ │
+│  └──────────────┬─────────────────┘  └────────────────────────────┬─────────────┘ │
+├─────────────────┼─────────────────────────────────────────────────┼───────────────┤
+│                 │          TIER 1: API GATEWAY & AUTH             │               │
+│  ┌──────────────┴──────────────────┐ ┌────────────────────────────┴─────────────┐ │
+│  │ OAuth 2.0 / SAML 2.0 / OIDC    │ │ TLS 1.3 + mTLS                           │ │
+│  │ API Key Management (rotating)   │ │ Nginx Reverse Proxy                     │ │
+│  │ Rate Limiting (token bucket)    │ │ Security Headers (CSP, HSTS, XFO)       │ │
+│  │ Immutable Audit Log (WORM)      │ │ Hash Chain Integrity Verification       │ │
+│  └─────────────────────────────────┘ └──────────────────────────────────────────┘ │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                          TIER 9: MONITORING & OBSERVABILITY                       │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
+│  │ Prometheus   │ │ Grafana      │ │ ELK Stack    │ │ Jaeger Tracing           │ │
+│  │ 11 jobs      │ │ 6 dashboards │ │ Logstash pipe│ │ OpenTelemetry 10% sample │ │
+│  │ 10 alerts    │ │ platform+    │ │ 30-day retn  │ │ 7-day retention          │ │
+│  │ 15s interval │ │ tenant+soc   │ │ Kibana UI    │ │ Rule exec tracing        │ │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────────────────┘ │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                         TIER 8: ORCHESTRATION & DEPLOYMENT                        │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Kubernetes 1.28+ · Helm (40+ templates) · ArgoCD GitOps · Docker Multi-stage │ │
+│  │ StatefulSets: Kafka · TimescaleDB · ClickHouse · MinIO                       │ │
+│  │ Deployments: Backend · Frontend · Celery · Flink · Stream Processor          │ │
+│  │ ConfigMaps: Rules hot-reload · Notification webhooks · Backup schedules      │ │
+│  └──────────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-## Component Breakdown
-
-### Backend (FastAPI + Python)
-
-The backend is an async Python application built on FastAPI with SQLAlchemy 2.0 for database operations.
-
-**Core Modules:**
-
-| Module | Path | Purpose |
-|--------|------|---------|
-| API Routes | `app/api/v1/` | REST endpoints for all platform features |
-| Core | `app/core/` | Configuration, security, database, caching, Celery |
-| Models | `app/models/` | SQLAlchemy ORM models for all entities |
-| Middleware | `app/middleware/` | CORS, tenant context, rate limiting, security headers |
-| AI Services | `app/ai/` | AI-powered analysis, summarization, recommendations |
-| Plugins | `app/plugins/` | Extensible integration framework |
-| Tasks | `app/tasks/` | Background Celery tasks for async operations |
-
-**API Structure (v1):**
-
-| Prefix | Module | Description |
-|--------|--------|-------------|
-| `/auth` | `auth.py` | Login, MFA, WebAuthn, password management, API keys |
-| `/tenants` | `tenants.py` | Tenant CRUD, usage tracking, audit logs |
-| `/users` | `users.py` | User, role, department management |
-| `/assets` | `assets.py` | Asset inventory, groups, discovery, agents, monitoring |
-| `/incidents` | `incidents.py` | Incident lifecycle, timeline, notes, evidence, MITRE, playbooks |
-| `/detection` | `detection.py` | Detection rules (Sigma, YARA, Suricata), alerts, IOCs, UEBA |
-| `/vulnerabilities` | `vulnerabilities.py` | Vulnerability scans, CVE database, misconfigurations |
-| `/compliance` | `compliance.py` | PCI DSS, SOC 2, ISO 27001, NIST CSF, HIPAA, GDPR frameworks |
-| `/reports` | `reports.py` | Report generation, scheduling, statistical dashboards |
-| `/ai` | `ai.py` | Incident summarization, root cause analysis, alert explanation |
-| `/sso` | `sso.py` | SAML 2.0, OIDC, LDAP/AD, Microsoft Entra ID |
-| `/soar` | `soar.py` | SOAR playbooks, workflow automation |
-| `/threat-intel` | `threat_intel.py` | Threat feeds, indicators, intelligence sources |
-| `/search` | `search.py` | Global search across all resources |
-| `/audit` | `audit.py` | Audit log querying and compliance evidence |
-| `/notifications` | `notifications.py` | Alert channels, user preferences |
-| `/dashboards` | `dashboards.py` | Aggregated dashboard data |
-| `/ws` | `websocket.py` | Real-time WebSocket event streaming |
-
-### Frontend (React + TypeScript + Vite)
-
-The frontend is a single-page application (SPA) built with React, TypeScript, Tailwind CSS, and Recharts for data visualization.
-
-**Key libraries:** `react-router-dom`, `zustand` (state management), `lucide-react` (icons), `react-hot-toast` (notifications).
-
-### Agent (Python)
-
-Cross-platform lightweight agent deployed to endpoints for real-time monitoring.
-
-| Component | Purpose |
-|-----------|---------|
-| `core/collector.py` | Data collection engine |
-| `core/communication.py` | Secure communication with backend |
-| `core/discovery/` | Asset and network discovery |
-| `core/monitors/` | Process, file, network monitors |
-| `platforms/windows/` | Windows-specific integrations (Event Log, WMI, Registry) |
-| `platforms/linux/` | Linux-specific integrations (syslog, auditd, proc) |
-| `platforms/macos/` | macOS-specific integrations |
-
-### Infrastructure
-
-| Service | Technology | Role |
-|---------|-----------|------|
-| API Gateway | Nginx | Reverse proxy, SSL termination, static file serving |
-| Database | PostgreSQL 15 | Primary relational data store |
-| Cache | Redis 7 | Rate limiting, session cache, Celery broker |
-| Message Queue | RabbitMQ 3.12 | Event bus for async task distribution |
-| Search/Logs | OpenSearch 2.x | Log indexing, full-text search, analytics |
-| Task Worker | Celery | Background jobs (detection, scanning, reporting) |
 
 ## Data Flow
 
-### Agent → Backend Flow
+```
+Agent/API → [TLS 1.3 + mTLS] → Ingest /batch → Kafka(events.raw)
+    ↓
+Stream Processor: Normalize → Dedup(Bloom) → Enrich(TI+Asset) → Window(5m/1hr)
+    ↓                                    ↓
+Kafka(events.normalized)          Kafka(alerts.triggered)
+    ↓                                    ↓
+Flink Jobs (5x SQL)              Alert Pipeline → DB dedup → Bloom dedup
+    ↓                                    ↓
+ClickHouse Analytics             Notifications (Slack/Teams/PD)
+TimescaleDB Hypertables          Incident Creation
+    ↓                                    ↓
+Grafana Dashboards              SOC API → React SPA (WebSocket)
+Prometheus Metrics              UEBA Score → Baseline Update
+```
 
-1. Agents register with the backend using a registration key
-2. Agents send heartbeats every 60 seconds via HTTPS
-3. Collected telemetry (events, logs, metrics) is batched and pushed to the API
-4. Backend persists data in PostgreSQL and indexes in OpenSearch
-5. Detection engine processes events against active detection rules
-6. Alerts are generated when detection rules match
+## Component Count
 
-### API Request Flow
-
-1. Client sends request through Nginx to FastAPI backend
-2. Tenant context middleware extracts `X-Tenant-ID` header
-3. Authentication validates JWT or API key
-4. Authorization checks role-based permissions
-5. Rate limiting middleware validates request quotas
-6. Request handlers process the operation
-7. Audit logs are created for state-changing operations
-8. Response returns with security headers and correlation ID
-
-## Multi-Tenant Architecture
-
-AEGISX implements **row-level tenant isolation** (`TENANT_ISOLATION_MODE: "row"`) with support for schema-level and database-level isolation in production deployments.
-
-**Key principles:**
-
-- Every resource row carries a `tenant_id` foreign key to the `tenants` table
-- All queries are scoped to the current tenant via `X-Tenant-ID` header
-- JWT tokens embed `tenant_id` to prevent cross-tenant access
-- Super admins can navigate across tenants; all other roles are tenant-bound
-- Resource quotas are enforced per tenant (assets, users, storage)
-- Audit logs capture all tenant operations for compliance
-
-## Security Architecture
-
-### Authentication
-
-- **Primary:** JWT access + refresh token pair (HS256)
-- **MFA:** TOTP (Time-based One-Time Password) with backup codes
-- **WebAuthn:** FIDO2/Passkey support for passwordless authentication
-- **API Keys:** SHA-256 hashed keys for service-to-service auth
-- **SSO:** SAML 2.0, OIDC, LDAP/AD, Microsoft Entra ID integration
-
-### Authorization (RBAC)
-
-| Role | Access Level |
-|------|-------------|
-| `super_admin` | Platform-wide, cross-tenant access |
-| `tenant_admin` | Full tenant administration |
-| `soc_manager` | SOC operations management |
-| `soc_analyst_l1/l2/l3` | Tiered analyst access |
-| `incident_responder` | Incident response operations |
-| `threat_hunter` | Threat hunting and detection engineering |
-| `compliance_officer` | Compliance assessment and auditing |
-| `auditor` | Read-only audit access |
-
-### Network Security
-
-- CORS with configurable origins
-- Trusted host middleware
-- Security headers (HSTS, CSP, X-Frame-Options, XSS protection)
-- Rate limiting (10 req/min for auth, 100 req/min for API)
-- Request correlation IDs for traceability
-
-### Cryptographic Security
-
-- Password hashing: bcrypt with 12 rounds
-- JWT signing: HS256
-- API key hashing: SHA-256
-- Data encryption: Fernet (symmetric) via `cryptography` library
-- HMAC signatures for webhook verification
-- Secure token generation via `secrets` module
-
-## Deployment Options
-
-### Docker Compose (Development)
-
-Single-host deployment with all services containerized. See `docker-compose.yml` for the full service stack including PostgreSQL, Redis, OpenSearch, RabbitMQ, backend, frontend, Celery workers, and Nginx.
-
-### Kubernetes (Production)
-
-The `kubernetes/` directory contains Kustomize-based deployment manifests:
-
-- `kubernetes/base/` — Core deployments and configurations
-- `kubernetes/overlays/dev/` — Development overlay
-- `kubernetes/overlays/prod/` — Production overlay
-
-Key Kubernetes considerations:
-- Horizontal Pod Autoscaling for API and Celery workers
-- PersistentVolumeClaims for databases
-- Secrets management via Kubernetes Secrets or external vault
-- Ingress for TLS termination
-- Network policies for inter-service communication
-- Resource limits and requests on all pods
-
-### Supported Topologies
-
-1. **All-in-One:** All services on a single host (Docker Compose)
-2. **Distributed:** Services split across multiple hosts/VMs
-3. **Kubernetes:** Full cloud-native deployment
-4. **Hybrid:** Backend in cloud, agents on-premises
+| Layer | Files | Lines (approx) |
+|-------|-------|----------------|
+| Tier 1: Gateway & Auth | 6 | 2,200 |
+| Tier 2: Data Ingestion | 4 | 1,600 |
+| Tier 3: Stream Processing | 4 | 2,000 |
+| Tier 4: Analytics & Detection | 8 | 5,500 |
+| Tier 5: Data Storage | 6 | 1,800 |
+| Tier 6: Application Services | 22 | 15,000 |
+| Tier 7: Frontend | 18 | 4,500 |
+| Tier 8: Orchestration | 42 | 3,500 |
+| Tier 9: Monitoring | 12 | 2,000 |
+| **Total** | **122** | **~38,100** |

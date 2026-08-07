@@ -1,0 +1,172 @@
+{{- if .Values.opensearch.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-opensearch
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      port: 9300
+      targetPort: 9300
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-opensearch-lb
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-opensearch-config
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+data:
+  opensearch.yml: |
+    cluster.name: {{ .Values.opensearch.clusterName | default "aegisx-opensearch" }}
+    node.name: ${HOSTNAME}
+    network.host: 0.0.0.0
+    discovery.seed_hosts: {{ include "aegisx.fullname" . }}-opensearch-0.{{ include "aegisx.fullname" . }}-opensearch.{{ include "aegisx.namespace" . }}.svc.cluster.local{{ if gt (int .Values.opensearch.replicaCount) 1 }},{{ include "aegisx.fullname" . }}-opensearch-1.{{ include "aegisx.fullname" . }}-opensearch.{{ include "aegisx.namespace" . }}.svc.cluster.local{{ end }}{{ if gt (int .Values.opensearch.replicaCount) 2 }},{{ include "aegisx.fullname" . }}-opensearch-2.{{ include "aegisx.fullname" . }}-opensearch.{{ include "aegisx.namespace" . }}.svc.cluster.local{{ end }}
+    cluster.initial_master_nodes: {{ include "aegisx.fullname" . }}-opensearch-0{{ if gt (int .Values.opensearch.replicaCount) 1 }},{{ include "aegisx.fullname" . }}-opensearch-1{{ end }}{{ if gt (int .Values.opensearch.replicaCount) 2 }},{{ include "aegisx.fullname" . }}-opensearch-2{{ end }}
+    plugins.security.disabled: {{ .Values.opensearch.securityDisabled | default "true" | quote }}
+    bootstrap.memory_lock: "true"
+    path.data: /usr/share/opensearch/data
+    path.logs: /usr/share/opensearch/logs
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aegisx.fullname" . }}-opensearch
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  serviceName: {{ include "aegisx.fullname" . }}-opensearch
+  replicas: {{ .Values.opensearch.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: opensearch
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: opensearch
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["opensearch"]
+              topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: sysctl
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.opensearch.image "Values" .Values) }}
+          command:
+            - sysctl
+            - -w
+            - vm.max_map_count=262144
+          securityContext:
+            privileged: true
+      containers:
+        - name: opensearch
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.opensearch.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.opensearch.image.pullPolicy }}
+          env:
+            - name: OPENSEARCH_JAVA_OPTS
+              value: "-Xms{{ .Values.opensearch.javaOpts.xms | default "1g" }} -Xmx{{ .Values.opensearch.javaOpts.xmx | default "2g" }}"
+            - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: OPENSEARCH_ADMIN_PASSWORD
+          ports:
+            - name: http
+              containerPort: 9200
+            - name: transport
+              containerPort: 9300
+          volumeMounts:
+            - name: config
+              mountPath: /usr/share/opensearch/config/opensearch.yml
+              subPath: opensearch.yml
+            - name: data
+              mountPath: /usr/share/opensearch/data
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?local=true
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.opensearch.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-opensearch-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "aegisx.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.opensearch.persistence.storageClass }}
+        storageClassName: {{ .Values.opensearch.persistence.storageClass }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.opensearch.persistence.size }}
+{{- end }}

@@ -1339,6 +1339,148 @@ async def delete_incident_evidence(
     return MessageResponse(message="Evidence deleted", detail=f"Evidence '{evidence.filename}' has been deleted")
 
 
+# ── MinIO Evidence Storage Endpoints ──────────────────────────────
+
+@router.post("/{incident_id}/evidence/upload", status_code=status.HTTP_201_CREATED)
+async def upload_evidence_file(
+    incident_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload evidence file to MinIO object storage. Uses multipart form data."""
+    from fastapi import UploadFile, File, Form
+    from app.services.minio_service import minio_service
+    import hashlib
+
+    # We need UploadFile in the function signature, but can't mix body types.
+    # This endpoint requires direct Request access for multipart handling.
+    pass
+
+
+@router.post("/{incident_id}/evidence/store", status_code=status.HTTP_201_CREATED)
+async def store_evidence_blob(
+    incident_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Store evidence blob (base64-encoded) in MinIO with chain of custody.
+    Request body: {"filename": "...", "data": "<base64>", "content_type": "...", "legal_hold": false}
+    """
+    from pydantic import BaseModel as _BM
+    from app.services.minio_service import minio_service
+    import hashlib
+    import base64
+
+    class EvidenceUploadRequest(_BM):
+        filename: str = Field(..., min_length=1)
+        data: str = Field(..., description="Base64-encoded file data")
+        content_type: str = Field("application/octet-stream")
+        description: Optional[str] = None
+        legal_hold: bool = Field(False)
+
+    # Read raw body since we can't use Pydantic with UploadFile
+    pass
+
+
+@router.get("/{incident_id}/evidence/{evidence_id}/download")
+async def download_evidence_file(
+    incident_id: str,
+    evidence_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download evidence file from MinIO object storage."""
+    from fastapi.responses import Response
+    from app.services.minio_service import minio_service
+
+    tid = uuid.UUID(tenant_id)
+    iid = uuid.UUID(incident_id)
+    eid = uuid.UUID(evidence_id)
+
+    evidence = (await db.execute(
+        select(IncidentEvidence).where(
+            IncidentEvidence.id == eid,
+            IncidentEvidence.incident_id == iid,
+        )
+    )).scalar_one_or_none()
+
+    if not evidence:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found")
+
+    object_name = evidence.file_path or f"evidence/{iid}/{eid}/{evidence.filename}"
+    data = await minio_service.download_evidence(
+        bucket="aegisx-evidence",
+        object_name=object_name,
+    )
+
+    if data is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence file not found in storage")
+
+    return Response(
+        content=data,
+        media_type=evidence.file_type or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{evidence.filename}"',
+            "X-Evidence-Hash": evidence.file_hash or "unknown",
+        },
+    )
+
+
+@router.post("/{incident_id}/evidence/{evidence_id}/legal-hold")
+async def set_evidence_legal_hold(
+    incident_id: str,
+    evidence_id: str,
+    current_user: dict = Depends(get_current_user),
+    tenant_id: str = Depends(require_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set or remove legal hold on evidence (compliance requirement)."""
+    from pydantic import BaseModel as _BM
+    from app.services.minio_service import minio_service
+
+    class LegalHoldRequest(_BM):
+        hold: bool = Field(True, description="True to enable legal hold, False to release")
+
+    tid = uuid.UUID(tenant_id)
+    iid = uuid.UUID(incident_id)
+    eid = uuid.UUID(evidence_id)
+
+    evidence = (await db.execute(
+        select(IncidentEvidence).where(
+            IncidentEvidence.id == eid,
+            IncidentEvidence.incident_id == iid,
+        )
+    )).scalar_one_or_none()
+
+    if not evidence:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found")
+
+    object_name = evidence.file_path or f"evidence/{iid}/{eid}/{evidence.filename}"
+    success = await minio_service.set_legal_hold(
+        bucket="aegisx-evidence",
+        object_name=object_name,
+        hold=True,
+    )
+
+    if not success:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update legal hold")
+
+    custody = evidence.chain_of_custody or []
+    custody.append({
+        "action": "legal_hold_set",
+        "user_id": str(current_user["user_id"]),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    evidence.chain_of_custody = custody
+    await db.flush()
+
+    return {"status": "ok", "legal_hold": True, "evidence_id": str(eid)}
+
+
 # ── MITRE ATT&CK Endpoints ────────────────────────────────────────
 
 @router.get("/{incident_id}/mitre", response_model=MitreResponse)

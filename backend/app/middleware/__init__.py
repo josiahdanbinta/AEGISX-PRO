@@ -64,11 +64,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         if path.startswith(f"{settings.API_V1_PREFIX}/auth"):
-            max_req, window = 10, 60  # 10 login attempts per minute
+            max_req, window = 10, 60
             key = f"rl:auth:{client_ip}"
         else:
             parts = [p for p in path.split("/") if p]
-            max_req, window = 100, 60  # 100 API requests per minute
+            max_req, window = 100, 60
             key = f"rl:{client_ip}:{':'.join(parts[:3])}"
 
         allowed, remaining = await rate_limit_check(key, max_req, window)
@@ -127,14 +127,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Log incoming requests with timing information."""
-
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        response = await call_next(request)
-        return response
-
-
 def setup_middleware(app: FastAPI) -> None:
     """Configure all middleware for the FastAPI application."""
 
@@ -178,6 +170,10 @@ def setup_middleware(app: FastAPI) -> None:
         if trusted_hosts:
             app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
+    from app.middleware.request_logging import RequestLoggingMiddleware
+    from app.middleware.metrics_middleware import PrometheusHTTPMiddleware
+
+    app.add_middleware(PrometheusHTTPMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(TenantContextMiddleware)
     app.add_middleware(RateLimitMiddleware)

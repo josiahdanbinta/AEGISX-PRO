@@ -1,0 +1,25 @@
+<clickhouse>
+    <profiles>
+        <default>
+            <max_memory_usage>10000000000</max_memory_usage>
+            <max_query_size>262144</max_query_size>
+            <use_uncompressed_cache>0</use_uncompressed_cache>
+            <load_balancing>random</load_balancing>
+        </default>
+        <readonly>
+            <readonly>1</readonly>
+        </readonly>
+    </profiles>
+
+    <users>
+        <aegisx>
+            <password_sha256_hex>8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92</password_sha256_hex>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>1</access_management>
+        </aegisx>
+    </users>
+</clickhouse>

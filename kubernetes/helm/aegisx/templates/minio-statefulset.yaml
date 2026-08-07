@@ -1,0 +1,159 @@
+{{- if .Values.minio.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-minio
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-minio-lb
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+spec:
+  type: ClusterIP
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aegisx.fullname" . }}-minio
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+spec:
+  serviceName: {{ include "aegisx.fullname" . }}-minio
+  replicas: {{ .Values.minio.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: minio
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: minio
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1001
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["minio"]
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: minio
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.minio.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              minio server --address :9000 --console-address :9001 \
+                {{- range $i := until (int .Values.minio.replicaCount) }}
+                http://{{ include "aegisx.fullname" $ }}-minio-{{ $i }}.{{ include "aegisx.fullname" $ }}-minio.{{ include "aegisx.namespace" $ }}.svc.cluster.local/data/disk{{ $i }} \
+                {{- end }}
+          env:
+            - name: MINIO_ROOT_USER
+              value: {{ .Values.minio.rootUser | quote }}
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: MINIO_ROOT_PASSWORD
+            - name: MINIO_BROWSER
+              value: "on"
+            - name: MINIO_PROMETHEUS_AUTH_TYPE
+              value: public
+          ports:
+            - name: api
+              containerPort: 9000
+            - name: console
+              containerPort: 9001
+          {{- if gt (int .Values.minio.replicaCount) 1 }}
+          volumeMounts:
+            {{- range $i := until (int .Values.minio.replicaCount) }}
+            - name: data{{ $i }}
+              mountPath: /data/disk{{ $i }}
+            {{- end }}
+          {{- else }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.minio.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+  volumeClaimTemplates:
+    {{- range $i := until (int .Values.minio.replicaCount) }}
+    - metadata:
+        name: data{{ $i }}
+        labels:
+          {{- include "aegisx.labels" $ | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if $.Values.minio.persistence.storageClass }}
+        storageClassName: {{ $.Values.minio.persistence.storageClass }}
+        {{- else if $.Values.global.storageClass }}
+        storageClassName: {{ $.Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $.Values.minio.persistence.size }}
+    {{- end }}
+{{- end }}

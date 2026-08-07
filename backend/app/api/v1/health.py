@@ -2,10 +2,10 @@
 AEGISX - Health Check Endpoints
 """
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional, Dict
 
 from app.core.config import settings
-
 
 router = APIRouter()
 
@@ -17,11 +17,21 @@ class HealthCheck(BaseModel):
     environment: str = settings.APP_ENV
 
 
+class ServiceStatus(BaseModel):
+    status: str
+    message: Optional[str] = None
+
+
 class ReadinessCheck(BaseModel):
     status: str
-    database: str
-    cache: str
-    search: str
+    database: ServiceStatus
+    cache: ServiceStatus
+    search: ServiceStatus
+    kafka: ServiceStatus = Field(default_factory=lambda: ServiceStatus(status="disabled"))
+    timescaledb: ServiceStatus = Field(default_factory=lambda: ServiceStatus(status="disabled"))
+    minio: ServiceStatus = Field(default_factory=lambda: ServiceStatus(status="disabled"))
+    clickhouse: ServiceStatus = Field(default_factory=lambda: ServiceStatus(status="disabled"))
+    version: str = settings.APP_VERSION
 
 
 @router.get(
@@ -38,37 +48,104 @@ async def health_check():
     "/ready",
     response_model=ReadinessCheck,
     summary="Readiness Check",
-    description="Full readiness probe including database, cache, and search",
+    description="Full readiness probe including database, cache, search, and infrastructure services",
 )
 async def readiness_check():
     from app.core.database import check_db_connection
     from app.core.cache import redis_client
 
-    db_status = "ok"
-    try:
-        if not await check_db_connection():
-            db_status = "unavailable"
-    except Exception:
-        db_status = "unavailable"
+    services = {}
 
-    cache_status = "ok"
+    # ── Database ────────────────────────────────────────
+    try:
+        if await check_db_connection():
+            services["database"] = ServiceStatus(status="ok")
+        else:
+            services["database"] = ServiceStatus(status="unavailable", message="Connection failed")
+    except Exception as e:
+        services["database"] = ServiceStatus(status="unavailable", message=str(e)[:200])
+
+    # ── Redis Cache ─────────────────────────────────────
     try:
         if redis_client:
             await redis_client.ping()
+            services["cache"] = ServiceStatus(status="ok")
         else:
-            cache_status = "unavailable"
+            services["cache"] = ServiceStatus(status="unavailable", message="Client not initialized")
+    except Exception as e:
+        services["cache"] = ServiceStatus(status="unavailable", message=str(e)[:200])
+
+    # ── OpenSearch ──────────────────────────────────────
+    try:
+        from app.services.opensearch import get_search_service
+        search = get_search_service()
+        if search and search.client:
+            search.client.info()
+            services["search"] = ServiceStatus(status="ok")
+        else:
+            services["search"] = ServiceStatus(status="unavailable")
+    except Exception as e:
+        services["search"] = ServiceStatus(status="degraded", message=str(e)[:200])
+
+    # ── Kafka ───────────────────────────────────────────
+    if settings.FEATURE_KAFKA:
+        try:
+            from app.services.kafka_messaging import kafka_service
+            if kafka_service._admin_client:
+                kafka_service._admin_client.list_topics(timeout=5)
+                services["kafka"] = ServiceStatus(status="ok")
+            else:
+                services["kafka"] = ServiceStatus(status="unavailable", message="Not initialized")
+        except Exception as e:
+            services["kafka"] = ServiceStatus(status="degraded", message=str(e)[:200])
+    else:
+        services["kafka"] = ServiceStatus(status="disabled")
+
+    # ── TimescaleDB ─────────────────────────────────────
+    try:
+        from app.core.database import async_session_factory
+        from sqlalchemy import text
+        async with async_session_factory() as session:
+            await session.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'timescaledb'"))
+            services["timescaledb"] = ServiceStatus(status="ok")
     except Exception:
-        cache_status = "unavailable"
-    search_status = "ok"  # Simplified
+        services["timescaledb"] = ServiceStatus(status="disabled", message="TimescaleDB extension not available")
 
-    overall = "healthy" if all(s == "ok" for s in [db_status, cache_status, search_status]) else "degraded"
+    # ── MinIO ───────────────────────────────────────────
+    try:
+        from app.services.minio_service import minio_service
+        client = minio_service._get_client()
+        if client:
+            import asyncio
+            found = await asyncio.get_event_loop().run_in_executor(None, client.bucket_exists, "aegisx-evidence")
+            services["minio"] = ServiceStatus(status="ok")
+        else:
+            services["minio"] = ServiceStatus(status="unavailable", message="Client not initialized")
+    except Exception as e:
+        services["minio"] = ServiceStatus(status="degraded", message=str(e)[:200])
 
-    return ReadinessCheck(
-        status=overall,
-        database=db_status,
-        cache=cache_status,
-        search=search_status,
-    )
+    # ── ClickHouse ──────────────────────────────────────
+    if settings.FEATURE_CLICKHOUSE:
+        try:
+            from app.services.clickhouse_service import clickhouse_service
+            await clickhouse_service._query("SELECT 1")
+            services["clickhouse"] = ServiceStatus(status="ok")
+        except Exception as e:
+            services["clickhouse"] = ServiceStatus(status="degraded", message=str(e)[:200])
+    else:
+        services["clickhouse"] = ServiceStatus(status="disabled")
+
+    # ── Overall status ──────────────────────────────────
+    critical = ["database", "cache"]
+    overall = "healthy"
+    for name, svc in services.items():
+        if name in critical and svc.status != "ok":
+            overall = "unhealthy"
+            break
+        elif svc.status not in ("ok", "disabled"):
+            overall = "degraded"
+
+    return ReadinessCheck(status=overall, version=settings.APP_VERSION, **services)
 
 
 @router.get(

@@ -1,0 +1,204 @@
+{{- if .Values.rabbitmq.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-rabbitmq
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: amqp
+      port: {{ .Values.rabbitmq.service.port }}
+      targetPort: amqp
+    - name: management
+      port: {{ .Values.rabbitmq.service.managementPort }}
+      targetPort: management
+    - name: epmd
+      port: 4369
+      targetPort: 4369
+    - name: dist
+      port: 25672
+      targetPort: 25672
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-rabbitmq-lb
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  type: ClusterIP
+  ports:
+    - name: amqp
+      port: {{ .Values.rabbitmq.service.port }}
+      targetPort: amqp
+    - name: management
+      port: {{ .Values.rabbitmq.service.managementPort }}
+      targetPort: management
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-rabbitmq-config
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+data:
+  rabbitmq.conf: |
+    cluster_formation.peer_discovery_backend = rabbit_peer_discovery_k8s
+    cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+    cluster_formation.k8s.address_type = hostname
+    cluster_formation.k8s.service_name = {{ include "aegisx.fullname" . }}-rabbitmq
+    cluster_formation.node_cleanup.only_log_warning = true
+    cluster_partition_handling = pause_minority
+    vm_memory_high_watermark.relative = 0.7
+    disk_free_limit.relative = 1.5
+    collect_statistics_interval = 10000
+    management.load_definitions = /etc/rabbitmq/definitions.json
+  enabled_plugins: |
+    [rabbitmq_management,rabbitmq_peer_discovery_k8s,rabbitmq_prometheus].
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aegisx.fullname" . }}-rabbitmq
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  serviceName: {{ include "aegisx.fullname" . }}-rabbitmq
+  replicas: {{ .Values.rabbitmq.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rabbitmq
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: rabbitmq
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "15692"
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 999
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["rabbitmq"]
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: rabbitmq
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.rabbitmq.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmq.defaultUser | default "aegisx" | quote }}
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: {{ .Values.rabbitmq.defaultVhost | default "/" | quote }}
+            - name: RABBITMQ_ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: RABBITMQ_ERLANG_COOKIE
+            - name: RABBITMQ_USE_LONGNAME
+              value: "true"
+            - name: K8S_SERVICE_NAME
+              value: {{ include "aegisx.fullname" . }}-rabbitmq
+            - name: RABBITMQ_NODENAME
+              value: "rabbit@$(HOSTNAME).{{ include "aegisx.fullname" . }}-rabbitmq.{{ include "aegisx.namespace" . }}.svc.cluster.local"
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: management
+              containerPort: 15672
+            - name: epmd
+              containerPort: 4369
+            - name: dist
+              containerPort: 25672
+            - name: metrics
+              containerPort: 15692
+          volumeMounts:
+            - name: config
+              mountPath: /etc/rabbitmq/rabbitmq.conf
+              subPath: rabbitmq.conf
+            - name: config
+              mountPath: /etc/rabbitmq/enabled_plugins
+              subPath: enabled_plugins
+            - name: data
+              mountPath: /var/lib/rabbitmq
+          livenessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - -q
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - -q
+                - check_running
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.rabbitmq.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-rabbitmq-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "aegisx.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.rabbitmq.persistence.storageClass }}
+        storageClassName: {{ .Values.rabbitmq.persistence.storageClass }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.rabbitmq.persistence.size }}
+{{- end }}

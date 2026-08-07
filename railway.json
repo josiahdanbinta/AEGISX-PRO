@@ -6,6 +6,39 @@
   "deploy": {
     "healthcheckPath": "/",
     "healthcheckTimeout": 30,
-    "restartPolicyType": "ALWAYS"
+    "restartPolicyType": "ALWAYS",
+    "numReplicas": 1
+  },
+  "services": {
+    "backend": {
+      "port": 8001,
+      "env": {
+        "APP_ENV": "production",
+        "DEBUG": "false",
+        "LOG_LEVEL": "WARNING",
+        "FEATURE_SOAR": "true",
+        "FEATURE_THREAT_INTEL": "true",
+        "FEATURE_AI": "false",
+        "FEATURE_COMPLIANCE": "true",
+        "FEATURE_VULNERABILITY": "true",
+        "FEATURE_AGENT": "true",
+        "FEATURE_AUDIT": "true",
+        "FEATURE_KAFKA": "true",
+        "FEATURE_CLICKHOUSE": "true",
+        "FEATURE_UEBA": "true",
+        "PROMETHEUS_ENABLED": "true",
+        "TRACING_ENABLED": "true",
+        "JAEGER_SAMPLING_RATE": "0.1"
+      }
+    },
+    "timescaledb": {
+      "template": "postgres",
+      "env": {
+        "TZ": "UTC"
+      }
+    },
+    "redis": {
+      "template": "redis"
+    }
   }
 }

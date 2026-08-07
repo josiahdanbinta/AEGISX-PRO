@@ -448,11 +448,16 @@ class ServicesCollector(BaseCollector):
             return False
 
     def _is_unsigned_windows(self, exe_path: str) -> bool:
-        sigcheck = self._run_command(
-            ["powershell", "-Command",
-             f"(Get-AuthenticodeSignature -FilePath '{exe_path}' -ErrorAction SilentlyContinue).Status"],
-            timeout=5,
-        )
-        if sigcheck["returncode"] == 0 and sigcheck["stdout"].strip():
-            return sigcheck["stdout"].strip() == "NotSigned"
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                 "(Get-AuthenticodeSignature -LiteralPath $env:EXEPATH -ErrorAction SilentlyContinue).Status"],
+                env={"EXEPATH": exe_path, **__import__('os').environ},
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip() == "NotSigned"
+        except Exception:
+            return False
         return False

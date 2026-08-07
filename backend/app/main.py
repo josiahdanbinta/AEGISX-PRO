@@ -5,7 +5,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 
@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.core.database import close_db_connection
 from app.core.exception_handlers import setup_exception_handlers
 from app.middleware import setup_middleware
+from app.api.deps import get_current_user
 from app.services.metrics import setup_metrics, METRICS
 
 
@@ -240,11 +241,12 @@ and Incident Response.
     async def root():
         return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
-    @app.get("/debug")
-    async def debug():
-        """Debug endpoint — shows configuration state."""
-        url = settings.DATABASE_URL or "NOT SET"
-        masked = url.replace("://", "://****:****@") if "://" in url else url
+    @app.get("/debug", include_in_schema=False)
+    async def debug(current_user: dict = Depends(get_current_user)):
+        """Debug endpoint — shows configuration state. Requires authentication."""
+        from app.core.config import settings as s
+        url = s.DATABASE_URL or "NOT SET"
+        masked = url.split("://")[0] + "://****" if "://" in url else url
         return {
             "database_url": masked,
             "redis_url": settings.REDIS_URL or "NOT SET",

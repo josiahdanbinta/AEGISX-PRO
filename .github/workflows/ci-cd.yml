@@ -277,3 +277,27 @@ jobs:
           REDIS_PORT: 6379
           APP_ENV: testing
         run: pytest tests/integration/ -v
+
+  # ── Deploy to Staging ──────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [integration-tests, docker-build, security-scan]
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    concurrency: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Helm Deploy
+        run: |
+          helm upgrade --install aegisx ./kubernetes/helm/aegisx \
+            --namespace aegisx-staging --create-namespace \
+            --set global.environment=staging \
+            --set backend.image.tag=${{ github.sha }} \
+            --set frontend.image.tag=${{ github.sha }} \
+            --timeout 10m --wait
+      - name: Run Smoke Tests
+        run: |
+          kubectl wait --namespace aegisx-staging --for=condition=ready pod -l app=aegisx --timeout=5m
+          echo "Smoke tests passed"

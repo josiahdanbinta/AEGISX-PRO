@@ -2,7 +2,7 @@ import { type ButtonHTMLAttributes, forwardRef, type ElementType } from 'react';
 import { clsx } from 'clsx';
 import { Loader2 } from 'lucide-react';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'success' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,12 +18,13 @@ const variants: Record<Variant, string> = {
   danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500',
   success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm focus:ring-emerald-500',
   ghost: 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-500',
+  outline: 'border border-slate-300 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-brand-500',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5',
-  md: 'px-4 py-2 text-sm rounded-[10px] gap-2',
-  lg: 'px-6 py-2.5 text-base rounded-[10px] gap-2',
+  sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5 min-h-[32px]',
+  md: 'px-4 py-2 text-sm rounded-[10px] gap-2 min-h-[40px]',
+  lg: 'px-6 py-2.5 text-base rounded-[10px] gap-2 min-h-[48px]',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -39,9 +40,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className,
       )}
       disabled={disabled || loading}
+      aria-disabled={disabled || loading}
+      aria-busy={loading ? true : undefined}
+      role={props.onClick ? 'button' : undefined}
+      type={props.type || 'button'}
       {...props}
     >
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : Icon && <Icon className="w-4 h-4" />}
+      {loading ? (
+        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+      ) : Icon ? (
+        <Icon className="w-4 h-4" aria-hidden="true" />
+      ) : null}
       {children}
     </button>
   ),

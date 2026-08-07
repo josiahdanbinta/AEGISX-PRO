@@ -1,0 +1,203 @@
+{
+  "title": "Platform Health",
+  "uid": "aegisx-platform-health",
+  "tags": ["aegisx", "platform", "operations"],
+  "timezone": "browser",
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Event Ingestion Rate",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(aegisx_events_ingested_total[5m])",
+          "legendFormat": "events/sec",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [{"format": "short"}, {"format": "short"}]
+    },
+    {
+      "id": 2,
+      "title": "Alert Generation Latency (P50/P95/P99)",
+      "type": "graph",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [{"format": "s", "label": "seconds"}, {"format": "short"}]
+    },
+    {
+      "id": 3,
+      "title": "API Response Time (P95 by endpoint)",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 8, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) by (handler)",
+          "legendFormat": "{{handler}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [{"format": "s"}, {"format": "short"}]
+    },
+    {
+      "id": 4,
+      "title": "API Request Rate by Status",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 8, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{status=~\"2..\"}[5m])",
+          "legendFormat": "2xx",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_requests_total{status=~\"4..\"}[5m])",
+          "legendFormat": "4xx",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+          "legendFormat": "5xx",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {"fillOpacity": 15, "stacking": {"mode": "normal"}}
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Kafka Consumer Lag",
+      "type": "graph",
+      "gridPos": {"x": 16, "y": 8, "w": 8, "h": 8},
+      "targets": [
+        {
+          "expr": "sum(kafka_consumer_group_lag{group=~\"aegisx.*\"}) by (topic)",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Active Connections (DB + Redis)",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 16, "w": 8, "h": 7},
+      "targets": [
+        {
+          "expr": "aegisx_db_connections_active",
+          "legendFormat": "PostgreSQL",
+          "refId": "A"
+        },
+        {
+          "expr": "redis_connected_clients",
+          "legendFormat": "Redis",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Stream Processor Throughput",
+      "type": "graph",
+      "gridPos": {"x": 8, "y": 16, "w": 8, "h": 7},
+      "targets": [
+        {
+          "expr": "rate(aegisx_stream_events_processed_total[5m])",
+          "legendFormat": "processed/sec",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(aegisx_stream_duplicates_total[5m])",
+          "legendFormat": "duplicates/sec",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(aegisx_stream_alerts_generated_total[5m])",
+          "legendFormat": "alerts/sec",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Service Uptime",
+      "type": "stat",
+      "gridPos": {"x": 16, "y": 16, "w": 8, "h": 7},
+      "targets": [
+        {
+          "expr": "avg(up) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 95},
+              {"color": "green", "value": 99}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Detection Rule Executions",
+      "type": "bargauge",
+      "gridPos": {"x": 0, "y": 23, "w": 12, "h": 7},
+      "targets": [
+        {
+          "expr": "topk(10, sum(rate(aegisx_detection_rule_executions_total[5m])) by (rule_name))",
+          "legendFormat": "{{rule_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "UEBA Anomaly Scores",
+      "type": "heatmap",
+      "gridPos": {"x": 12, "y": 23, "w": 12, "h": 7},
+      "targets": [
+        {
+          "expr": "sum(rate(aegisx_ueba_score_bucket[5m])) by (le)",
+          "legendFormat": "score {{le}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "version": 1
+}

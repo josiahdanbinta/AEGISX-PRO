@@ -51,6 +51,23 @@ taxii2-client>=2.3.0
 # GraphQL
 strawberry-graphql>=0.230.0
 
+# Kafka & Stream Processing
+confluent-kafka>=2.5.0
+aiohttp>=3.9.0
+
+# Object Storage (MinIO)
+minio>=7.2.0
+
+# Observability
+prometheus-client>=0.20.0
+prometheus-fastapi-instrumentator>=7.0.0
+opentelemetry-api>=1.25.0
+opentelemetry-sdk>=1.25.0
+opentelemetry-instrumentation-fastapi>=0.46b0
+opentelemetry-instrumentation-sqlalchemy>=0.46b0
+opentelemetry-exporter-jaeger>=1.21.0
+opentelemetry-exporter-otlp>=1.25.0
+
 # Testing
 pytest>=8.0.0
 pytest-asyncio>=0.23.0

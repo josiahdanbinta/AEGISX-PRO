@@ -312,6 +312,32 @@ async def agent_data_push(request: AgentDataPush, db: AsyncSession = Depends(get
 
     await db.flush()
 
+    # ── Publish to Kafka telemetry stream ─────────────────────────
+    try:
+        from app.services.kafka_messaging import kafka_service
+        from app.services.dedup_service import dedup_service
+        import asyncio as _asyncio
+
+        fingerprint = await dedup_service._compute_event_fingerprint({
+            "source": "agent",
+            "source_type": request.data_type,
+            "hostname": agent.hostname,
+            "agent_id": str(agent.id),
+            "data": request.payload,
+        })
+
+        is_dup = await dedup_service.is_event_duplicate(fingerprint)
+        if not is_dup:
+            _asyncio.create_task(kafka_service.produce_telemetry({
+                "agent_id": str(agent.id),
+                "hostname": agent.hostname,
+                "data_type": request.data_type,
+                "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
+                "payload": request.payload,
+            }))
+    except Exception:
+        pass
+
     return {"status": "received", "data_type": request.data_type}
 
 

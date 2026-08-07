@@ -21,24 +21,29 @@ logger = logging.getLogger(__name__)
     default_retry_delay=60,
 )
 def evaluate_all_rules(self):
-    """Periodic task: evaluate all active Sigma rules across all tenants."""
+    """Periodic task: evaluate all active Sigma rules and shadow-test candidate rules."""
     import asyncio
 
     async def _evaluate():
         from app.services.sigma_engine import SigmaEngine
+        from app.services.shadow_rules import get_shadow_engine, ShadowRuleEngine
+        from app.services.notification_webhooks import notification_webhooks
+        from app.services.auto_containment import auto_containment
+        from app.services.smart_notifications import smart_notifications
 
         async with async_session_factory() as db:
             from sqlalchemy import distinct
             result = await db.execute(
                 select(distinct(DetectionRule.tenant_id)).where(
                     DetectionRule.status == "active",
-                    DetectionRule.rule_type == "sigma",
+                    DetectionRule.rule_type.in_(["sigma", "falco"]),
                 )
             )
             tenant_ids = [str(row[0]) for row in result.all()]
 
             total_rules = 0
             total_alerts = 0
+            total_shadow = 0
 
             for tid in tenant_ids:
                 try:
@@ -46,18 +51,53 @@ def evaluate_all_rules(self):
                     summary = await engine.run_all_rules()
                     total_rules += summary.get("rules_evaluated", 0)
                     total_alerts += summary.get("alerts_created", 0)
+
+                    result2 = await db.execute(
+                        select(DetectionRule).where(
+                            DetectionRule.tenant_id == tid,
+                            DetectionRule.status == "shadow",
+                        )
+                    )
+                    shadow_rules = result2.scalars().all()
+
+                    if shadow_rules:
+                        shadow_engine = get_shadow_engine(str(tid))
+                        for rule in shadow_rules:
+                            try:
+                                results = shadow_engine.evaluate(rule, [{}], variant="shadow")
+                                total_shadow += len(results)
+                            except Exception as e:
+                                logger.debug("Shadow eval skipped for %s: %s", rule.name, e)
+
+                    high_alerts = summary.get("high_alerts", [])
+                    if high_alerts:
+                        channels = _get_notification_channels(db, tid)
+                        if channels:
+                            for alert in high_alerts[:5]:
+                                try:
+                                    smart_decision = smart_notifications.should_notify(alert)
+                                    if smart_decision["should_notify"]:
+                                        await notification_webhooks.notify_all_configured(
+                                            alert, channels
+                                        )
+                                    if alert.get("severity") in ("critical", "high"):
+                                        await auto_containment.evaluate_alert(alert)
+                                except Exception:
+                                    pass
+
                 except Exception as e:
                     logger.error("Failed to evaluate rules for tenant %s: %s", tid, e)
 
             await db.commit()
             logger.info(
-                "evaluate_all_rules complete: %d tenants, %d rules, %d alerts",
-                len(tenant_ids), total_rules, total_alerts,
+                "evaluate_all_rules complete: %d tenants, %d rules, %d alerts, %d shadow evals",
+                len(tenant_ids), total_rules, total_alerts, total_shadow,
             )
             return {
                 "tenants_processed": len(tenant_ids),
                 "rules_evaluated": total_rules,
                 "alerts_created": total_alerts,
+                "shadow_evals": total_shadow,
             }
 
     try:
@@ -65,6 +105,44 @@ def evaluate_all_rules(self):
     except Exception as exc:
         logger.error("evaluate_all_rules failed: %s", exc, exc_info=True)
         raise self.retry(exc=exc)
+
+
+def _get_notification_channels(db, tenant_id):
+    try:
+        from app.models import IntegrationConfig
+        import asyncio as _asyncio
+
+        async def _fetch():
+            from sqlalchemy import select
+            result = await db.execute(
+                select(IntegrationConfig).where(
+                    IntegrationConfig.tenant_id == tenant_id,
+                    IntegrationConfig.is_active == True,
+                    IntegrationConfig.config_type == "notification",
+                )
+            )
+            configs = result.scalars().all()
+            channels = []
+            for c in configs:
+                cfg = c.config or {}
+                if cfg.get("enabled"):
+                    channels.append({
+                        "type": cfg.get("notification_type", "webhook"),
+                        "webhook_url": cfg.get("webhook_url") or cfg.get("api_url"),
+                        "channel": cfg.get("channel"),
+                        "routing_key": cfg.get("routing_key"),
+                    })
+            return channels
+
+        try:
+            loop = _asyncio.get_event_loop()
+            if loop.is_running():
+                return []
+            return _asyncio.run(_fetch())
+        except RuntimeError:
+            return _asyncio.run(_fetch())
+    except Exception:
+        return []
 
 
 @celery_app.task(

@@ -1,0 +1,11 @@
+http.host: "0.0.0.0"
+http.port: 9600
+path.config: /usr/share/logstash/pipeline
+xpack.monitoring.enabled: false
+log.level: info
+log.format: json
+pipeline.workers: 2
+pipeline.batch.size: 125
+pipeline.batch.delay: 50
+queue.type: persisted
+queue.max_bytes: 1gb

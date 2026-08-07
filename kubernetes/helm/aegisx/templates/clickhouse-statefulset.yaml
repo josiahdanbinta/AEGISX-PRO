@@ -1,0 +1,185 @@
+{{- if .Values.clickhouse.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-clickhouse
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+    - name: native
+      port: 9000
+      targetPort: 9000
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegisx.fullname" . }}-clickhouse-lb
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+    - name: native
+      port: 9000
+      targetPort: 9000
+  selector:
+    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegisx.fullname" . }}-clickhouse-config
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+data:
+  macros.xml: |
+    <clickhouse>
+      <macros>
+        <shard>{replica}</shard>
+        <replica>{{ include "aegisx.fullname" . }}-clickhouse-{replica}.{{ include "aegisx.fullname" . }}-clickhouse.{{ include "aegisx.namespace" . }}.svc.cluster.local</replica>
+      </macros>
+    </clickhouse>
+  users.xml: |
+    <clickhouse>
+      <users>
+        <aegisx>
+          <password>{{ .Values.clickhouse.password }}</password>
+          <networks>
+            <ip>::/0</ip>
+          </networks>
+          <profile>default</profile>
+          <quota>default</quota>
+        </aegisx>
+      </users>
+    </clickhouse>
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aegisx.fullname" . }}-clickhouse
+  labels:
+    {{- include "aegisx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  serviceName: {{ include "aegisx.fullname" . }}-clickhouse
+  replicas: {{ .Values.clickhouse.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: clickhouse
+  template:
+    metadata:
+      labels:
+        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: clickhouse
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 101
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/component
+                      operator: In
+                      values: ["clickhouse"]
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: clickhouse
+          image: {{ include "aegisx.image" (dict "imageRoot" .Values.clickhouse.image "Values" .Values) }}
+          imagePullPolicy: {{ .Values.clickhouse.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8123
+            - name: native
+              containerPort: 9000
+          env:
+            - name: CLICKHOUSE_DB
+              value: {{ .Values.clickhouse.dbName | quote }}
+            - name: CLICKHOUSE_USER
+              value: {{ .Values.clickhouse.username | quote }}
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegisx.fullname" . }}-secrets
+                  key: CLICKHOUSE_PASSWORD
+            - name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
+              value: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+            - name: config-users
+              mountPath: /etc/clickhouse-server/users.d/users.xml
+              subPath: users.xml
+            - name: config-macros
+              mountPath: /etc/clickhouse-server/config.d/macros.xml
+              subPath: macros.xml
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8123
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8123
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.clickhouse.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config-users
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-clickhouse-config
+        - name: config-macros
+          configMap:
+            name: {{ include "aegisx.fullname" . }}-clickhouse-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "aegisx.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.clickhouse.persistence.storageClass }}
+        storageClassName: {{ .Values.clickhouse.persistence.storageClass }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.clickhouse.persistence.size }}
+{{- end }}

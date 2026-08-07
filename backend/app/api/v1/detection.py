@@ -1332,13 +1332,21 @@ async def test_rule(
                 details["condition_matched"] = condition
 
     elif rule.rule_type == "suricata":
-        query = rule.query or ""
-        details["query"] = query
-        for key in ("src_ip", "dest_ip", "src_port", "dest_port", "proto", "http_uri", "dns_query"):
-            if key in sample and key in query:
-                matched = True
-                matches.append({"field": key, "value": sample[key], "in_query": True})
-                break
+        try:
+            from app.services.suricata_engine import suricata_parser, suricata_engine
+            parsed_rules = suricata_parser.parse_rules(rule.query or "")
+            if parsed_rules:
+                eval_results = suricata_engine.evaluate_rules(parsed_rules, [sample])
+                if eval_results:
+                    matched = True
+                    matches = eval_results
+                    details["suricata_sids"] = [r["sid"] for r in eval_results]
+                    details["suricata_messages"] = [r["msg"] for r in eval_results]
+                    details["rule_count"] = len(parsed_rules)
+            else:
+                details["parse_error"] = "No valid Suricata rules parsed from query"
+        except Exception as e:
+            details["engine_error"] = str(e)
 
     elif rule.rule_type in ("correlation", "threshold", "machine_learning", "behavioral"):
         query = rule.query or ""

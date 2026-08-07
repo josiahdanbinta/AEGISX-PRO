@@ -16,13 +16,46 @@ data:
   FEATURE_COMPLIANCE: {{ .Values.config.featureCompliance | toString | quote }}
   FEATURE_VULNERABILITY: {{ .Values.config.featureVulnerability | toString | quote }}
   FEATURE_ASSET_DISCOVERY: {{ .Values.config.featureAssetDiscovery | toString | quote }}
-  POSTGRES_HOST: {{ include "aegisx.fullname" . }}-postgresql
+  # Data Stores
+  POSTGRES_HOST: {{ include "aegisx.fullname" . }}-postgresql-lb
   POSTGRES_PORT: {{ .Values.postgresql.service.port | quote }}
   POSTGRES_USER: {{ .Values.postgresql.postgresUser | quote }}
   POSTGRES_DB: {{ .Values.postgresql.postgresDb | quote }}
-  REDIS_HOST: {{ include "aegisx.fullname" . }}-redis
+  TIMESCALEDB_HOST: {{ include "aegisx.fullname" . }}-timescaledb
+  TIMESCALEDB_PORT: "5432"
+  TIMESCALEDB_DB: {{ .Values.timescaledb.postgresDb | default "aegisx_tsdb" | quote }}
+  CLICKHOUSE_HOST: {{ include "aegisx.fullname" . }}-clickhouse-lb
+  CLICKHOUSE_PORT: "8123"
+  CLICKHOUSE_DB: {{ .Values.clickhouse.dbName | default "aegisx_analytics" | quote }}
+  REDIS_HOST: {{ include "aegisx.fullname" . }}-redis-lb
   REDIS_PORT: {{ .Values.redis.service.port | quote }}
-  OPENSEARCH_HOST: {{ include "aegisx.fullname" . }}-opensearch
+  OPENSEARCH_HOST: {{ include "aegisx.fullname" . }}-opensearch-lb
   OPENSEARCH_PORT: {{ .Values.opensearch.service.port | quote }}
-  RABBITMQ_HOST: {{ include "aegisx.fullname" . }}-rabbitmq
+  RABBITMQ_HOST: {{ include "aegisx.fullname" . }}-rabbitmq-lb
   RABBITMQ_PORT: {{ .Values.rabbitmq.service.port | quote }}
+  # Streaming
+  KAFKA_BOOTSTRAP_SERVERS: {{ include "aegisx.fullname" . }}-kafka-bootstrap:9092
+  SCHEMA_REGISTRY_URL: http://{{ include "aegisx.fullname" . }}-schema-registry:8081
+  # Object Storage
+  MINIO_ENDPOINT: {{ include "aegisx.fullname" . }}-minio-lb:9000
+  MINIO_ACCESS_KEY: {{ .Values.minio.rootUser | quote }}
+  MINIO_BUCKET_EVIDENCE: aegisx-evidence
+  MINIO_BUCKET_ARTIFACTS: aegisx-artifacts
+  # Observability
+  PROMETHEUS_URL: http://{{ include "aegisx.fullname" . }}-prometheus:9090
+  JAEGER_AGENT_HOST: {{ include "aegisx.fullname" . }}-jaeger-collector
+  JAEGER_AGENT_PORT: "14250"
+  JAEGER_SAMPLER_TYPE: probabilistic
+  JAEGER_SAMPLER_PARAM: "0.1"
+  # Detection Rules (ConfigMap hot-reload)
+  AEGISX_RULES_DIR: /etc/aegisx/rules
+  AEGISX_RULES_CHECK_INTERVAL: "30"
+  # Notification Defaults
+  NOTIFICATION_SLACK_ENABLED: "false"
+  NOTIFICATION_TEAMS_ENABLED: "false"
+  NOTIFICATION_PAGERDUTY_ENABLED: "false"
+  NOTIFICATION_DISCORD_ENABLED: "false"
+  # Backup
+  BACKUP_ENABLED: "true"
+  BACKUP_SCHEDULE_CRON: "0 2 * * *"
+  BACKUP_RETENTION_DAYS: "30"

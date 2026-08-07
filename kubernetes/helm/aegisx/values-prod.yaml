@@ -1,8 +1,28 @@
 global:
   environment: production
+  imageRegistry: ghcr.io
+  storageClass: "managed-premium"
+  imagePullSecrets:
+    - name: ghcr-registry
 
+config:
+  appName: "AEGISX"
+  appEnv: "production"
+  logLevel: "WARNING"
+  apiPrefix: "/api/v1"
+  corsOrigins: "https://aegisx.example.com"
+  featureSOAR: true
+  featureThreatIntel: true
+  featureAI: true
+  featureCompliance: true
+  featureVulnerability: true
+  featureAssetDiscovery: true
+
+# ── Production Scaling ───────────────────────────────────────────
 backend:
   replicaCount: 6
+  image:
+    tag: latest
   resources:
     requests:
       cpu: "1"
@@ -14,6 +34,8 @@ backend:
     enabled: true
     minReplicas: 6
     maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 80
 
 celeryWorker:
   replicaCount: 4
@@ -27,11 +49,219 @@ celeryWorker:
 
 frontend:
   replicaCount: 3
+  image:
+    tag: latest
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
   autoscaling:
     enabled: true
     minReplicas: 3
     maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
 
+# ── Databases (StatefulSets with production sizing) ──────────────
+postgresql:
+  replicaCount: 3
+  persistence:
+    size: 100Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+timescaledb:
+  replicaCount: 3
+  persistence:
+    size: 500Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+
+clickhouse:
+  replicaCount: 3
+  persistence:
+    size: 250Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+redis:
+  replicaCount: 3
+  maxmemory: "2gb"
+  persistence:
+    size: 20Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+opensearch:
+  replicaCount: 3
+  javaOpts:
+    xms: "2g"
+    xmx: "4g"
+  persistence:
+    size: 250Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+
+rabbitmq:
+  replicaCount: 3
+  persistence:
+    size: 50Gi
+    storageClass: "managed-premium-ssd"
+
+# ── Streaming ────────────────────────────────────────────────────
+kafka:
+  replicaCount: 6
+  persistence:
+    size: 250Gi
+    storageClass: "managed-premium-ssd"
+  config:
+    defaultPartitions: 24
+    defaultReplicationFactor: 3
+    minInSyncReplicas: 2
+    retentionHours: 168
+    retentionBytes: "536870912000"
+  resources:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+
+schemaRegistry:
+  replicaCount: 2
+  replicationFactor: 3
+
+flink:
+  parallelism: 16
+  jobmanager:
+    replicas: 2
+    memory: "4g"
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+  taskmanager:
+    replicas: 4
+    slots: 16
+    memory: "8g"
+    resources:
+      requests:
+        cpu: "4"
+        memory: "8Gi"
+      limits:
+        cpu: "8"
+        memory: "16Gi"
+
+# ── Object Storage ───────────────────────────────────────────────
+minio:
+  replicaCount: 8
+  rootUser: aegisx
+  persistence:
+    size: 500Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+# ── Observability ────────────────────────────────────────────────
+prometheus:
+  retentionTime: "30d"
+  retentionSize: "100GB"
+  persistence:
+    size: 100Gi
+    storageClass: "managed-premium-ssd"
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+grafana:
+  replicaCount: 2
+  persistence:
+    size: 20Gi
+    storageClass: "managed-premium-ssd"
+
+jaeger:
+  maxTraces: 100000
+  persistence:
+    size: 50Gi
+    storageClass: "managed-premium-ssd"
+
+# ── Ingress ──────────────────────────────────────────────────────
 ingress:
+  enabled: true
+  className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts:
+    - host: aegisx.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /health
+          pathType: Prefix
+          service: backend
+        - path: /ws
+          pathType: Prefix
+          service: backend
+        - path: /grafana
+          pathType: Prefix
+          service: grafana
+  tls:
+    - secretName: aegisx-tls
+      hosts:
+        - aegisx.example.com
+
+networkPolicy:
+  enabled: true
