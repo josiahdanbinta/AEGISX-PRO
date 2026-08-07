@@ -15,6 +15,7 @@ from app.models.operational import (
     ComplianceAssessment,
     Report, ReportSchedule, ReportTemplate,
     NotificationChannel, NotificationHistory, NotificationPreference, NotificationTemplate,
+    AgentCommand,
 )
 
 __all__ = [
