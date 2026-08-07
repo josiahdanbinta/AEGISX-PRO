@@ -70,7 +70,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const { method = 'GET', body, headers = {}, params, tenantId } = options;
   const { token } = useAuthStore.getState();
 
-  const url = new URL(`${BASE_URL}${endpoint}`, window.location.origin);
+  let path = `${BASE_URL}${endpoint}`;
+  const qIdx = path.indexOf('?');
+  const base = qIdx > -1 ? path.substring(0, qIdx) : path;
+  const qs = qIdx > -1 ? path.substring(qIdx) : '';
+  if (!base.endsWith('/')) path = base + '/' + qs;
+  const url = new URL(path, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
   }

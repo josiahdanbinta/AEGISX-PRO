@@ -4,7 +4,7 @@ Safe imports — individual router failures don't crash the app.
 """
 from fastapi import APIRouter
 
-api_router = APIRouter()
+api_router = APIRouter(redirect_slashes=False)
 
 _routers = [
     ("auth", "/auth", "Authentication"),
