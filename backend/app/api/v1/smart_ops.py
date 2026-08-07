@@ -1,5 +1,5 @@
 """
-AEGISX - Smart Notification & Auto-Containment API
+AEGIS - Smart Notification & Auto-Containment API
 """
 from typing import Any, Dict, List, Optional
 

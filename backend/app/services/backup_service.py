@@ -1,5 +1,5 @@
 """
-AEGISX - Backup & Disaster Recovery Automation
+AEGIS - Backup & Disaster Recovery Automation
 TimescaleDB WAL archiving, MinIO bucket replication, ClickHouse backup scripts.
 """
 import asyncio
@@ -20,12 +20,12 @@ class BackupService:
     """Automated backup management for TimescaleDB, ClickHouse, and MinIO."""
 
     def __init__(self):
-        self.backup_dir = os.path.join(tempfile.gettempdir(), "aegisx-backups")
+        self.backup_dir = os.path.join(tempfile.gettempdir(), "AEGIS-backups")
         os.makedirs(self.backup_dir, exist_ok=True)
 
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # TimescaleDB WAL Archiving
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def timescaledb_wal_archive(self) -> Dict[str, Any]:
         try:
@@ -34,8 +34,8 @@ class BackupService:
 
             host = getattr(settings, "POSTGRES_HOST", "localhost")
             port = str(getattr(settings, "POSTGRES_PORT", 5432))
-            user = getattr(settings, "POSTGRES_USER", "aegisx")
-            db = getattr(settings, "POSTGRES_DB", "aegisx")
+            user = getattr(settings, "POSTGRES_USER", "AEGIS")
+            db = getattr(settings, "POSTGRES_DB", "AEGIS")
             password = getattr(settings, "POSTGRES_PASSWORD", "")
 
             env = os.environ.copy()
@@ -72,8 +72,8 @@ class BackupService:
 
             host = getattr(settings, "POSTGRES_HOST", "localhost")
             port = str(getattr(settings, "POSTGRES_PORT", 5432))
-            user = getattr(settings, "POSTGRES_USER", "aegisx")
-            db = getattr(settings, "POSTGRES_DB", "aegisx")
+            user = getattr(settings, "POSTGRES_USER", "AEGIS")
+            db = getattr(settings, "POSTGRES_DB", "AEGIS")
             password = getattr(settings, "POSTGRES_PASSWORD", "")
 
             env = os.environ.copy()
@@ -100,9 +100,9 @@ class BackupService:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # ClickHouse Backup
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def clickhouse_backup(self) -> Dict[str, Any]:
         try:
@@ -111,8 +111,8 @@ class BackupService:
 
             host = getattr(settings, "CLICKHOUSE_HOST", "localhost")
             port = str(getattr(settings, "CLICKHOUSE_PORT", 8123))
-            user = getattr(settings, "CLICKHOUSE_USER", "aegisx")
-            password = getattr(settings, "CLICKHOUSE_PASSWORD", "aegisx")
+            user = getattr(settings, "CLICKHOUSE_USER", "AEGIS")
+            password = getattr(settings, "CLICKHOUSE_PASSWORD", "AEGIS")
 
             import aiohttp
             import gzip
@@ -123,7 +123,7 @@ class BackupService:
             backups = {}
             async with aiohttp.ClientSession(auth=aiohttp.BasicAuth(user, password)) as session:
                 for table in tables:
-                    url = f"http://{host}:{port}/?database=aegisx"
+                    url = f"http://{host}:{port}/?database=AEGIS"
                     sql = f"SELECT * FROM {table} FORMAT TabSeparatedWithNamesAndTypes"
                     try:
                         async with session.post(url, data=sql.encode()) as resp:
@@ -145,9 +145,9 @@ class BackupService:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # MinIO Replication
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def minio_replication_status(self) -> Dict[str, Any]:
         try:
@@ -201,9 +201,9 @@ class BackupService:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # Full Backup
-    # ═══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def full_backup(self) -> Dict[str, Any]:
         start = datetime.now(timezone.utc)

@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX WebSocket endpoint registration verification.
+Integration tests for AEGIS WebSocket endpoint registration verification.
 """
 import uuid
 

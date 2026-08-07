@@ -1,5 +1,5 @@
 """
-AEGISX - Cloud Asset Discovery Connectors
+AEGIS - Cloud Asset Discovery Connectors
 AWS, Azure, GCP integration for automated asset discovery.
 """
 import json
@@ -85,7 +85,7 @@ class GCPConnector(CloudConnector):
 
 
 class CloudDiscoveryService:
-    """Orchestrates cloud asset discovery and syncs to AEGISX database."""
+    """Orchestrates cloud asset discovery and syncs to AEGIS database."""
 
     @staticmethod
     async def discover_and_sync(tenant_id: str, provider: str, credentials: Dict[str, Any]) -> Dict[str, Any]:

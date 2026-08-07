@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX Threat Intelligence API endpoints.
+Integration tests for AEGIS Threat Intelligence API endpoints.
 """
 import uuid
 

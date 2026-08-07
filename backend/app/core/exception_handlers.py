@@ -1,17 +1,17 @@
 """
-AEGISX - Exception Handlers
+AEGIS - Exception Handlers
 """
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError as PydanticValidationError
 
-from app.core.exceptions import AegisxException
+from app.core.exceptions import AEGISException
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
 
-    @app.exception_handler(AegisxException)
-    async def aegisx_exception_handler(request: Request, exc: AegisxException):
+    @app.exception_handler(AEGISException)
+    async def AEGIS_exception_handler(request: Request, exc: AEGISException):
         return JSONResponse(
             status_code=exc.status_code,
             content={

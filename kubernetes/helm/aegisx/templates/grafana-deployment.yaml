@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-grafana-datasources
+  name: {{ include "AEGIS.fullname" . }}-grafana-datasources
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 data:
   datasources.yaml: |
@@ -14,7 +14,7 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://{{ include "aegisx.fullname" . }}-prometheus:9090
+        url: http://{{ include "AEGIS.fullname" . }}-prometheus:9090
         isDefault: true
         editable: false
         jsonData:
@@ -22,9 +22,9 @@ data:
       - name: PostgreSQL
         type: postgres
         access: proxy
-        url: {{ include "aegisx.fullname" . }}-postgresql-lb:5432
-        database: aegisx
-        user: aegisx
+        url: {{ include "AEGIS.fullname" . }}-postgresql-lb:5432
+        database: AEGIS
+        user: AEGIS
         editable: true
         secureJsonData:
           password: ${POSTGRES_PASSWORD}
@@ -32,9 +32,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+  name: {{ include "AEGIS.fullname" . }}-grafana-dashboards
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 data:
   dashboard-provider.yaml: |
@@ -51,29 +51,29 @@ data:
           path: /etc/grafana/dashboards
   platform-health.json: |
     {
-      "title": "AEGISX Platform Health",
-      "uid": "aegisx-platform-health",
+      "title": "AEGIS Platform Health",
+      "uid": "AEGIS-platform-health",
       "panels": []
     }
   per-tenant-metrics.json: |
     {
-      "title": "AEGISX Per-Tenant Metrics",
-      "uid": "aegisx-tenant-metrics",
+      "title": "AEGIS Per-Tenant Metrics",
+      "uid": "AEGIS-tenant-metrics",
       "panels": []
     }
   analyst-workload.json: |
     {
-      "title": "AEGISX Analyst Workload",
-      "uid": "aegisx-analyst-workload",
+      "title": "AEGIS Analyst Workload",
+      "uid": "AEGIS-analyst-workload",
       "panels": []
     }
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-grafana
+  name: {{ include "AEGIS.fullname" . }}-grafana
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 spec:
   type: ClusterIP
@@ -82,16 +82,16 @@ spec:
       port: 3000
       targetPort: 3000
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 ---
 {{- if .Values.grafana.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "aegisx.fullname" . }}-grafana
+  name: {{ include "AEGIS.fullname" . }}-grafana
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 spec:
   accessModes:
@@ -109,20 +109,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-grafana
+  name: {{ include "AEGIS.fullname" . }}-grafana
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 spec:
   replicas: {{ .Values.grafana.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: grafana
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: grafana
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -131,7 +131,7 @@ spec:
       {{- end }}
       containers:
         - name: grafana
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.grafana.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.grafana.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
           env:
             - name: GF_SECURITY_ADMIN_USER
@@ -139,7 +139,7 @@ spec:
             - name: GF_SECURITY_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: GRAFANA_ADMIN_PASSWORD
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "false"
@@ -154,7 +154,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: POSTGRES_PASSWORD
           ports:
             - name: http
@@ -192,16 +192,16 @@ spec:
       volumes:
         - name: datasources
           configMap:
-            name: {{ include "aegisx.fullname" . }}-grafana-datasources
+            name: {{ include "AEGIS.fullname" . }}-grafana-datasources
         - name: dashboards-provider
           configMap:
-            name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+            name: {{ include "AEGIS.fullname" . }}-grafana-dashboards
             items:
               - key: dashboard-provider.yaml
                 path: default.yaml
         - name: dashboards
           configMap:
-            name: {{ include "aegisx.fullname" . }}-grafana-dashboards
+            name: {{ include "AEGIS.fullname" . }}-grafana-dashboards
             items:
               - key: platform-health.json
                 path: platform-health.json
@@ -212,7 +212,7 @@ spec:
         - name: data
           {{- if .Values.grafana.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "aegisx.fullname" . }}-grafana
+            claimName: {{ include "AEGIS.fullname" . }}-grafana
           {{- else }}
           emptyDir: {}
           {{- end }}

@@ -1,5 +1,5 @@
 """
-AEGISX - AI-Smart SOC Chat Service
+AEGIS - AI-Smart SOC Chat Service
 Real-time WebSocket chat between SOC analysts with AI assistant bot.
 The AI bot participates in conversations, suggests remediations, explains alerts,
 and provides threat intelligence context.
@@ -57,7 +57,7 @@ class SOCChatRoom:
                     "id": str(uuid.uuid4())[:8],
                     "room_id": self.room_id,
                     "user_id": "ai-assistant",
-                    "username": "AEGISX AI",
+                    "username": "AEGIS AI",
                     "content": ai_response,
                     "type": "ai",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -69,12 +69,12 @@ class SOCChatRoom:
         msg = user_message.lower().strip()
 
         if any(word in msg for word in ("hi", "hello", "hey", "help")):
-            return ("Hello! I'm the AEGISX AI Assistant. I can help you:\n"
-                    "• Investigate alerts and IOCs\n"
-                    "• Suggest remediation actions\n"
-                    "• Explain threat intelligence\n"
-                    "• Run osquery commands\n"
-                    "• Generate incident summaries\n\n"
+            return ("Hello! I'm the AEGIS AI Assistant. I can help you:\n"
+                    "â€¢ Investigate alerts and IOCs\n"
+                    "â€¢ Suggest remediation actions\n"
+                    "â€¢ Explain threat intelligence\n"
+                    "â€¢ Run osquery commands\n"
+                    "â€¢ Generate incident summaries\n\n"
                     "Try: `investigate 10.0.0.5` or `remediate alert-123` or `summarize incident-456`")
 
         if "investigate" in msg:
@@ -82,28 +82,28 @@ class SOCChatRoom:
             if target:
                 return (f"Investigating `{target}`...\n\n"
                         f":mag: I'll search across:\n"
-                        f"• Threat Intelligence (VT, AbuseIPDB, Shodan)\n"
-                        f"• Active alerts and incidents\n"
-                        f"• Asset inventory\n"
-                        f"• Sigma/Falco detection logs\n\n"
-                        f"Use `/aegisx-investigate {target}` in Slack for full results, "
+                        f"â€¢ Threat Intelligence (VT, AbuseIPDB, Shodan)\n"
+                        f"â€¢ Active alerts and incidents\n"
+                        f"â€¢ Asset inventory\n"
+                        f"â€¢ Sigma/Falco detection logs\n\n"
+                        f"Use `/AEGIS-investigate {target}` in Slack for full results, "
                         f"or check the Threat Hunting page for detailed analysis.")
 
         if "remediate" in msg:
             return (":shield: I can suggest remediation actions. Available:\n"
-                    "• `isolate_endpoint` — Quarantine from network\n"
-                    "• `kill_process` — Terminate malicious process\n"
-                    "• `block_ip_firewall` — Block at perimeter\n"
-                    "• `quarantine_file` — Isolate suspicious file\n"
-                    "• `reset_user_password` — Force credential change\n"
-                    "• `suspend_user` — Disable compromised account\n"
-                    "• `collect_forensics` — Gather evidence\n\n"
-                    "Use `/aegisx-remediate` in Slack or the SOAR console to execute.")
+                    "â€¢ `isolate_endpoint` â€” Quarantine from network\n"
+                    "â€¢ `kill_process` â€” Terminate malicious process\n"
+                    "â€¢ `block_ip_firewall` â€” Block at perimeter\n"
+                    "â€¢ `quarantine_file` â€” Isolate suspicious file\n"
+                    "â€¢ `reset_user_password` â€” Force credential change\n"
+                    "â€¢ `suspend_user` â€” Disable compromised account\n"
+                    "â€¢ `collect_forensics` â€” Gather evidence\n\n"
+                    "Use `/AEGIS-remediate` in Slack or the SOAR console to execute.")
 
         if "summarize" in msg or "summary" in msg:
             return (":clipboard: I can generate AI-powered summaries of incidents. "
                     "Use the AI Insights panel in the incident detail page, "
-                    "or `/aegisx-investigate <incident-id>` for a quick summary.")
+                    "or `/AEGIS-investigate <incident-id>` for a quick summary.")
 
         if "mitre" in msg or "tactic" in msg:
             return (":crossed_swords: I can map alerts to MITRE ATT&CK techniques. "
@@ -111,18 +111,18 @@ class SOCChatRoom:
 
         if any(word in msg for word in ("osquery", "query", "sql")):
             return (":gear: I can help build osquery queries. Try these templates:\n"
-                    "• `list_processes` — All running processes\n"
-                    "• `list_listening_ports` — Network listeners\n"
-                    "• `list_startup_items` — Persistence mechanisms\n"
-                    "• `list_kernel_modules` — Loaded kernel modules\n\n"
+                    "â€¢ `list_processes` â€” All running processes\n"
+                    "â€¢ `list_listening_ports` â€” Network listeners\n"
+                    "â€¢ `list_startup_items` â€” Persistence mechanisms\n"
+                    "â€¢ `list_kernel_modules` â€” Loaded kernel modules\n\n"
                     "Use `/osquery/templates` API or the Osquery console to schedule queries.")
 
         for keyword, response in [
-            ("status", "Platform is operational. Use `/aegisx-status` for detailed health metrics."),
-            ("alert", "Check `/aegisx-alerts` for open alerts or the Real-Time Alert Dashboard."),
+            ("status", "Platform is operational. Use `/AEGIS-status` for detailed health metrics."),
+            ("alert", "Check `/AEGIS-alerts` for open alerts or the Real-Time Alert Dashboard."),
             ("block", "To block an IP: use `block_ip_firewall` (perimeter) or `block_ip_edr` (endpoints). Requires approval for external IPs."),
             ("isolate", "Isolate endpoint is a high-risk action requiring SOC Manager approval. Use with caution."),
-            ("incident", "View incidents at `/incidents` or use `/aegisx-investigate <id>`."),
+            ("incident", "View incidents at `/incidents` or use `/AEGIS-investigate <id>`."),
             ("playbook", "Run SOAR playbooks from the SOAR console. Use the Playbook Builder to create custom automation."),
             ("password", "Reset a password via the Admin panel or API: `POST /auth/reset-password/request`."),
             ("log", "View logs in Kibana, audit trail in Admin panel, or raw events in ClickHouse."),

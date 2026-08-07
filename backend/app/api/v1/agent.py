@@ -1,5 +1,5 @@
 """
-AEGISX - Agent Enrollment & Management API Router
+AEGIS - Agent Enrollment & Management API Router
 Register, download, heartbeat, data push, command relay
 """
 import uuid
@@ -25,7 +25,7 @@ from app.core.security import generate_secure_token
 router = APIRouter()
 
 
-# ── Pydantic Models ───────────────────────────────────────────────
+# â”€â”€ Pydantic Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AgentRegisterRequest(BaseModel):
     hostname: str = Field(..., description="Agent hostname")
@@ -86,13 +86,13 @@ class AgentCommandResponse(BaseModel):
     message: str
 
 
-# ── In-memory command queue (Redis-backed in production) ───────────
+# â”€â”€ In-memory command queue (Redis-backed in production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 _agent_command_queues: dict = {}
 _pending_commands: dict = {}
 
 
-# ── Agent Registration ─────────────────────────────────────────────
+# â”€â”€ Agent Registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/register",
@@ -125,7 +125,7 @@ async def register_agent(request: AgentRegisterRequest, db: AsyncSession = Depen
     existing_agent = existing.scalar_one_or_none()
 
     if existing_agent:
-        # Re-register existing agent — update it
+        # Re-register existing agent â€” update it
         existing_agent.ip_address = request.ip_address
         existing_agent.platform = request.platform
         existing_agent.version = request.agent_version
@@ -207,7 +207,7 @@ async def register_agent(request: AgentRegisterRequest, db: AsyncSession = Depen
     )
 
 
-# ── Agent Heartbeat ────────────────────────────────────────────────
+# â”€â”€ Agent Heartbeat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/heartbeat",
@@ -260,7 +260,7 @@ async def agent_heartbeat(request: AgentHeartbeatRequest, db: AsyncSession = Dep
     )
 
 
-# ── Agent Data Push ────────────────────────────────────────────────
+# â”€â”€ Agent Data Push â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/data",
@@ -312,7 +312,7 @@ async def agent_data_push(request: AgentDataPush, db: AsyncSession = Depends(get
 
     await db.flush()
 
-    # ── Publish to Kafka telemetry stream ─────────────────────────
+    # â”€â”€ Publish to Kafka telemetry stream â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.kafka_messaging import kafka_service
         from app.services.dedup_service import dedup_service
@@ -341,12 +341,12 @@ async def agent_data_push(request: AgentDataPush, db: AsyncSession = Depends(get
     return {"status": "received", "data_type": request.data_type}
 
 
-# ── Agent Download ─────────────────────────────────────────────────
+# â”€â”€ Agent Download â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get(
     "/download",
     summary="Download agent package",
-    description="Download the AEGISX agent package for manual or scripted deployment.",
+    description="Download the AEGIS agent package for manual or scripted deployment.",
 )
 async def download_agent():
     """Package and stream the agent code as a tar.gz file."""
@@ -370,13 +370,13 @@ async def download_agent():
         tar_buffer,
         media_type="application/gzip",
         headers={
-            "Content-Disposition": "attachment; filename=aegisx-agent.tar.gz",
+            "Content-Disposition": "attachment; filename=AEGIS-agent.tar.gz",
             "X-Agent-Version": "1.1.0",
         },
     )
 
 
-# ── Agent Command ──────────────────────────────────────────────────
+# â”€â”€ Agent Command â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/{agent_id}/command",
@@ -425,7 +425,7 @@ async def send_agent_command(
     return AgentCommandResponse(command_id=cmd_id, message=f"Command '{request.command}' queued for agent {agent.name}")
 
 
-# ── Agent Listing (for dashboard) ──────────────────────────────────
+# â”€â”€ Agent Listing (for dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get(
     "/list",
@@ -475,13 +475,13 @@ async def get_registration_key(
         "tenant_id": current_user["tenant_id"],
         "server_url": "http://localhost:8000",
         "enrollment_commands": {
-            "linux_macos": f"curl -sSL http://SERVER_IP:8000/api/v1/agent/download -o aegisx-agent.tar.gz && tar -xzf aegisx-agent.tar.gz && cd agent && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python agent.py --server http://SERVER_IP:8000 --key {settings.AGENT_REGISTRATION_KEY} --tenant {current_user['tenant_id']}",
-            "windows_cmd": f"curl -o aegisx-agent.zip http://SERVER_IP:8000/api/v1/agent/download && tar -xf aegisx-agent.zip && cd agent && python -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt && python agent.py --server http://SERVER_IP:8000 --key {settings.AGENT_REGISTRATION_KEY} --tenant {current_user['tenant_id']}",
+            "linux_macos": f"curl -sSL http://SERVER_IP:8000/api/v1/agent/download -o AEGIS-agent.tar.gz && tar -xzf AEGIS-agent.tar.gz && cd agent && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python agent.py --server http://SERVER_IP:8000 --key {settings.AGENT_REGISTRATION_KEY} --tenant {current_user['tenant_id']}",
+            "windows_cmd": f"curl -o AEGIS-agent.zip http://SERVER_IP:8000/api/v1/agent/download && tar -xf AEGIS-agent.zip && cd agent && python -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt && python agent.py --server http://SERVER_IP:8000 --key {settings.AGENT_REGISTRATION_KEY} --tenant {current_user['tenant_id']}",
         },
     }
 
 
-# ── EDR Response Endpoints ───────────────────────────────────────
+# â”€â”€ EDR Response Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/commands", summary="Get pending commands for authenticated agent")
 async def get_pending_commands(

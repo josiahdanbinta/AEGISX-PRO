@@ -1,5 +1,5 @@
 """
-AEGISX - Health Check Endpoints
+AEGIS - Health Check Endpoints
 """
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
@@ -56,7 +56,7 @@ async def readiness_check():
 
     services = {}
 
-    # ── Database ────────────────────────────────────────
+    # â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         if await check_db_connection():
             services["database"] = ServiceStatus(status="ok")
@@ -65,7 +65,7 @@ async def readiness_check():
     except Exception as e:
         services["database"] = ServiceStatus(status="unavailable", message=str(e)[:200])
 
-    # ── Redis Cache ─────────────────────────────────────
+    # â”€â”€ Redis Cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         if redis_client:
             await redis_client.ping()
@@ -75,7 +75,7 @@ async def readiness_check():
     except Exception as e:
         services["cache"] = ServiceStatus(status="unavailable", message=str(e)[:200])
 
-    # ── OpenSearch ──────────────────────────────────────
+    # â”€â”€ OpenSearch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.opensearch import get_search_service
         search = get_search_service()
@@ -87,7 +87,7 @@ async def readiness_check():
     except Exception as e:
         services["search"] = ServiceStatus(status="degraded", message=str(e)[:200])
 
-    # ── Kafka ───────────────────────────────────────────
+    # â”€â”€ Kafka â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if settings.FEATURE_KAFKA:
         try:
             from app.services.kafka_messaging import kafka_service
@@ -101,7 +101,7 @@ async def readiness_check():
     else:
         services["kafka"] = ServiceStatus(status="disabled")
 
-    # ── TimescaleDB ─────────────────────────────────────
+    # â”€â”€ TimescaleDB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.core.database import async_session_factory
         from sqlalchemy import text
@@ -111,20 +111,20 @@ async def readiness_check():
     except Exception:
         services["timescaledb"] = ServiceStatus(status="disabled", message="TimescaleDB extension not available")
 
-    # ── MinIO ───────────────────────────────────────────
+    # â”€â”€ MinIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.minio_service import minio_service
         client = minio_service._get_client()
         if client:
             import asyncio
-            found = await asyncio.get_event_loop().run_in_executor(None, client.bucket_exists, "aegisx-evidence")
+            found = await asyncio.get_event_loop().run_in_executor(None, client.bucket_exists, "AEGIS-evidence")
             services["minio"] = ServiceStatus(status="ok")
         else:
             services["minio"] = ServiceStatus(status="unavailable", message="Client not initialized")
     except Exception as e:
         services["minio"] = ServiceStatus(status="degraded", message=str(e)[:200])
 
-    # ── ClickHouse ──────────────────────────────────────
+    # â”€â”€ ClickHouse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if settings.FEATURE_CLICKHOUSE:
         try:
             from app.services.clickhouse_service import clickhouse_service
@@ -135,7 +135,7 @@ async def readiness_check():
     else:
         services["clickhouse"] = ServiceStatus(status="disabled")
 
-    # ── Overall status ──────────────────────────────────
+    # â”€â”€ Overall status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     critical = ["database", "cache"]
     overall = "healthy"
     for name, svc in services.items():

@@ -1,5 +1,5 @@
 """
-AEGISX - Business Services Layer
+AEGIS - Business Services Layer
 Audit, Tenant, Notification, Email, Search services with ORM integration.
 """
 import uuid

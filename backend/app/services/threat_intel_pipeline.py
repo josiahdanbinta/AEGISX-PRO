@@ -1,5 +1,5 @@
 """
-AEGISX - MISP / OpenCTI Threat Intelligence Pipeline (Tier 4)
+AEGIS - MISP / OpenCTI Threat Intelligence Pipeline (Tier 4)
 Auto-ingestion, IOC normalization, confidence scoring, and enrichment
 from MISP, OpenCTI, OTX, VirusTotal, Shodan, and AbuseIPDB.
 """
@@ -40,7 +40,7 @@ class ThreatIntelPipeline:
             self._client = httpx.AsyncClient(timeout=30.0)
         return self._client
 
-    # ── MISP ────────────────────────────────────────────────────
+    # â”€â”€ MISP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def sync_misp(self) -> Dict[str, Any]:
         if not settings.MISP_URL or not settings.MISP_API_KEY:
@@ -149,7 +149,7 @@ class ThreatIntelPipeline:
                 return "white"
         return "amber"
 
-    # ── OpenCTI ──────────────────────────────────────────────────
+    # â”€â”€ OpenCTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def sync_opencti(self) -> Dict[str, Any]:
         if not settings.OPENCTI_URL or not settings.OPENCTI_API_KEY:
@@ -251,7 +251,7 @@ class ThreatIntelPipeline:
             "pattern_type": node.get("pattern_type"),
         }
 
-    # ── VirusTotal ───────────────────────────────────────────────
+    # â”€â”€ VirusTotal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def lookup_virustotal(self, ioc_type: str, value: str) -> Optional[Dict]:
         if not settings.VIRUSTOTAL_API_KEY:
@@ -295,7 +295,7 @@ class ThreatIntelPipeline:
             logger.warning("VirusTotal lookup failed for %s: %s", value, e)
             return None
 
-    # ── AbuseIPDB ────────────────────────────────────────────────
+    # â”€â”€ AbuseIPDB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def lookup_abuseipdb(self, ip: str) -> Optional[Dict]:
         if not settings.ABUSEIPDB_API_KEY:
@@ -327,7 +327,7 @@ class ThreatIntelPipeline:
             logger.warning("AbuseIPDB lookup failed for %s: %s", ip, e)
             return None
 
-    # ── Shodan ───────────────────────────────────────────────────
+    # â”€â”€ Shodan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def lookup_shodan(self, ip: str) -> Optional[Dict]:
         if not settings.SHODAN_API_KEY:
@@ -359,7 +359,7 @@ class ThreatIntelPipeline:
             logger.warning("Shodan lookup failed for %s: %s", ip, e)
             return None
 
-    # ── Full Enrichment ──────────────────────────────────────────
+    # â”€â”€ Full Enrichment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def enrich_ioc(self, ioc_type: str, value: str) -> Dict[str, Any]:
         cache_key = f"{ioc_type}:{value}"

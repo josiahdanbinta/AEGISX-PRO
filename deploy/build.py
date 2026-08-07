@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-AEGISX Agent - Build Script
+AEGIS Agent - Build Script
 Creates standalone executables and deployment packages for all platforms.
 
 Usage:
-    python deploy/build.py --platform windows --server https://aegisx.company.com --key REGISTRATION_KEY
-    python deploy/build.py --platform macos --server https://aegisx.company.com --key REGISTRATION_KEY
-    python deploy/build.py --platform linux --server https://aegisx.company.com --key REGISTRATION_KEY
-    python deploy/build.py --all --server https://aegisx.company.com --key REGISTRATION_KEY
+    python deploy/build.py --platform windows --server https://AEGIS.company.com --key REGISTRATION_KEY
+    python deploy/build.py --platform macos --server https://AEGIS.company.com --key REGISTRATION_KEY
+    python deploy/build.py --platform linux --server https://AEGIS.company.com --key REGISTRATION_KEY
+    python deploy/build.py --all --server https://AEGIS.company.com --key REGISTRATION_KEY
 """
 
 import argparse
@@ -99,9 +99,9 @@ def color_text(text: str, color: str) -> str:
 
 
 def print_banner():
-    print(color_text("╔══════════════════════════════════════════════╗", "cyan"))
-    print(color_text("║       AEGISX Agent - Build & Package         ║", "cyan"))
-    print(color_text("╚══════════════════════════════════════════════╝", "cyan"))
+    print(color_text("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—", "cyan"))
+    print(color_text("â•‘       AEGIS Agent - Build & Package         â•‘", "cyan"))
+    print(color_text("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "cyan"))
     print()
 
 
@@ -110,11 +110,11 @@ def print_step(step: int, total: int, description: str):
 
 
 def print_success(message: str):
-    print(f"  {color_text('✓', 'green')} {message}")
+    print(f"  {color_text('âœ“', 'green')} {message}")
 
 
 def print_warning(message: str):
-    print(f"  {color_text('⚠', 'yellow')} {message}")
+    print(f"  {color_text('âš ', 'yellow')} {message}")
 
 
 def print_error(message: str):
@@ -123,20 +123,20 @@ def print_error(message: str):
 
 def get_data_dir(platform: str) -> str:
     if platform == "win32":
-        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGISX Agent", "data")
+        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGIS Agent", "data")
     elif platform == "darwin":
-        return os.path.expanduser("~/Library/Application Support/AEGISX Agent/data")
+        return os.path.expanduser("~/Library/Application Support/AEGIS Agent/data")
     else:
-        return "/var/lib/aegisx-agent"
+        return "/var/lib/AEGIS-agent"
 
 
 def get_config_dir(platform: str) -> str:
     if platform == "win32":
-        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGISX Agent")
+        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGIS Agent")
     elif platform == "darwin":
-        return os.path.expanduser("~/Library/Application Support/AEGISX Agent")
+        return os.path.expanduser("~/Library/Application Support/AEGIS Agent")
     else:
-        return "/opt/aegisx-agent"
+        return "/opt/AEGIS-agent"
 
 
 def generate_agent_id() -> str:
@@ -157,7 +157,7 @@ def create_bootstrap_script(server_url: str = "", key: str = "", tenant: str = "
     """Create the bootstrap/entry-point script for first-run setup."""
     bootstrap_content = '''#!/usr/bin/env python3
 """
-AEGISX Agent - Bootstrap / Entry Point
+AEGIS Agent - Bootstrap / Entry Point
 Handles first-run configuration and launches the agent.
 """
 
@@ -171,31 +171,31 @@ def get_default_data_dir() -> str:
     platform = sys.platform
     if platform == "win32":
         base = os.environ.get("ProgramData", "C:\\ProgramData")
-        return os.path.join(base, "AEGISX Agent", "data")
+        return os.path.join(base, "AEGIS Agent", "data")
     elif platform == "darwin":
-        return os.path.expanduser("~/Library/Application Support/AEGISX Agent/data")
+        return os.path.expanduser("~/Library/Application Support/AEGIS Agent/data")
     else:
-        return "/var/lib/aegisx-agent"
+        return "/var/lib/AEGIS-agent"
 
 
 def get_default_config_dir() -> str:
     platform = sys.platform
     if platform == "win32":
-        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGISX Agent")
+        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGIS Agent")
     elif platform == "darwin":
-        return os.path.expanduser("~/Library/Application Support/AEGISX Agent")
+        return os.path.expanduser("~/Library/Application Support/AEGIS Agent")
     else:
-        return "/opt/aegisx-agent"
+        return "/opt/AEGIS-agent"
 
 
 def get_default_log_dir() -> str:
     platform = sys.platform
     if platform == "win32":
-        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGISX Agent", "logs")
+        return os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"), "AEGIS Agent", "logs")
     elif platform == "darwin":
-        return os.path.expanduser("~/Library/Logs/AEGISX Agent")
+        return os.path.expanduser("~/Library/Logs/AEGIS Agent")
     else:
-        return "/var/log/aegisx"
+        return "/var/log/AEGIS"
 
 
 def first_run_setup(config_path: str, server_url: str = "", key: str = "", tenant: str = ""):
@@ -205,16 +205,16 @@ def first_run_setup(config_path: str, server_url: str = "", key: str = "", tenan
         return
 
     print()
-    print("╔══════════════════════════════════════════════╗")
-    print("║     AEGISX Agent - First Time Setup          ║")
-    print("╚══════════════════════════════════════════════╝")
+    print("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—")
+    print("â•‘     AEGIS Agent - First Time Setup          â•‘")
+    print("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•")
     print()
     print("Please provide the following information to enroll this agent:")
-    print("(You can get these from your AEGISX admin console)")
+    print("(You can get these from your AEGIS admin console)")
     print()
 
     if not server_url:
-        server_url = input("Server URL (e.g., https://aegisx.company.com): ").strip()
+        server_url = input("Server URL (e.g., https://AEGIS.company.com): ").strip()
     if not server_url:
         print("ERROR: Server URL is required.")
         sys.exit(1)
@@ -264,7 +264,7 @@ def first_run_setup(config_path: str, server_url: str = "", key: str = "", tenan
         yml.safe_dump(config_data, f, default_flow_style=False)
 
     print()
-    print(f"✓ Configuration saved to {config_file}")
+    print(f"âœ“ Configuration saved to {config_file}")
     print("Starting agent...")
     print()
 
@@ -272,7 +272,7 @@ def first_run_setup(config_path: str, server_url: str = "", key: str = "", tenan
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AEGISX Security Agent")
+    parser = argparse.ArgumentParser(description="AEGIS Security Agent")
     parser.add_argument("--config", "-c", help="Path to config file")
     parser.add_argument("--setup", action="store_true", help="Force first-run setup")
     parser.add_argument("--server", help="Server URL (for setup)")
@@ -317,7 +317,7 @@ if __name__ == "__main__":
 
 
 def write_bootstrap(build_path: Path, server_url: str = "", key: str = "", tenant: str = ""):
-    bootstrap_path = build_path / "aegisx_bootstrap.py"
+    bootstrap_path = build_path / "AEGIS_bootstrap.py"
     content = create_bootstrap_script(server_url, key, tenant)
     bootstrap_path.write_text(content, encoding="utf-8")
     return bootstrap_path
@@ -355,7 +355,7 @@ def build_windows_exe(server_url: str = "", key: str = "", tenant: str = "") -> 
     pyi_args = [
         str(bootstrap_path),
         "--onefile",
-        "--name", "AEGISX-Agent",
+        "--name", "AEGIS-Agent",
         "--clean",
         "--noconfirm",
     ]
@@ -377,7 +377,7 @@ def build_windows_exe(server_url: str = "", key: str = "", tenant: str = "") -> 
         return False
 
     # Move output
-    exe_name = "AEGISX-Agent.exe"
+    exe_name = "AEGIS-Agent.exe"
     src_exe = Path("dist") / exe_name
     if src_exe.exists():
         dest_dir = DIST_DIR / "windows"
@@ -396,7 +396,7 @@ def _generate_windows_build_script(server_url: str, key: str, tenant: str) -> bo
     script_dir = DIST_DIR / "windows"
     script_dir.mkdir(parents=True, exist_ok=True)
 
-    script_content = f'''# AEGISX Agent - Windows Build Script
+    script_content = f'''# AEGIS Agent - Windows Build Script
 # Generated by deploy/build.py
 # Run on a Windows machine with Python 3.8+
 
@@ -405,9 +405,9 @@ $VERSION = "{VERSION}"
 $AGENT_DIR = "$PSScriptRoot\\..\\..\\agent"
 $OUTPUT_DIR = "$PSScriptRoot\\..\\..\\dist\\windows"
 
-Write-Host "Building AEGISX Agent v$VERSION for Windows..." -ForegroundColor Cyan
+Write-Host "Building AEGIS Agent v$VERSION for Windows..." -ForegroundColor Cyan
 
-$buildDir = Join-Path $env:TEMP "aegisx-build-$VERSION"
+$buildDir = Join-Path $env:TEMP "AEGIS-build-$VERSION"
 if (Test-Path $buildDir) {{ Remove-Item -Recurse -Force $buildDir }}
 New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 
@@ -418,9 +418,9 @@ Copy-Item -Path $AGENT_DIR -Destination "$buildDir\\" -Recurse -Force
 $bootstrapCode = @'
 {create_bootstrap_script(server_url, key, tenant)[:500]}...
 '@
-Set-Content -Path "$buildDir\\aegisx_bootstrap.py" -Value (Get-Content "$PSScriptRoot\\..\\..\\build_output\\aegisx_bootstrap.py" -Raw -ErrorAction SilentlyContinue)
+Set-Content -Path "$buildDir\\AEGIS_bootstrap.py" -Value (Get-Content "$PSScriptRoot\\..\\..\\build_output\\AEGIS_bootstrap.py" -Raw -ErrorAction SilentlyContinue)
 
-if (-not (Test-Path "$buildDir\\aegisx_bootstrap.py")) {{
+if (-not (Test-Path "$buildDir\\AEGIS_bootstrap.py")) {{
     Write-Host "Bootstrap file missing. Run deploy/build.py first on the source machine." -ForegroundColor Red
     exit 1
 }}
@@ -428,7 +428,7 @@ if (-not (Test-Path "$buildDir\\aegisx_bootstrap.py")) {{
 pip install pyinstaller --quiet
 
 Push-Location $buildDir
-pyinstaller --onefile --name "AEGISX-Agent" --clean --noconfirm `
+pyinstaller --onefile --name "AEGIS-Agent" --clean --noconfirm `
     --add-data "agent;agent" `
     --hidden-import "agent.core.communication" `
     --hidden-import "agent.core.collector" `
@@ -440,13 +440,13 @@ pyinstaller --onefile --name "AEGISX-Agent" --clean --noconfirm `
     --hidden-import "agent.core.collectors.logs" `
     --hidden-import "agent.core.collectors.ransomware" `
     --hidden-import "agent.platforms" `
-    aegisx_bootstrap.py
+    AEGIS_bootstrap.py
 Pop-Location
 
 New-Item -ItemType Directory -Path $OUTPUT_DIR -Force | Out-Null
-Copy-Item -Path "$buildDir\\dist\\AEGISX-Agent.exe" -Destination "$OUTPUT_DIR\\" -Force
+Copy-Item -Path "$buildDir\\dist\\AEGIS-Agent.exe" -Destination "$OUTPUT_DIR\\" -Force
 
-Write-Host "Windows executable: $OUTPUT_DIR\\AEGISX-Agent.exe" -ForegroundColor Green
+Write-Host "Windows executable: $OUTPUT_DIR\\AEGIS-Agent.exe" -ForegroundColor Green
 '''
 
     (script_dir / "build_windows.ps1").write_text(script_content, encoding="utf-8")
@@ -479,7 +479,7 @@ def build_macos_pkg(server_url: str = "", key: str = "", tenant: str = "") -> bo
     pyi_args = [
         str(bootstrap_path),
         "--onefile",
-        "--name", "AEGISX-Agent",
+        "--name", "AEGIS-Agent",
         "--clean",
         "--noconfirm",
         "--add-data", f"agent{os.pathsep}agent",
@@ -494,7 +494,7 @@ def build_macos_pkg(server_url: str = "", key: str = "", tenant: str = "") -> bo
         print_error(f"PyInstaller build failed: {e}")
         return False
 
-    exe_name = "AEGISX-Agent"
+    exe_name = "AEGIS-Agent"
     src_exe = Path("dist") / exe_name
     if not src_exe.exists():
         print_error("PyInstaller output not found")
@@ -505,7 +505,7 @@ def build_macos_pkg(server_url: str = "", key: str = "", tenant: str = "") -> bo
 
     # Create .app bundle
     print_step(4, 7, "Creating .app bundle...")
-    app_dir = dest_dir / "AEGISX-Agent.app"
+    app_dir = dest_dir / "AEGIS-Agent.app"
     contents = app_dir / "Contents"
     macos_dir = contents / "MacOS"
     resources_dir = contents / "Resources"
@@ -521,11 +521,11 @@ def build_macos_pkg(server_url: str = "", key: str = "", tenant: str = "") -> bo
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>AEGISX Agent</string>
+    <string>AEGIS Agent</string>
     <key>CFBundleDisplayName</key>
-    <string>AEGISX Agent</string>
+    <string>AEGIS Agent</string>
     <key>CFBundleIdentifier</key>
-    <string>com.aegisx.agent</string>
+    <string>com.AEGIS.agent</string>
     <key>CFBundleVersion</key>
     <string>{VERSION}</string>
     <key>CFBundleShortVersionString</key>
@@ -545,16 +545,16 @@ def build_macos_pkg(server_url: str = "", key: str = "", tenant: str = "") -> bo
 
     # Build .pkg
     print_step(5, 7, "Building .pkg installer...")
-    pkg_path = dest_dir / f"AEGISX-Agent-{VERSION}.pkg"
+    pkg_path = dest_dir / f"AEGIS-Agent-{VERSION}.pkg"
 
     try:
         subprocess.run(
             [
                 "pkgbuild",
                 "--root", str(app_dir),
-                "--identifier", "com.aegisx.agent",
+                "--identifier", "com.AEGIS.agent",
                 "--version", VERSION,
-                "--install-location", "/Applications/AEGISX Agent.app",
+                "--install-location", "/Applications/AEGIS Agent.app",
                 str(pkg_path),
             ],
             check=True,
@@ -576,7 +576,7 @@ def _generate_macos_build_script(server_url: str, key: str, tenant: str) -> bool
     script_dir.mkdir(parents=True, exist_ok=True)
 
     script_content = f'''#!/bin/bash
-# AEGISX Agent - macOS Build Script
+# AEGIS Agent - macOS Build Script
 set -e
 VERSION="{VERSION}"
 AGENT_DIR="$(cd "$(dirname "$0")/../../agent" && pwd)"
@@ -584,26 +584,26 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DIST_DIR="$SCRIPT_DIR/../.."
 OUTPUT_DIR="$SCRIPT_DIR"
 
-echo "Building AEGISX Agent v$VERSION for macOS..."
+echo "Building AEGIS Agent v$VERSION for macOS..."
 echo ""
 
 pip3 install pyinstaller --quiet
 
-BUILD_DIR="/tmp/aegisx-build-macos-$VERSION"
+BUILD_DIR="/tmp/AEGIS-build-macos-$VERSION"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 cp -R "$AGENT_DIR" "$BUILD_DIR/agent"
 
-if [ -f "$DIST_DIR/build_output/aegisx_bootstrap.py" ]; then
-    cp "$DIST_DIR/build_output/aegisx_bootstrap.py" "$BUILD_DIR/aegisx_bootstrap.py"
+if [ -f "$DIST_DIR/build_output/AEGIS_bootstrap.py" ]; then
+    cp "$DIST_DIR/build_output/AEGIS_bootstrap.py" "$BUILD_DIR/AEGIS_bootstrap.py"
 else
     echo "ERROR: Bootstrap script missing. Run deploy/build.py first."
     exit 1
 fi
 
 cd "$BUILD_DIR"
-python3 -m PyInstaller --onefile --name "AEGISX-Agent" --clean --noconfirm \\
+python3 -m PyInstaller --onefile --name "AEGIS-Agent" --clean --noconfirm \\
     --add-data "agent:agent" \\
     --hidden-import "agent.core.communication" \\
     --hidden-import "agent.core.collector" \\
@@ -615,39 +615,39 @@ python3 -m PyInstaller --onefile --name "AEGISX-Agent" --clean --noconfirm \\
     --hidden-import "agent.core.collectors.logs" \\
     --hidden-import "agent.core.collectors.ransomware" \\
     --hidden-import "agent.platforms" \\
-    aegisx_bootstrap.py
+    AEGIS_bootstrap.py
 
-mkdir -p "$OUTPUT_DIR/AEGISX-Agent.app/Contents/MacOS"
-mkdir -p "$OUTPUT_DIR/AEGISX-Agent.app/Contents/Resources"
-cp "dist/AEGISX-Agent" "$OUTPUT_DIR/AEGISX-Agent.app/Contents/MacOS/"
-chmod 755 "$OUTPUT_DIR/AEGISX-Agent.app/Contents/MacOS/AEGISX-Agent"
+mkdir -p "$OUTPUT_DIR/AEGIS-Agent.app/Contents/MacOS"
+mkdir -p "$OUTPUT_DIR/AEGIS-Agent.app/Contents/Resources"
+cp "dist/AEGIS-Agent" "$OUTPUT_DIR/AEGIS-Agent.app/Contents/MacOS/"
+chmod 755 "$OUTPUT_DIR/AEGIS-Agent.app/Contents/MacOS/AEGIS-Agent"
 
-cat > "$OUTPUT_DIR/AEGISX-Agent.app/Contents/Info.plist" << 'PLIST'
+cat > "$OUTPUT_DIR/AEGIS-Agent.app/Contents/Info.plist" << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-    <key>CFBundleName</key><string>AEGISX Agent</string>
-    <key>CFBundleIdentifier</key><string>com.aegisx.agent</string>
+    <key>CFBundleName</key><string>AEGIS Agent</string>
+    <key>CFBundleIdentifier</key><string>com.AEGIS.agent</string>
     <key>CFBundleVersion</key><string>${VERSION}</string>
     <key>CFBundleShortVersionString</key><string>${VERSION}</string>
-    <key>CFBundleExecutable</key><string>AEGISX-Agent</string>
+    <key>CFBundleExecutable</key><string>AEGIS-Agent</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>10.15</string>
     <key>LSUIElement</key><true/>
 </dict></plist>
 PLIST
 
-pkgbuild --root "$OUTPUT_DIR/AEGISX-Agent.app" \\
-    --identifier "com.aegisx.agent" \\
+pkgbuild --root "$OUTPUT_DIR/AEGIS-Agent.app" \\
+    --identifier "com.AEGIS.agent" \\
     --version "$VERSION" \\
-    --install-location "/Applications/AEGISX Agent.app" \\
-    "$OUTPUT_DIR/AEGISX-Agent-${VERSION}.pkg" 2>/dev/null || echo "[WARN] pkgbuild not available, .app only"
+    --install-location "/Applications/AEGIS Agent.app" \\
+    "$OUTPUT_DIR/AEGIS-Agent-${VERSION}.pkg" 2>/dev/null || echo "[WARN] pkgbuild not available, .app only"
 
 echo ""
 echo "macOS build complete!"
-echo "  App: $OUTPUT_DIR/AEGISX-Agent.app"
-echo "  PKG: $OUTPUT_DIR/AEGISX-Agent-${VERSION}.pkg"
+echo "  App: $OUTPUT_DIR/AEGIS-Agent.app"
+echo "  PKG: $OUTPUT_DIR/AEGIS-Agent-${VERSION}.pkg"
 '''
 
     (script_dir / "build_macos.sh").write_text(script_content, encoding="utf-8")
@@ -677,7 +677,7 @@ def build_linux_packages(server_url: str = "", key: str = "", tenant: str = "") 
     pyi_args = [
         str(bootstrap_path),
         "--onefile",
-        "--name", "aegisx-agent",
+        "--name", "AEGIS-agent",
         "--clean",
         "--noconfirm",
         "--add-data", f"agent{os.pathsep}agent",
@@ -692,7 +692,7 @@ def build_linux_packages(server_url: str = "", key: str = "", tenant: str = "") 
         print_error(f"PyInstaller build failed: {e}")
         return False
 
-    exe_name = "aegisx-agent"
+    exe_name = "AEGIS-agent"
     src_exe = Path("dist") / exe_name
     if not src_exe.exists():
         print_error("PyInstaller output not found")
@@ -711,10 +711,10 @@ def build_linux_packages(server_url: str = "", key: str = "", tenant: str = "") 
     if staging.exists():
         shutil.rmtree(staging)
 
-    staging_bin = staging / "opt" / "aegisx-agent"
+    staging_bin = staging / "opt" / "AEGIS-agent"
     staging_svc = staging / "etc" / "systemd" / "system"
-    staging_data = staging / "var" / "lib" / "aegisx-agent"
-    staging_log = staging / "var" / "log" / "aegisx"
+    staging_data = staging / "var" / "lib" / "AEGIS-agent"
+    staging_log = staging / "var" / "log" / "AEGIS"
 
     for d in [staging_bin, staging_svc, staging_data, staging_log]:
         d.mkdir(parents=True, exist_ok=True)
@@ -722,25 +722,25 @@ def build_linux_packages(server_url: str = "", key: str = "", tenant: str = "") 
     shutil.copy2(src_exe, staging_bin / exe_name)
 
     service_content = f'''[Unit]
-Description=AEGISX Security Agent
+Description=AEGIS Security Agent
 After=network.target
-Documentation=https://aegisx.com/docs
+Documentation=https://AEGIS.com/docs
 
 [Service]
 Type=simple
-ExecStart=/opt/aegisx-agent/{exe_name}
+ExecStart=/opt/AEGIS-agent/{exe_name}
 Restart=always
 RestartSec=10
-StandardOutput=append:/var/log/aegisx/agent.log
-StandardError=append:/var/log/aegisx/agent-error.log
-Environment="AEGISX_SERVER_URL={server_url}"
-Environment="AEGISX_REGISTRATION_KEY={key}"
-Environment="AEGISX_TENANT_ID={tenant}"
+StandardOutput=append:/var/log/AEGIS/agent.log
+StandardError=append:/var/log/AEGIS/agent-error.log
+Environment="AEGIS_SERVER_URL={server_url}"
+Environment="AEGIS_REGISTRATION_KEY={key}"
+Environment="AEGIS_TENANT_ID={tenant}"
 
 [Install]
 WantedBy=multi-user.target
 '''
-    (staging_svc / "aegisx-agent.service").write_text(service_content, encoding="utf-8")
+    (staging_svc / "AEGIS-agent.service").write_text(service_content, encoding="utf-8")
 
     # Try building .deb and .rpm with fpm
     print_step(5, 7, "Building .deb and .rpm packages...")
@@ -753,22 +753,22 @@ WantedBy=multi-user.target
             subprocess.run(
                 [
                     "fpm", "-s", "dir", "-t", "deb",
-                    "-n", "aegisx-agent",
+                    "-n", "AEGIS-agent",
                     "-v", VERSION,
-                    "--description", "AEGISX Security Monitoring Agent",
-                    "--url", "https://aegisx.com",
-                    "--maintainer", "AEGISX <support@aegisx.com>",
+                    "--description", "AEGIS Security Monitoring Agent",
+                    "--url", "https://AEGIS.com",
+                    "--maintainer", "AEGIS <support@AEGIS.com>",
                     "--license", "Proprietary",
                     "--architecture", arch,
                     "--depends", "systemd",
                     "-C", str(staging),
-                    "-p", str(dest_dir / f"aegisx-agent_{VERSION}_{arch}.deb"),
+                    "-p", str(dest_dir / f"AEGIS-agent_{VERSION}_{arch}.deb"),
                     ".",
                 ],
                 check=True,
                 capture_output=True,
             )
-            print_success(f".deb package: {dest_dir / f'aegisx-agent_{VERSION}_{arch}.deb'}")
+            print_success(f".deb package: {dest_dir / f'AEGIS-agent_{VERSION}_{arch}.deb'}")
             pkg_success = True
         except subprocess.CalledProcessError as e:
             print_warning(f"fpm .deb failed: {e.stderr.decode() if e.stderr else e}")
@@ -779,22 +779,22 @@ WantedBy=multi-user.target
             subprocess.run(
                 [
                     "fpm", "-s", "dir", "-t", "rpm",
-                    "-n", "aegisx-agent",
+                    "-n", "AEGIS-agent",
                     "-v", VERSION,
-                    "--description", "AEGISX Security Monitoring Agent",
-                    "--url", "https://aegisx.com",
-                    "--maintainer", "AEGISX <support@aegisx.com>",
+                    "--description", "AEGIS Security Monitoring Agent",
+                    "--url", "https://AEGIS.com",
+                    "--maintainer", "AEGIS <support@AEGIS.com>",
                     "--license", "Proprietary",
                     "--architecture", arch,
                     "--depends", "systemd",
                     "-C", str(staging),
-                    "-p", str(dest_dir / f"aegisx-agent-{VERSION}-1.{arch}.rpm"),
+                    "-p", str(dest_dir / f"AEGIS-agent-{VERSION}-1.{arch}.rpm"),
                     ".",
                 ],
                 check=True,
                 capture_output=True,
             )
-            print_success(f".rpm package: {dest_dir / f'aegisx-agent-{VERSION}-1.{arch}.rpm'}")
+            print_success(f".rpm package: {dest_dir / f'AEGIS-agent-{VERSION}-1.{arch}.rpm'}")
             pkg_success = True
         except subprocess.CalledProcessError as e:
             print_warning(f"fpm .rpm failed: {e.stderr.decode() if e.stderr else e}")
@@ -804,7 +804,7 @@ WantedBy=multi-user.target
         print_warning("fpm not found (gem install fpm). Creating tar.gz instead.")
 
     # Always create tar.gz fallback
-    tar_dir = BUILD_DIR / "linux-tar" / f"aegisx-agent-{VERSION}"
+    tar_dir = BUILD_DIR / "linux-tar" / f"AEGIS-agent-{VERSION}"
     tar_dir.mkdir(parents=True, exist_ok=True)
     (tar_dir / "bin").mkdir(exist_ok=True)
     shutil.copy2(src_exe, tar_dir / "bin" / exe_name)
@@ -813,9 +813,9 @@ WantedBy=multi-user.target
     if install_sh.exists():
         shutil.copy2(install_sh, tar_dir / "install.sh")
 
-    tar_path = dest_dir / f"aegisx-agent-{VERSION}-linux-{arch}.tar.gz"
+    tar_path = dest_dir / f"AEGIS-agent-{VERSION}-linux-{arch}.tar.gz"
     with tarfile.open(tar_path, "w:gz") as tar:
-        tar.add(tar_dir, arcname=f"aegisx-agent-{VERSION}")
+        tar.add(tar_dir, arcname=f"AEGIS-agent-{VERSION}")
     print_success(f"tar.gz archive: {tar_path}")
 
     return True
@@ -842,11 +842,11 @@ def create_self_extracting_installer(platform: str, server_url: str, key: str, t
     if platform == "win32":
         sfx_content = f'''@echo off
 setlocal enabledelayedexpansion
-echo AEGISX Agent - Self-Extracting Installer
+echo AEGIS Agent - Self-Extracting Installer
 echo.
-set "INSTALL_DIR=%ProgramFiles%\\AEGISX Agent"
-set "DATA_DIR=%ProgramData%\\AEGISX Agent\\data"
-set "LOG_DIR=%ProgramData%\\AEGISX Agent\\logs"
+set "INSTALL_DIR=%ProgramFiles%\\AEGIS Agent"
+set "DATA_DIR=%ProgramData%\\AEGIS Agent\\data"
+set "LOG_DIR=%ProgramData%\\AEGIS Agent\\logs"
 
 echo Checking Python...
 where python >nul 2>&1 || goto :no_python
@@ -882,7 +882,7 @@ echo   ransomware: true
 ) > "%INSTALL_DIR%\\config.yaml"
 
 echo Installing agent package...
-pip install --quiet --target "%INSTALL_DIR%" aegisx-agent 2>nul || (
+pip install --quiet --target "%INSTALL_DIR%" AEGIS-agent 2>nul || (
     echo Warning: pip install failed. Using bundled agent.
     REM Placeholder for bundled agent extraction
 )
@@ -900,16 +900,16 @@ exit /b 1
 
 :end
 '''
-        (output_dir / "AEGISX-Agent-Setup.cmd").write_text(sfx_content, encoding="utf-8")
+        (output_dir / "AEGIS-Agent-Setup.cmd").write_text(sfx_content, encoding="utf-8")
 
     elif platform in ("linux", "darwin"):
         sfx_content = f'''#!/bin/bash
 set -e
-echo "AEGISX Agent - Self-Extracting Installer"
+echo "AEGIS Agent - Self-Extracting Installer"
 echo ""
-INSTALL_DIR="/opt/aegisx-agent"
-DATA_DIR="/var/lib/aegisx-agent"
-LOG_DIR="/var/log/aegisx"
+INSTALL_DIR="/opt/AEGIS-agent"
+DATA_DIR="/var/lib/AEGIS-agent"
+LOG_DIR="/var/log/AEGIS"
 
 echo "Checking Python..."
 command -v python3 >/dev/null 2>&1 || {{ echo "ERROR: Python 3.8+ required"; exit 1; }}
@@ -924,7 +924,7 @@ cat > "$INSTALL_DIR/config.yaml" << 'CONFEOF'
 CONFEOF
 
 echo "Installing agent..."
-python3 -m pip install --quiet --target "$INSTALL_DIR" aegisx-agent 2>/dev/null || {{
+python3 -m pip install --quiet --target "$INSTALL_DIR" AEGIS-agent 2>/dev/null || {{
     echo "Warning: pip install failed. Copying bundled agent..."
     # Placeholder for bundled agent
 }}
@@ -933,7 +933,7 @@ echo ""
 echo "Installation complete!"
 echo "Run: python3 -m agent.agent"
 '''
-        sfx_path = output_dir / "aegisx-agent-setup.sh"
+        sfx_path = output_dir / "AEGIS-agent-setup.sh"
         sfx_path.write_text(sfx_content, encoding="utf-8")
         os.chmod(sfx_path, 0o755)
 
@@ -963,7 +963,7 @@ def create_deployment_zip(output_dir: Path, server_url: str, key: str, tenant: s
     # Create deployment config template
     config_template = zip_dir / "config.template.yaml"
     config = {
-        "server_url": server_url or "https://your-aegisx-server.com",
+        "server_url": server_url or "https://your-AEGIS-server.com",
         "registration_key": key or "YOUR_REGISTRATION_KEY",
         "tenant_id": tenant or "YOUR_TENANT_ID",
         "data_dir": "./data",
@@ -999,7 +999,7 @@ def create_deployment_zip(output_dir: Path, server_url: str, key: str, tenant: s
 
     # Generate README
     readme_path = zip_dir / "README.txt"
-    readme_content = f"""AEGISX Agent v{VERSION} - Deployment Package
+    readme_content = f"""AEGIS Agent v{VERSION} - Deployment Package
 {'=' * 50}
 
 Quick Install:
@@ -1010,12 +1010,12 @@ Quick Install:
 Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 Platform: {sys.platform} / {pf.machine()}
 
-For documentation, visit https://aegisx.com/docs
+For documentation, visit https://AEGIS.com/docs
 """
     readme_path.write_text(readme_content, encoding="utf-8")
 
     # Create ZIP
-    zip_name = f"aegisx-agent-deployment-{VERSION}.zip"
+    zip_name = f"AEGIS-agent-deployment-{VERSION}.zip"
     zip_path = output_dir / zip_name
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -1035,13 +1035,13 @@ For documentation, visit https://aegisx.com/docs
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="AEGISX Agent - Build & Package Tool",
+        description="AEGIS Agent - Build & Package Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python deploy/build.py --platform windows
-  python deploy/build.py --platform macos --server https://aegisx.company.com --key MYKEY --tenant t-001
-  python deploy/build.py --all --server https://aegisx.company.com --key MYKEY --tenant t-001
+  python deploy/build.py --platform macos --server https://AEGIS.company.com --key MYKEY --tenant t-001
+  python deploy/build.py --all --server https://AEGIS.company.com --key MYKEY --tenant t-001
   python deploy/build.py --platform linux --zip-only
         """,
     )
@@ -1059,7 +1059,7 @@ Examples:
     parser.add_argument(
         "--server", "-s",
         default="",
-        help="AEGISX server URL to embed in the build",
+        help="AEGIS server URL to embed in the build",
     )
     parser.add_argument(
         "--key", "-k",
@@ -1131,7 +1131,7 @@ def main():
 
     if not args.zip_only:
         for plat in platforms:
-            print(color_text(f"═══ Building for {plat.upper()} ═══", "cyan"))
+            print(color_text(f"â•â•â• Building for {plat.upper()} â•â•â•", "cyan"))
             print()
 
             if plat == "windows":
@@ -1144,7 +1144,7 @@ def main():
             print()
 
     # Always create deployment ZIP
-    print(color_text("═══ Creating Deployment Package ═══", "cyan"))
+    print(color_text("â•â•â• Creating Deployment Package â•â•â•", "cyan"))
     print()
     create_deployment_zip(DIST_DIR, args.server, args.key, args.tenant)
 
@@ -1165,9 +1165,9 @@ def main():
             pass
 
     print()
-    print(color_text("╔══════════════════════════════════════════════╗", "green"))
-    print(color_text("║           Build Complete!                    ║", "green"))
-    print(color_text("╚══════════════════════════════════════════════╝", "green"))
+    print(color_text("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—", "green"))
+    print(color_text("â•‘           Build Complete!                    â•‘", "green"))
+    print(color_text("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "green"))
     print()
     print(f"  Artifacts:  {DIST_DIR}")
     print()

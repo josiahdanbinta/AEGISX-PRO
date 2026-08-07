@@ -3,10 +3,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ include "aegisx.fullname" . }}
+  name: {{ include "AEGIS.fullname" . }}
   namespace: argocd
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -23,7 +23,7 @@ spec:
           value: {{ .Values.global.environment | quote }}
   destination:
     server: https://kubernetes.default.svc
-    namespace: {{ include "aegisx.namespace" . }}
+    namespace: {{ include "AEGIS.namespace" . }}
   syncPolicy:
     automated:
       prune: true

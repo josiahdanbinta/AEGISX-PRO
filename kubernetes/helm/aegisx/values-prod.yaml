@@ -6,11 +6,11 @@ global:
     - name: ghcr-registry
 
 config:
-  appName: "AEGISX"
+  appName: "AEGIS"
   appEnv: "production"
   logLevel: "WARNING"
   apiPrefix: "/api/v1"
-  corsOrigins: "https://aegisx.example.com"
+  corsOrigins: "https://AEGIS.example.com"
   featureSOAR: true
   featureThreatIntel: true
   featureAI: true
@@ -18,7 +18,7 @@ config:
   featureVulnerability: true
   featureAssetDiscovery: true
 
-# ── Production Scaling ───────────────────────────────────────────
+# â”€â”€ Production Scaling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 backend:
   replicaCount: 6
   image:
@@ -64,7 +64,7 @@ frontend:
     maxReplicas: 10
     targetCPUUtilizationPercentage: 60
 
-# ── Databases (StatefulSets with production sizing) ──────────────
+# â”€â”€ Databases (StatefulSets with production sizing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 postgresql:
   replicaCount: 3
   persistence:
@@ -140,7 +140,7 @@ rabbitmq:
     size: 50Gi
     storageClass: "managed-premium-ssd"
 
-# ── Streaming ────────────────────────────────────────────────────
+# â”€â”€ Streaming â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 kafka:
   replicaCount: 6
   persistence:
@@ -188,10 +188,10 @@ flink:
         cpu: "8"
         memory: "16Gi"
 
-# ── Object Storage ───────────────────────────────────────────────
+# â”€â”€ Object Storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 minio:
   replicaCount: 8
-  rootUser: aegisx
+  rootUser: AEGIS
   persistence:
     size: 500Gi
     storageClass: "managed-premium-ssd"
@@ -203,7 +203,7 @@ minio:
       cpu: "4"
       memory: "8Gi"
 
-# ── Observability ────────────────────────────────────────────────
+# â”€â”€ Observability â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 prometheus:
   retentionTime: "30d"
   retentionSize: "100GB"
@@ -230,7 +230,7 @@ jaeger:
     size: 50Gi
     storageClass: "managed-premium-ssd"
 
-# ── Ingress ──────────────────────────────────────────────────────
+# â”€â”€ Ingress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ingress:
   enabled: true
   className: nginx
@@ -241,7 +241,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
   hosts:
-    - host: aegisx.example.com
+    - host: AEGIS.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -259,9 +259,9 @@ ingress:
           pathType: Prefix
           service: grafana
   tls:
-    - secretName: aegisx-tls
+    - secretName: AEGIS-tls
       hosts:
-        - aegisx.example.com
+        - AEGIS.example.com
 
 networkPolicy:
   enabled: true

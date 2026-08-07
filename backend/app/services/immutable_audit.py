@@ -1,7 +1,7 @@
 """
-AEGISX - Immutable Audit Log Service (Tier 1)
+AEGIS - Immutable Audit Log Service (Tier 1)
 WORM (Write Once Read Many) enforcement with SHA-256 hash chain verification.
-Ensures audit trail integrity — any tampering is cryptographically detectable.
+Ensures audit trail integrity â€” any tampering is cryptographically detectable.
 """
 import hashlib
 import json
@@ -64,7 +64,7 @@ class ImmutableAuditLog:
         self.tenant_id = tenant_id
         self._chain: List[AuditChainEntry] = []
         self._genesis_hash = genesis_hash or hashlib.sha256(
-            f"aegisx-audit-genesis-{tenant_id}-{settings.APP_VERSION}".encode()
+            f"AEGIS-audit-genesis-{tenant_id}-{settings.APP_VERSION}".encode()
         ).hexdigest()
         self._last_hash = self._genesis_hash
         self._sequence = 0

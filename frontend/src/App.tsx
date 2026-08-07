@@ -92,7 +92,7 @@ function DeploymentPage() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Agent Deployment</h1>
-        <p className="text-sm text-slate-500 mt-1">Deploy the AEGISX agent on your endpoints</p>
+        <p className="text-sm text-slate-500 mt-1">Deploy the AEGIS agent on your endpoints</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,7 +102,7 @@ function DeploymentPage() {
           commands={[
             { label: 'PowerShell', cmd: `Invoke-WebRequest -Uri "http://${window.location.hostname}:8000/deploy/install.ps1" -OutFile install.ps1; .\\install.ps1 -Server "http://${window.location.hostname}:8000" -Key "YOUR_REGISTRATION_KEY" -Tenant "YOUR_TENANT_ID"` },
             { label: 'CMD (Quick)', cmd: `curl -o install.cmd http://${window.location.hostname}:8000/deploy/install.cmd && install.cmd "http://${window.location.hostname}:8000" "YOUR_KEY" "YOUR_TENANT"` },
-            { label: 'Installer (.exe)', cmd: `Download AEGISX-Agent-Setup.exe from the releases page and run it. Enter your server URL, registration key, and tenant ID when prompted.` },
+            { label: 'Installer (.exe)', cmd: `Download AEGIS-Agent-Setup.exe from the releases page and run it. Enter your server URL, registration key, and tenant ID when prompted.` },
           ]}
         />
         <DeploymentCard
@@ -110,8 +110,8 @@ function DeploymentPage() {
           description="Deploy on Ubuntu, Debian, RHEL, CentOS, Fedora"
           commands={[
             { label: 'cURL (Recommended)', cmd: `curl -sSL http://${window.location.hostname}:8000/deploy/install.sh | sudo bash -s -- --server http://${window.location.hostname}:8000 --key YOUR_REGISTRATION_KEY --tenant YOUR_TENANT_ID` },
-            { label: '.deb Package', cmd: `wget http://${window.location.hostname}:8000/deploy/aegisx-agent.deb && sudo dpkg -i aegisx-agent.deb && sudo aegisx-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
-            { label: '.rpm Package', cmd: `wget http://${window.location.hostname}:8000/deploy/aegisx-agent.rpm && sudo rpm -i aegisx-agent.rpm && sudo aegisx-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
+            { label: '.deb Package', cmd: `wget http://${window.location.hostname}:8000/deploy/AEGIS-agent.deb && sudo dpkg -i AEGIS-agent.deb && sudo AEGIS-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
+            { label: '.rpm Package', cmd: `wget http://${window.location.hostname}:8000/deploy/AEGIS-agent.rpm && sudo rpm -i AEGIS-agent.rpm && sudo AEGIS-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
           ]}
         />
         <DeploymentCard
@@ -119,15 +119,15 @@ function DeploymentPage() {
           description="Deploy on macOS 12+ (Monterey and later)"
           commands={[
             { label: 'cURL (Recommended)', cmd: `curl -sSL http://${window.location.hostname}:8000/deploy/install.sh | bash -s -- --server http://${window.location.hostname}:8000 --key YOUR_REGISTRATION_KEY --tenant YOUR_TENANT_ID` },
-            { label: 'Homebrew', cmd: `brew install aegisx/tap/aegisx-agent && aegisx-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
-            { label: '.pkg Installer', cmd: `Download AEGISX-Agent.pkg. Double-click to install, then run: aegisx-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
+            { label: 'Homebrew', cmd: `brew install AEGIS/tap/AEGIS-agent && AEGIS-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
+            { label: '.pkg Installer', cmd: `Download AEGIS-Agent.pkg. Double-click to install, then run: AEGIS-agent register --server http://${window.location.hostname}:8000 --key YOUR_KEY --tenant YOUR_TENANT` },
           ]}
         />
         <DeploymentCard
           os="Docker / Kubernetes"
           description="Deploy as container for Docker and Kubernetes environments"
           commands={[
-            { label: 'Docker', cmd: `docker run -d --name aegisx-agent --restart always -e AEGISX_SERVER=http://${window.location.hostname}:8000 -e AEGISX_KEY=YOUR_KEY -e AEGISX_TENANT=YOUR_TENANT ghcr.io/org/aegisx-agent:latest` },
+            { label: 'Docker', cmd: `docker run -d --name AEGIS-agent --restart always -e AEGIS_SERVER=http://${window.location.hostname}:8000 -e AEGIS_KEY=YOUR_KEY -e AEGIS_TENANT=YOUR_TENANT ghcr.io/org/AEGIS-agent:latest` },
             { label: 'Kubernetes', cmd: `kubectl apply -f http://${window.location.hostname}:8000/deploy/k8s-agent.yaml` },
           ]}
         />
@@ -141,7 +141,7 @@ function DeploymentPage() {
           <div>
             <h3 className="font-semibold text-slate-900 mb-1">System Connection Info</h3>
             <p className="text-sm text-slate-600">
-              AEGISX Dashboard is running on <code className="bg-white px-1.5 py-0.5 rounded text-sm font-mono text-brand-700">{window.location.hostname}:{window.location.port || '3000'}</code>
+              AEGIS Dashboard is running on <code className="bg-white px-1.5 py-0.5 rounded text-sm font-mono text-brand-700">{window.location.hostname}:{window.location.port || '3000'}</code>
             </p>
             <p className="text-sm text-slate-600 mt-1">
               Agent enrollment endpoint: <code className="bg-white px-1.5 py-0.5 rounded text-sm font-mono text-brand-700">http://{window.location.hostname}:8000/api/v1/agent/register</code>

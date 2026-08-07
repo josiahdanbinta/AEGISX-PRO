@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: aegisx
+  namespace: AEGIS
   labels:
-    app: aegisx-backend
+    app: AEGIS-backend
 spec:
   replicas: 3
   strategy:
@@ -14,23 +14,23 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: aegisx-backend
+      app: AEGIS-backend
   template:
     metadata:
       labels:
-        app: aegisx-backend
+        app: AEGIS-backend
     spec:
       containers:
         - name: backend
-          image: ghcr.io/org/aegisx-backend:latest
+          image: ghcr.io/org/AEGIS-backend:latest
           ports:
             - containerPort: 8000
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: aegisx-config
+                name: AEGIS-config
             - secretRef:
-                name: aegisx-secrets
+                name: AEGIS-secrets
           resources:
             requests:
               cpu: "500m"
@@ -61,28 +61,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: celery-worker
-  namespace: aegisx
+  namespace: AEGIS
   labels:
-    app: aegisx-celery-worker
+    app: AEGIS-celery-worker
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: aegisx-celery-worker
+      app: AEGIS-celery-worker
   template:
     metadata:
       labels:
-        app: aegisx-celery-worker
+        app: AEGIS-celery-worker
     spec:
       containers:
         - name: worker
-          image: ghcr.io/org/aegisx-backend:latest
+          image: ghcr.io/org/AEGIS-backend:latest
           command: ["celery", "-A", "app.core.celery_config", "worker", "-l", "info"]
           envFrom:
             - configMapRef:
-                name: aegisx-config
+                name: AEGIS-config
             - secretRef:
-                name: aegisx-secrets
+                name: AEGIS-secrets
           resources:
             requests:
               cpu: "250m"
@@ -95,28 +95,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: celery-beat
-  namespace: aegisx
+  namespace: AEGIS
   labels:
-    app: aegisx-celery-beat
+    app: AEGIS-celery-beat
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: aegisx-celery-beat
+      app: AEGIS-celery-beat
   template:
     metadata:
       labels:
-        app: aegisx-celery-beat
+        app: AEGIS-celery-beat
     spec:
       containers:
         - name: beat
-          image: ghcr.io/org/aegisx-backend:latest
+          image: ghcr.io/org/AEGIS-backend:latest
           command: ["celery", "-A", "app.core.celery_config", "beat", "-l", "info"]
           envFrom:
             - configMapRef:
-                name: aegisx-config
+                name: AEGIS-config
             - secretRef:
-                name: aegisx-secrets
+                name: AEGIS-secrets
           resources:
             requests:
               cpu: "100m"
@@ -129,22 +129,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: aegisx
+  namespace: AEGIS
   labels:
-    app: aegisx-frontend
+    app: AEGIS-frontend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: aegisx-frontend
+      app: AEGIS-frontend
   template:
     metadata:
       labels:
-        app: aegisx-frontend
+        app: AEGIS-frontend
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/org/aegisx-frontend:latest
+          image: ghcr.io/org/AEGIS-frontend:latest
           ports:
             - containerPort: 80
               protocol: TCP

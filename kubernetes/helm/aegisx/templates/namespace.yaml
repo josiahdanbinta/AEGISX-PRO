@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ include "aegisx.namespace" . }}
+  name: {{ include "AEGIS.namespace" . }}
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
-    aegisx.io/environment: {{ .Values.global.environment }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
+    AEGIS.io/environment: {{ .Values.global.environment }}

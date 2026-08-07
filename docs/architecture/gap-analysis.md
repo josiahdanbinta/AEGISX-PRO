@@ -1,14 +1,14 @@
-# AEGISX PRO — 9-Tier Architecture Gap Analysis
+# AEGIS â€” 9-Tier Architecture Gap Analysis
 
 _Generated: 2026-08-07 | Target Architecture: Production-Grade SOC Platform_
 
 ## Executive Summary
 
-The existing AEGISX codebase implements a **~40% complete** version of the target 9-tier architecture. Tiers 1, 4, 6, and 7 are well-implemented with production-ready code. Tiers 2, 3, 5, 8, and 9 have major gaps — the infrastructure backbone (event streaming, data lakes, observability) is either missing entirely or uses development-only configurations.
+The existing AEGIS codebase implements a **~40% complete** version of the target 9-tier architecture. Tiers 1, 4, 6, and 7 are well-implemented with production-ready code. Tiers 2, 3, 5, 8, and 9 have major gaps â€” the infrastructure backbone (event streaming, data lakes, observability) is either missing entirely or uses development-only configurations.
 
 ---
 
-## TIER 1: API Gateway & Authentication — 80% Complete
+## TIER 1: API Gateway & Authentication â€” 80% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -26,11 +26,11 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 2: Data Ingestion — 10% Complete
+## TIER 2: Data Ingestion â€” 10% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
-| Kafka Cluster (3-6 nodes) | MISSING | No Kafka anywhere — no topics, no brokers, no producers/consumers in codebase |
+| Kafka Cluster (3-6 nodes) | MISSING | No Kafka anywhere â€” no topics, no brokers, no producers/consumers in codebase |
 | Schema Registry (Avro) | MISSING | No schema management; all data is JSON only |
 | Ingestion API | PARTIAL | `ingestion.py` exists (syslog RFC 5424/3164, JSON events, Elastic Beats) but no TLS client cert auth |
 | Deduplication Service | MISSING | No Redis bloom filter implementation; no dedup window |
@@ -44,11 +44,11 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 3: Stream Processing — 0% Complete
+## TIER 3: Stream Processing â€” 0% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
-| Apache Flink (stateful) | MISSING | No Flink cluster — no JobManager, no TaskManager, no jobs |
+| Apache Flink (stateful) | MISSING | No Flink cluster â€” no JobManager, no TaskManager, no jobs |
 | Event Normalization | MISSING | Normalization done ad-hoc in API handlers, not as streaming pipeline |
 | Enrichment Pipeline | MISSING | TI lookups and asset metadata enrichment happen at detection time, not at ingestion |
 | Window Operations | MISSING | No streaming window operations for baselines |
@@ -62,7 +62,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 4: Analytics & Detection — 70% Complete
+## TIER 4: Analytics & Detection â€” 70% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -81,7 +81,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 5: Data Storage — 30% Complete
+## TIER 5: Data Storage â€” 30% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -100,7 +100,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 6: Application Services — 65% Complete
+## TIER 6: Application Services â€” 65% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -117,7 +117,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 7: Frontend & Dashboards — 60% Complete
+## TIER 7: Frontend & Dashboards â€” 60% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -138,7 +138,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 8: Orchestration & Deployment — 35% Complete
+## TIER 8: Orchestration & Deployment â€” 35% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -157,7 +157,7 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 ---
 
-## TIER 9: Monitoring & Observability — 10% Complete
+## TIER 9: Monitoring & Observability â€” 10% Complete
 
 | Feature | Status | Gap Details |
 |---------|--------|-------------|
@@ -179,18 +179,18 @@ The existing AEGISX codebase implements a **~40% complete** version of the targe
 
 | Priority | Tier | Component | Effort | Impact |
 |----------|------|-----------|--------|--------|
-| **P0** | 2 | Kafka Cluster + Topics | High | Critical — event backbone for all tiers |
-| **P0** | 8 | StatefulSet conversion (PG, Redis, OS, RMQ) | Medium | Critical — production readiness |
-| **P0** | 5 | TimescaleDB for time-series data | Medium | Critical — hypertables needed for event/alerts scale |
-| **P1** | 5 | MinIO object storage | Medium | High — evidence/artifact retention |
-| **P1** | 9 | Prometheus + Grafana | Medium | High — platform observability |
-| **P1** | 3 | Flink stream processing | High | High — real-time enrichment/normalization |
-| **P1** | 1 | TLS/mTLS, request logging | Low | High — security compliance |
-| **P2** | 5 | ClickHouse analytics | Medium | Medium — analytics performance |
-| **P2** | 9 | Jaeger tracing | Low | Medium — debugging/diagnostics |
-| **P2** | 7 | WCAG 2.1 AA + visual SOAR builder | High | Medium — UX compliance |
-| **P3** | 8 | ArgoCD GitOps | Medium | Low — deployment automation |
-| **P3** | 4 | ML anomaly detection | High | Low — UEBA enhancement |
+| **P0** | 2 | Kafka Cluster + Topics | High | Critical â€” event backbone for all tiers |
+| **P0** | 8 | StatefulSet conversion (PG, Redis, OS, RMQ) | Medium | Critical â€” production readiness |
+| **P0** | 5 | TimescaleDB for time-series data | Medium | Critical â€” hypertables needed for event/alerts scale |
+| **P1** | 5 | MinIO object storage | Medium | High â€” evidence/artifact retention |
+| **P1** | 9 | Prometheus + Grafana | Medium | High â€” platform observability |
+| **P1** | 3 | Flink stream processing | High | High â€” real-time enrichment/normalization |
+| **P1** | 1 | TLS/mTLS, request logging | Low | High â€” security compliance |
+| **P2** | 5 | ClickHouse analytics | Medium | Medium â€” analytics performance |
+| **P2** | 9 | Jaeger tracing | Low | Medium â€” debugging/diagnostics |
+| **P2** | 7 | WCAG 2.1 AA + visual SOAR builder | High | Medium â€” UX compliance |
+| **P3** | 8 | ArgoCD GitOps | Medium | Low â€” deployment automation |
+| **P3** | 4 | ML anomaly detection | High | Low â€” UEBA enhancement |
 
 ---
 

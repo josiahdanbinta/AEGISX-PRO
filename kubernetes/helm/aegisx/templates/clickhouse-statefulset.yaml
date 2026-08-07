@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-clickhouse
+  name: {{ include "AEGIS.fullname" . }}-clickhouse
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 spec:
   type: ClusterIP
@@ -18,15 +18,15 @@ spec:
       port: 9000
       targetPort: 9000
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-clickhouse-lb
+  name: {{ include "AEGIS.fullname" . }}-clickhouse-lb
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 spec:
   type: ClusterIP
@@ -38,57 +38,57 @@ spec:
       port: 9000
       targetPort: 9000
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-clickhouse-config
+  name: {{ include "AEGIS.fullname" . }}-clickhouse-config
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 data:
   macros.xml: |
     <clickhouse>
       <macros>
         <shard>{replica}</shard>
-        <replica>{{ include "aegisx.fullname" . }}-clickhouse-{replica}.{{ include "aegisx.fullname" . }}-clickhouse.{{ include "aegisx.namespace" . }}.svc.cluster.local</replica>
+        <replica>{{ include "AEGIS.fullname" . }}-clickhouse-{replica}.{{ include "AEGIS.fullname" . }}-clickhouse.{{ include "AEGIS.namespace" . }}.svc.cluster.local</replica>
       </macros>
     </clickhouse>
   users.xml: |
     <clickhouse>
       <users>
-        <aegisx>
+        <AEGIS>
           <password>{{ .Values.clickhouse.password }}</password>
           <networks>
             <ip>::/0</ip>
           </networks>
           <profile>default</profile>
           <quota>default</quota>
-        </aegisx>
+        </AEGIS>
       </users>
     </clickhouse>
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "aegisx.fullname" . }}-clickhouse
+  name: {{ include "AEGIS.fullname" . }}-clickhouse
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: clickhouse
 spec:
-  serviceName: {{ include "aegisx.fullname" . }}-clickhouse
+  serviceName: {{ include "AEGIS.fullname" . }}-clickhouse
   replicas: {{ .Values.clickhouse.replicaCount }}
   podManagementPolicy: Parallel
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: clickhouse
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: clickhouse
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -110,7 +110,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: clickhouse
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.clickhouse.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.clickhouse.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.clickhouse.image.pullPolicy }}
           ports:
             - name: http
@@ -125,7 +125,7 @@ spec:
             - name: CLICKHOUSE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: CLICKHOUSE_PASSWORD
             - name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
               value: "1"
@@ -162,15 +162,15 @@ spec:
       volumes:
         - name: config-users
           configMap:
-            name: {{ include "aegisx.fullname" . }}-clickhouse-config
+            name: {{ include "AEGIS.fullname" . }}-clickhouse-config
         - name: config-macros
           configMap:
-            name: {{ include "aegisx.fullname" . }}-clickhouse-config
+            name: {{ include "AEGIS.fullname" . }}-clickhouse-config
   volumeClaimTemplates:
     - metadata:
         name: data
         labels:
-          {{- include "aegisx.labels" . | nindent 10 }}
+          {{- include "AEGIS.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce

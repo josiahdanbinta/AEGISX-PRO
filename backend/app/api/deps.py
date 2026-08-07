@@ -1,5 +1,5 @@
 """
-AEGISX - API Dependencies
+AEGIS - API Dependencies
 Authentication, authorization, tenant isolation, and common dependencies
 """
 import uuid
@@ -22,7 +22,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False)
 
 
-# ── Tenant Context ───────────────────────────────────────────────
+# â”€â”€ Tenant Context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async def get_tenant_id(
     request: Request,
@@ -51,7 +51,7 @@ def require_tenant(
     return tenant_id
 
 
-# ── Authentication ──────────────────────────────────────────────
+# â”€â”€ Authentication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async def get_current_user_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
@@ -151,7 +151,7 @@ async def get_current_user(
     }
 
 
-# ── Authorization ───────────────────────────────────────────────
+# â”€â”€ Authorization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class PermissionChecker:
     """Role and permission-based access control checker."""
@@ -201,7 +201,7 @@ class PermissionChecker:
         return current_user
 
 
-# ── Common permission checkers ──────────────────────────────────
+# â”€â”€ Common permission checkers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 RequireSuperAdmin = PermissionChecker(required_roles=["super_admin"])
 RequireTenantAdmin = PermissionChecker(required_roles=["super_admin", "tenant_admin"])
@@ -213,7 +213,7 @@ RequireAuditor = PermissionChecker(required_roles=["super_admin", "tenant_admin"
 RequireComplianceOfficer = PermissionChecker(required_roles=["super_admin", "tenant_admin", "compliance_officer"])
 
 
-# ── Pagination ──────────────────────────────────────────────────
+# â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class PaginationParams:
     def __init__(

@@ -1,14 +1,14 @@
 """
-AEGISX - Redis PubSub Event Bus
+AEGIS - Redis PubSub Event Bus
 Backbone for real-time push notifications. Producers publish events,
 WebSocket subscribers receive them via Redis channels.
 
 Channels:
-    aegisx:dashboard:updates      — aggregate dashboard stats (emitted every 10s)
-    aegisx:alerts:{tenant_id}     — new alerts for tenant
-    aegisx:incident:{id}          — incident status/note/timeline changes
-    aegisx:anomaly:{tenant_id}    — UEBA anomaly alerts
-    aegisx:agent:{agent_id}       — agent status/heartbeat updates
+    AEGIS:dashboard:updates      â€” aggregate dashboard stats (emitted every 10s)
+    AEGIS:alerts:{tenant_id}     â€” new alerts for tenant
+    AEGIS:incident:{id}          â€” incident status/note/timeline changes
+    AEGIS:anomaly:{tenant_id}    â€” UEBA anomaly alerts
+    AEGIS:agent:{agent_id}       â€” agent status/heartbeat updates
 """
 import asyncio
 import json
@@ -19,7 +19,7 @@ import redis.asyncio as aioredis
 
 from app.core.config import settings
 
-logger = logging.getLogger("aegisx.eventbus")
+logger = logging.getLogger("AEGIS.eventbus")
 
 
 class EventBus:
@@ -43,7 +43,7 @@ class EventBus:
             )
         return self._sub
 
-    # ── Publish ────────────────────────────────────────────────
+    # â”€â”€ Publish â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def publish(self, channel: str, payload: dict):
         """Publish a JSON event to a channel."""
@@ -54,33 +54,33 @@ class EventBus:
             logger.debug("EventBus publish failed [%s]: %s", channel, e)
 
     async def dashboard_update(self, stats: dict):
-        await self.publish("aegisx:dashboard:updates", {
+        await self.publish("AEGIS:dashboard:updates", {
             "type": "dashboard_update", "data": stats,
         })
 
     async def alert_created(self, tenant_id: str, alert: dict):
-        await self.publish(f"aegisx:alerts:{tenant_id}", {
+        await self.publish(f"AEGIS:alerts:{tenant_id}", {
             "type": "alert", "data": alert,
         })
 
     async def anomaly_detected(self, tenant_id: str, anomaly: dict):
-        await self.publish(f"aegisx:anomaly:{tenant_id}", {
+        await self.publish(f"AEGIS:anomaly:{tenant_id}", {
             "type": "anomaly", "data": anomaly,
         })
 
     async def incident_update(self, incident_id: str, tenant_id: str, update: dict):
-        await self.publish(f"aegisx:incident:{incident_id}", {
+        await self.publish(f"AEGIS:incident:{incident_id}", {
             "type": "incident_update", "incident_id": incident_id,
             "tenant_id": tenant_id, "data": update,
         })
 
     async def agent_heartbeat(self, agent_id: str, tenant_id: str, status: dict):
-        await self.publish(f"aegisx:agent:{agent_id}", {
+        await self.publish(f"AEGIS:agent:{agent_id}", {
             "type": "agent_heartbeat", "agent_id": agent_id,
             "tenant_id": tenant_id, "data": status,
         })
 
-    # ── Subscribe ─────────────────────────────────────────────
+    # â”€â”€ Subscribe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def subscribe(self, *channels: str) -> AsyncIterator[Dict[str, Any]]:
         """Subscribe to channels and yield deserialized messages."""

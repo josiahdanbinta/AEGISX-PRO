@@ -8,7 +8,7 @@ from agent.core.collector import BaseCollector
 from agent.platforms import is_windows, is_linux, is_macos
 
 
-logger = logging.getLogger("aegisx.collector.software")
+logger = logging.getLogger("AEGIS.collector.software")
 
 _LATEST_VERSIONS = {
     "google chrome": "131.0.6778.0",
@@ -31,13 +31,13 @@ _LATEST_VERSIONS = {
 
 # FIX RECOMMENDATIONS with download URLs for each outdated app
 _FIX_RECOMMENDATIONS = {
-    "google chrome": {"action": "Update via Chrome → Help → About Google Chrome, or download from", "url": "https://www.google.com/chrome/"},
-    "microsoft edge": {"action": "Update via Edge → Help → About Microsoft Edge, or download from", "url": "https://www.microsoft.com/edge"},
-    "mozilla firefox": {"action": "Update via Firefox → Help → About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
-    "firefox": {"action": "Update via Firefox → Help → About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
-    "adobe acrobat reader": {"action": "Update via Help → Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
-    "adobe acrobat": {"action": "Update via Help → Check for Updates, or download from", "url": "https://acrobat.adobe.com/"},
-    "adobe reader": {"action": "Update via Help → Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
+    "google chrome": {"action": "Update via Chrome â†’ Help â†’ About Google Chrome, or download from", "url": "https://www.google.com/chrome/"},
+    "microsoft edge": {"action": "Update via Edge â†’ Help â†’ About Microsoft Edge, or download from", "url": "https://www.microsoft.com/edge"},
+    "mozilla firefox": {"action": "Update via Firefox â†’ Help â†’ About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
+    "firefox": {"action": "Update via Firefox â†’ Help â†’ About Firefox, or download from", "url": "https://www.mozilla.org/firefox/"},
+    "adobe acrobat reader": {"action": "Update via Help â†’ Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
+    "adobe acrobat": {"action": "Update via Help â†’ Check for Updates, or download from", "url": "https://acrobat.adobe.com/"},
+    "adobe reader": {"action": "Update via Help â†’ Check for Updates, or download from", "url": "https://get.adobe.com/reader/"},
     "java": {"action": "Download latest Java from", "url": "https://www.java.com/download/"},
     "oracle java": {"action": "Download latest JDK from", "url": "https://www.oracle.com/java/technologies/downloads/"},
     "openjdk": {"action": "Download latest OpenJDK from", "url": "https://adoptium.net/download/"},
@@ -60,9 +60,9 @@ _FIX_RECOMMENDATIONS = {
     "docker": {"action": "Download latest Docker from", "url": "https://www.docker.com/products/docker-desktop"},
     "virtualbox": {"action": "Download latest VirtualBox from", "url": "https://www.virtualbox.org/wiki/Downloads"},
     "winscp": {"action": "Download latest WinSCP from", "url": "https://winscp.net/eng/download.php"},
-    "zoom": {"action": "Update via Zoom → Check for Updates, or download from", "url": "https://zoom.us/download"},
-    "slack": {"action": "Update via Slack → Check for Updates, or download from", "url": "https://slack.com/downloads"},
-    "discord": {"action": "Update via Discord → Check for Updates, or download from", "url": "https://discord.com/download"},
+    "zoom": {"action": "Update via Zoom â†’ Check for Updates, or download from", "url": "https://zoom.us/download"},
+    "slack": {"action": "Update via Slack â†’ Check for Updates, or download from", "url": "https://slack.com/downloads"},
+    "discord": {"action": "Update via Discord â†’ Check for Updates, or download from", "url": "https://discord.com/download"},
     "telegram": {"action": "Download latest Telegram from", "url": "https://desktop.telegram.org/"},
     "signal": {"action": "Download latest Signal from", "url": "https://signal.org/download/"},
     "teamviewer": {"action": "Download latest TeamViewer from", "url": "https://www.teamviewer.com/download/"},
@@ -71,8 +71,8 @@ _FIX_RECOMMENDATIONS = {
     "onedrive": {"action": "Update via Microsoft Store or download from", "url": "https://www.microsoft.com/en-us/microsoft-365/onedrive/download"},
     "powershell": {"action": "Download latest PowerShell from", "url": "https://github.com/PowerShell/PowerShell/releases"},
     "windows terminal": {"action": "Update via Microsoft Store or download from", "url": "https://github.com/microsoft/terminal/releases"},
-    "vscode": {"action": "Update via VS Code → Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
-    "visual studio code": {"action": "Update via VS Code → Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
+    "vscode": {"action": "Update via VS Code â†’ Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
+    "visual studio code": {"action": "Update via VS Code â†’ Check for Updates, or download from", "url": "https://code.visualstudio.com/download"},
 }  
     "7-zip": "24.08",
     "7zip": "24.08",

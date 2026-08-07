@@ -1,7 +1,7 @@
 """
-AEGISX - Metrics Instrumentation
+AEGIS - Metrics Instrumentation
 Wires Prometheus counters/histograms into actual code paths.
-Keep this module self-contained — no circular imports.
+Keep this module self-contained â€” no circular imports.
 """
 import time
 import functools
@@ -29,7 +29,7 @@ from app.services.metrics import (
 )
 
 
-# ── Database connections polling ──────────────────────────
+# â”€â”€ Database connections polling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def poll_db_connections():
     try:
         from app.core.database import engine
@@ -40,7 +40,7 @@ async def poll_db_connections():
         pass
 
 
-# ── Event ingestion ──────────────────────────────────────
+# â”€â”€ Event ingestion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def record_event_ingested(tenant_id: str = "default", source_type: str = "generic",
                            duplicated: bool = False):
     events_ingested_total.labels(tenant_id=tenant_id, source_type=source_type).inc()
@@ -48,7 +48,7 @@ def record_event_ingested(tenant_id: str = "default", source_type: str = "generi
         events_duplicated_total.labels(tenant_id=tenant_id).inc()
 
 
-# ── Alert creation ───────────────────────────────────────
+# â”€â”€ Alert creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def record_alert_created(tenant_id: str, severity: str, rule_name: str,
                           duration_s: float = 0):
     alerts_created_total.labels(tenant_id=tenant_id, severity=severity,
@@ -70,7 +70,7 @@ def set_open_alerts(tenant_id: str, severity: str, count: int):
     alerts_open.labels(tenant_id=tenant_id, severity=severity).set(count)
 
 
-# ── Detection rules ──────────────────────────────────────
+# â”€â”€ Detection rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @contextmanager
 def track_detection_rule(tenant_id: str, rule_name: str):
     start = time.monotonic()
@@ -83,7 +83,7 @@ def track_detection_rule(tenant_id: str, rule_name: str):
         detection_rule_duration_seconds.labels(rule_name=rule_name).observe(elapsed)
 
 
-# ── Stream processing ────────────────────────────────────
+# â”€â”€ Stream processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def record_stream_event_processed(tenant_id: str):
     stream_events_processed_total.labels(tenant_id=tenant_id).inc()
 
@@ -100,12 +100,12 @@ def record_stream_error(error_type: str):
     stream_errors_total.labels(error_type=error_type).inc()
 
 
-# ── UEBA ─────────────────────────────────────────────────
+# â”€â”€ UEBA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def record_ueba_score(tenant_id: str, entity_type: str, score: float):
     ueba_score.labels(tenant_id=tenant_id, entity_type=entity_type).observe(score)
 
 
-# ── Storage ──────────────────────────────────────────────
+# â”€â”€ Storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def set_storage_metrics(tenant_id: str, storage_type: str, bytes_used: int,
                          quota_bytes: int = 0):
     storage_bytes_used.labels(tenant_id=tenant_id, storage_type=storage_type).set(bytes_used)

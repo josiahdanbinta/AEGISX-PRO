@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-frontend
+  name: {{ include "AEGIS.fullname" . }}-frontend
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: frontend
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -25,7 +25,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: frontend
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.frontend.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.frontend.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http

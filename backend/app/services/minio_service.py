@@ -5,7 +5,7 @@ import logging
 
 from app.core.config import settings
 
-logger = logging.getLogger("aegisx.minio")
+logger = logging.getLogger("AEGIS.minio")
 
 
 class MinioService:
@@ -44,7 +44,7 @@ class MinioService:
         if not client:
             return
         loop = asyncio.get_event_loop()
-        for bucket in ["aegisx-evidence", "aegisx-artifacts"]:
+        for bucket in ["AEGIS-evidence", "AEGIS-artifacts"]:
             try:
                 found = await loop.run_in_executor(None, client.bucket_exists, bucket)
                 if not found:

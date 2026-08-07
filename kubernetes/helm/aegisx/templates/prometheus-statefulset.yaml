@@ -3,17 +3,17 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["nodes", "nodes/metrics", "services", "endpoints", "pods"]
@@ -27,24 +27,24 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
 subjects:
   - kind: ServiceAccount
-    name: {{ include "aegisx.fullname" . }}-prometheus
-    namespace: {{ include "aegisx.namespace" . }}
+    name: {{ include "AEGIS.fullname" . }}-prometheus
+    namespace: {{ include "AEGIS.namespace" . }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus-config
+  name: {{ include "AEGIS.fullname" . }}-prometheus-config
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 data:
   prometheus.yml: |
@@ -53,7 +53,7 @@ data:
       evaluation_interval: {{ .Values.prometheus.scrapeInterval }}
       external_labels:
         cluster: {{ .Values.global.environment | quote }}
-        platform: aegisx
+        platform: AEGIS
 
     rule_files:
       - /etc/prometheus/rules/*.yml
@@ -73,7 +73,7 @@ data:
           - role: pod
             namespaces:
               names:
-                - {{ include "aegisx.namespace" . }}
+                - {{ include "AEGIS.namespace" . }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -104,11 +104,11 @@ data:
 
   alerting-rules.yml: |
     groups:
-      - name: aegisx-platform
+      - name: AEGIS-platform
         interval: 30s
         rules:
           - alert: HighEventIngestionLatency
-            expr: rate(aegisx_event_ingestion_duration_seconds_sum[5m]) / rate(aegisx_event_ingestion_duration_seconds_count[5m]) > 5
+            expr: rate(AEGIS_event_ingestion_duration_seconds_sum[5m]) / rate(AEGIS_event_ingestion_duration_seconds_count[5m]) > 5
             for: 5m
             labels:
               severity: warning
@@ -117,7 +117,7 @@ data:
               description: "Ingestion pipeline is processing events slower than 5s on average for 5 minutes."
 
           - alert: AlertProcessingDelay
-            expr: rate(aegisx_alert_processing_duration_seconds_sum[5m]) / rate(aegisx_alert_processing_duration_seconds_count[5m]) > 30
+            expr: rate(AEGIS_alert_processing_duration_seconds_sum[5m]) / rate(AEGIS_alert_processing_duration_seconds_count[5m]) > 30
             for: 5m
             labels:
               severity: warning
@@ -125,7 +125,7 @@ data:
               summary: "Alert processing delay exceeds 30 seconds"
 
           - alert: HighAPIErrorRate
-            expr: rate(aegisx_api_errors_total[5m]) / rate(aegisx_api_requests_total[5m]) > 0.05
+            expr: rate(AEGIS_api_errors_total[5m]) / rate(AEGIS_api_requests_total[5m]) > 0.05
             for: 5m
             labels:
               severity: critical
@@ -153,9 +153,9 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 spec:
   type: ClusterIP
@@ -164,33 +164,33 @@ spec:
       port: 9090
       targetPort: 9090
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "aegisx.fullname" . }}-prometheus
+  name: {{ include "AEGIS.fullname" . }}-prometheus
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 spec:
-  serviceName: {{ include "aegisx.fullname" . }}-prometheus
+  serviceName: {{ include "AEGIS.fullname" . }}-prometheus
   replicas: 1
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: prometheus
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: prometheus
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"
     spec:
-      serviceAccountName: {{ include "aegisx.fullname" . }}-prometheus
+      serviceAccountName: {{ include "AEGIS.fullname" . }}-prometheus
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -199,7 +199,7 @@ spec:
         fsGroup: 65534
       containers:
         - name: prometheus
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.prometheus.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.prometheus.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.prometheus.image.pullPolicy }}
           args:
             - --config.file=/etc/prometheus/prometheus.yml
@@ -240,10 +240,10 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "aegisx.fullname" . }}-prometheus-config
+            name: {{ include "AEGIS.fullname" . }}-prometheus-config
         - name: rules
           configMap:
-            name: {{ include "aegisx.fullname" . }}-prometheus-config
+            name: {{ include "AEGIS.fullname" . }}-prometheus-config
             items:
               - key: alerting-rules.yml
                 path: alerting-rules.yml
@@ -251,7 +251,7 @@ spec:
     - metadata:
         name: data
         labels:
-          {{- include "aegisx.labels" . | nindent 10 }}
+          {{- include "AEGIS.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce

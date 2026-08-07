@@ -24,14 +24,14 @@ class TestTenantModel:
             display_name="Test Tenant",
             subscription_tier="pro",
             quota_assets=500,
-            domain="test.aegisx.com",
+            domain="test.AEGIS.com",
             contact_email="admin@test.com",
         )
         assert tenant.name == "test-tenant"
         assert tenant.display_name == "Test Tenant"
         assert tenant.subscription_tier == "pro"
         assert tenant.quota_assets == 500
-        assert tenant.domain == "test.aegisx.com"
+        assert tenant.domain == "test.AEGIS.com"
         assert tenant.contact_email == "admin@test.com"
 
     def test_tenant_defaults(self):
@@ -70,14 +70,14 @@ class TestUserModel:
         user = User(
             tenant_id=uuid.uuid4(),
             username="jdoe",
-            email="jdoe@aegisx.com",
+            email="jdoe@AEGIS.com",
             hashed_password="hashed_pw_123",
             full_name="John Doe",
             phone="+1234567890",
             title="Security Analyst",
         )
         assert user.username == "jdoe"
-        assert user.email == "jdoe@aegisx.com"
+        assert user.email == "jdoe@AEGIS.com"
         assert user.hashed_password == "hashed_pw_123"
         assert user.full_name == "John Doe"
         assert user.phone == "+1234567890"
@@ -242,12 +242,12 @@ class TestApiKeyModel:
             user_id=uuid.uuid4(),
             name="Integration Key",
             key_hash="sha256hashvalue",
-            prefix="aegisx_abc123",
+            prefix="AEGIS_abc123",
             scopes=["read:assets", "read:incidents"],
         )
         assert key.name == "Integration Key"
         assert key.key_hash == "sha256hashvalue"
-        assert key.prefix == "aegisx_abc123"
+        assert key.prefix == "AEGIS_abc123"
         assert len(key.scopes) == 2
         assert "read:assets" in key.scopes
 
@@ -1047,14 +1047,14 @@ class TestNotificationModels:
         history = NotificationHistory(
             tenant_id=uuid.uuid4(),
             channel_type="email",
-            recipient="analyst@aegisx.com",
+            recipient="analyst@AEGIS.com",
             subject="Critical Alert: Brute Force Attack",
             content="A brute force attack has been detected on host 10.0.1.10",
             status="sent",
             triggered_by="detection_engine",
         )
         assert history.channel_type == "email"
-        assert history.recipient == "analyst@aegisx.com"
+        assert history.recipient == "analyst@AEGIS.com"
         assert history.status == "sent"
         assert history.triggered_by == "detection_engine"
 

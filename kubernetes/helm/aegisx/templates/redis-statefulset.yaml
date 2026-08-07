@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-redis
+  name: {{ include "AEGIS.fullname" . }}-redis
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 spec:
   type: ClusterIP
@@ -15,15 +15,15 @@ spec:
       port: {{ .Values.redis.service.port }}
       targetPort: {{ .Values.redis.service.port }}
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-redis-lb
+  name: {{ include "AEGIS.fullname" . }}-redis-lb
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 spec:
   type: ClusterIP
@@ -32,27 +32,27 @@ spec:
       port: {{ .Values.redis.service.port }}
       targetPort: {{ .Values.redis.service.port }}
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "aegisx.fullname" . }}-redis
+  name: {{ include "AEGIS.fullname" . }}-redis
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 spec:
-  serviceName: {{ include "aegisx.fullname" . }}-redis
+  serviceName: {{ include "AEGIS.fullname" . }}-redis
   replicas: {{ .Values.redis.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: redis
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: redis
       annotations:
         prometheus.io/scrape: "true"
@@ -77,7 +77,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: redis
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.redis.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.redis.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           command:
             - redis-server
@@ -104,7 +104,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: REDIS_PASSWORD
           ports:
             - name: redis
@@ -143,14 +143,14 @@ spec:
                 - ALL
         {{- if .Values.redis.exporter.enabled }}
         - name: redis-exporter
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.redis.exporter.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.redis.exporter.image "Values" .Values) }}
           env:
             - name: REDIS_ADDR
               value: "redis://localhost:{{ .Values.redis.service.port }}"
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: REDIS_PASSWORD
           ports:
             - name: metrics
@@ -167,7 +167,7 @@ spec:
     - metadata:
         name: data
         labels:
-          {{- include "aegisx.labels" . | nindent 10 }}
+          {{- include "AEGIS.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce

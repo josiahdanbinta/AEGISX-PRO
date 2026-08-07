@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-schema-registry
+  name: {{ include "AEGIS.fullname" . }}-schema-registry
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: schema-registry
 spec:
   type: ClusterIP
@@ -14,26 +14,26 @@ spec:
       port: 8081
       targetPort: 8081
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: schema-registry
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-schema-registry
+  name: {{ include "AEGIS.fullname" . }}-schema-registry
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: schema-registry
 spec:
   replicas: {{ .Values.schemaRegistry.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: schema-registry
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: schema-registry
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -42,7 +42,7 @@ spec:
       {{- end }}
       containers:
         - name: schema-registry
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.schemaRegistry.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.schemaRegistry.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.schemaRegistry.image.pullPolicy }}
           env:
             - name: SCHEMA_REGISTRY_HOST_NAME
@@ -50,7 +50,7 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
-              value: PLAINTEXT://{{ include "aegisx.fullname" . }}-kafka-bootstrap:9092
+              value: PLAINTEXT://{{ include "AEGIS.fullname" . }}-kafka-bootstrap:9092
             - name: SCHEMA_REGISTRY_LISTENERS
               value: http://0.0.0.0:8081
             - name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC

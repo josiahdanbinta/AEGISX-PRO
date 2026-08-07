@@ -1,5 +1,5 @@
 """
-AEGISX - Authentication API Router
+AEGIS - Authentication API Router
 Login, MFA, password management, API keys, WebAuthn
 """
 import hashlib
@@ -42,7 +42,7 @@ from app.models import (
 
 router = APIRouter()
 
-# ── Request / Response Models ────────────────────────────────────
+# â”€â”€ Request / Response Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -125,7 +125,7 @@ class MessageResponse(BaseModel):
     detail: Optional[str] = None
 
 
-# ── Helpers ───────────────────────────────────────────────────────
+# â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _roles_to_str_list(roles: Optional[list]) -> List[str]:
     if not roles:
@@ -133,7 +133,7 @@ def _roles_to_str_list(roles: Optional[list]) -> List[str]:
     return [r["role_name"] for r in roles if isinstance(r, dict) and "role_name" in r]
 
 
-def _generate_qr_code_uri(secret: str, email: str, issuer: str = "AEGISX") -> str:
+def _generate_qr_code_uri(secret: str, email: str, issuer: str = "AEGIS") -> str:
     try:
         import pyotp
         return pyotp.totp.TOTP(secret).provisioning_uri(name=email, issuer_name=issuer)
@@ -163,7 +163,7 @@ async def _audit_auth(db: AsyncSession, user, action: str, success: bool = True,
         pass
 
 
-# ── Login ────────────────────────────────────────────────────────
+# â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/login",
@@ -286,7 +286,7 @@ async def login(
     )
 
 
-# ── Token Refresh ────────────────────────────────────────────────
+# â”€â”€ Token Refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/refresh",
@@ -375,7 +375,7 @@ async def refresh_token(
     )
 
 
-# ── Logout ───────────────────────────────────────────────────────
+# â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/logout",
@@ -414,7 +414,7 @@ async def logout(
     return MessageResponse(message="Logged out successfully")
 
 
-# ── MFA ──────────────────────────────────────────────────────────
+# â”€â”€ MFA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/mfa/verify",
@@ -668,7 +668,7 @@ async def disable_mfa(
     return MessageResponse(message="MFA has been disabled successfully")
 
 
-# ── Password Reset ──────────────────────────────────────────────
+# â”€â”€ Password Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/password/reset-request",
@@ -716,7 +716,7 @@ async def request_password_reset(
         await send_reset_email(
             to_email=request.email,
             reset_token=reset_token,
-            reset_url="https://aegisx.local/reset-password",
+            reset_url="https://AEGIS.local/reset-password",
             username=user.full_name or user.username,
         )
     except Exception:
@@ -974,7 +974,7 @@ async def reset_password(
     return MessageResponse(message="Password has been reset successfully")
 
 
-# ── Change Password ─────────────────────────────────────────────
+# â”€â”€ Change Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/password/change",
@@ -1038,7 +1038,7 @@ async def change_password(
     return MessageResponse(message="Password changed successfully")
 
 
-# ── WebAuthn / Passkeys ─────────────────────────────────────────
+# â”€â”€ WebAuthn / Passkeys â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/webauthn/register",
@@ -1179,7 +1179,7 @@ async def webauthn_verify(
     )
 
 
-# ── API Keys ─────────────────────────────────────────────────────
+# â”€â”€ API Keys â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/api-key/generate",
@@ -1313,7 +1313,7 @@ async def revoke_api_key(
     return MessageResponse(message="API key revoked")
 
 
-# ── User Profile ────────────────────────────────────────────────
+# â”€â”€ User Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get(
     "/me",

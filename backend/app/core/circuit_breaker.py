@@ -1,7 +1,7 @@
 """
-AEGISX - Circuit Breaker Pattern
+AEGIS - Circuit Breaker Pattern
 Prevents cascading failures for external service calls.
-Implements 3-state circuit: CLOSED → OPEN → HALF_OPEN.
+Implements 3-state circuit: CLOSED â†’ OPEN â†’ HALF_OPEN.
 """
 import asyncio
 import functools
@@ -46,7 +46,7 @@ class CircuitBreaker:
             if time.time() - self._last_failure_time > self.recovery_timeout:
                 self._state = "HALF_OPEN"
                 self._half_open_count = 0
-                logger.info("Circuit %s → HALF_OPEN", self.name)
+                logger.info("Circuit %s â†’ HALF_OPEN", self.name)
             else:
                 raise CircuitBreakerOpenError(
                     f"Circuit {self.name} is OPEN. Retry in "
@@ -72,7 +72,7 @@ class CircuitBreaker:
             self._half_open_count += 1
             if self._half_open_count >= self.half_open_max:
                 self._state = "CLOSED"
-                logger.info("Circuit %s → CLOSED (recovered)", self.name)
+                logger.info("Circuit %s â†’ CLOSED (recovered)", self.name)
 
     def _on_failure(self):
         self._failures += 1
@@ -82,7 +82,7 @@ class CircuitBreaker:
             self._state == "CLOSED" and self._failures >= self.failure_threshold
         ):
             self._state = "OPEN"
-            logger.warning("Circuit %s → OPEN (%d failures)", self.name, self._failures)
+            logger.warning("Circuit %s â†’ OPEN (%d failures)", self.name, self._failures)
 
 
 class CircuitBreakerOpenError(Exception):

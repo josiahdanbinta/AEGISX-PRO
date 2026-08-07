@@ -1,30 +1,30 @@
-# AEGISX PRO — Deployment Runbook
+# AEGIS â€” Deployment Runbook
 
 ## Architecture Overview
 
 ```
-                     ┌──────────┐
-                     │  NGINX   │ TLS 1.3 + mTLS
-                     │  :80/443 │
-                     └────┬─────┘
-            ┌─────────────┼─────────────┐
-       ┌────▼────┐   ┌────▼────┐   ┌────▼────┐
-       │ Frontend│   │ Backend │   │ Grafana │
-       │ React   │   │ FastAPI │   │ :3000   │
-       │ :5174   │   │ :8000   │   └─────────┘
-       └─────────┘   └────┬────┘
-                          │
-    ┌─────────────────────┼─────────────────────┐
-    │                     │                     │
-┌───▼───┐ ┌───────┐ ┌────▼────┐ ┌────────┐ ┌──▼───┐
-│Kafka  │ │Redis  │ │Timescale│ │ClickHse│ │MinIO │
-│3-node │ │Cache  │ │DB PG15  │ │Analytx │ │Evidnc│
-└───┬───┘ └───────┘ └─────────┘ └────────┘ └──────┘
-    │
-┌───▼──────────┐ ┌──────────┐ ┌────────┐
-│Stream Proc   │ │Celery    │ │Flink   │
-│(Normalize)   │ │Worker x4 │ │Jobs x5 │
-└──────────────┘ └──────────┘ └────────┘
+                     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                     â”‚  NGINX   â”‚ TLS 1.3 + mTLS
+                     â”‚  :80/443 â”‚
+                     â””â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”˜
+            â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+       â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â”
+       â”‚ Frontendâ”‚   â”‚ Backend â”‚   â”‚ Grafana â”‚
+       â”‚ React   â”‚   â”‚ FastAPI â”‚   â”‚ :3000   â”‚
+       â”‚ :5174   â”‚   â”‚ :8000   â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”˜
+                          â”‚
+    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+    â”‚                     â”‚                     â”‚
+â”Œâ”€â”€â”€â–¼â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â–¼â”€â”€â”€â”
+â”‚Kafka  â”‚ â”‚Redis  â”‚ â”‚Timescaleâ”‚ â”‚ClickHseâ”‚ â”‚MinIO â”‚
+â”‚3-node â”‚ â”‚Cache  â”‚ â”‚DB PG15  â”‚ â”‚Analytx â”‚ â”‚Evidncâ”‚
+â””â”€â”€â”€â”¬â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”˜
+    â”‚
+â”Œâ”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚Stream Proc   â”‚ â”‚Celery    â”‚ â”‚Flink   â”‚
+â”‚(Normalize)   â”‚ â”‚Worker x4 â”‚ â”‚Jobs x5 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ## Hardware Requirements
@@ -39,7 +39,7 @@
 
 - [ ] All 8 REQUIRED secrets generated (64+ char, cryptographically random)
 - [ ] TLS certificates generated: `bash docker/nginx/generate-mtls-certs.sh certs/`
-- [ ] DNS configured for `aegisx.example.com` → load balancer IP
+- [ ] DNS configured for `AEGIS.example.com` â†’ load balancer IP
 - [ ] SMTP relay configured (for password reset emails)
 - [ ] Container registry access configured (ghcr.io or private)
 - [ ] Slack app created (if using Slack bot)
@@ -54,7 +54,7 @@
 ```bash
 # 1. Set secrets
 cp .env.production .env
-# Edit .env — replace all REQUIRED values
+# Edit .env â€” replace all REQUIRED values
 
 # 2. Generate TLS certs (optional)
 bash docker/nginx/generate-mtls-certs.sh certs/
@@ -81,8 +81,8 @@ print('Database initialized')
 "
 
 # 7. Default login
-# Email: admin@aegisx.com
-# Password: set via AEGISX_ADMIN_PASSWORD env var
+# Email: admin@AEGIS.com
+# Password: set via AEGIS_ADMIN_PASSWORD env var
 ```
 
 ## Option B: Kubernetes (multi-node)
@@ -100,16 +100,16 @@ export GRAFANA_ADMIN_PASSWORD="$(openssl rand -base64 24)"
 export OPENSEARCH_PASSWORD="$(openssl rand -base64 32)"
 
 # 2. Deploy
-bash deploy/k8s-deploy.sh aegisx production
+bash deploy/k8s-deploy.sh AEGISduction
 
 # 3. Verify all pods running
-kubectl get pods -n aegisx -w
+kubectl get pods -n AEGIS -w
 # Should see: backend-xxx, kafka-0/1/2, timescaledb-0, clickhouse-0, minio-0, prometheus-0, grafana-xxx, jaeger-xxx
 
 # 4. Port forward for local access
-kubectl port-forward -n aegisx svc/aegisx-backend 8000:8000
-kubectl port-forward -n aegisx svc/aegisx-grafana 3000:3000
-kubectl port-forward -n aegisx svc/aegisx-jaeger-query 16686:16686
+kubectl port-forward -n AEGIS svc/AEGIS-backend 8000:8000
+kubectl port-forward -n AEGIS svc/AEGIS-grafana 3000:3000
+kubectl port-forward -n AEGIS svc/AEGIS-jaeger-query 16686:16686
 
 # 5. Health check
 curl http://localhost:8000/health/live
@@ -120,20 +120,20 @@ curl http://localhost:8000/metrics  # Prometheus metrics
 
 1. **Change default admin password:**
    ```bash
-   curl -X POST https://aegisx.example.com/api/v1/auth/login \
+   curl -X POST https://AEGIS.example.com/api/v1/auth/login \
      -H "Content-Type: application/json" \
-     -d '{"email":"admin@aegisx.com","password":"Admin123!@#"}'
+     -d '{"email":"admin@AEGIS.com","password":"Admin123!@#"}'
    # Use the JWT to call change-password endpoint
    ```
 
 2. **Enable MFA for all admin accounts:**
    ```
-   POST /api/v1/auth/mfa/setup → scan QR → POST /api/v1/auth/mfa/enable
+   POST /api/v1/auth/mfa/setup â†’ scan QR â†’ POST /api/v1/auth/mfa/enable
    ```
 
 3. **Configure threat intel feeds:**
    ```
-   POST /api/v1/threat-intel/feeds → add MISP, OpenCTI, VirusTotal keys
+   POST /api/v1/threat-intel/feeds â†’ add MISP, OpenCTI, VirusTotal keys
    ```
 
 4. **Deploy agents to endpoints:**
@@ -141,8 +141,8 @@ curl http://localhost:8000/metrics  # Prometheus metrics
 
 5. **Import detection rules:**
    ```bash
-   # Mount Sigma/Falco rules via ConfigMap or copy to /etc/aegisx/rules/
-   kubectl create configmap aegisx-rules --from-file=rules/ -n aegisx
+   # Mount Sigma/Falco rules via ConfigMap or copy to /etc/AEGIS/rules/
+   kubectl create configmap AEGIS-rules --from-file=rules/ -n AEGIS
    ```
 
 ## Health Monitoring
@@ -150,7 +150,7 @@ curl http://localhost:8000/metrics  # Prometheus metrics
 | Service | Health Endpoint | Metrics |
 |---------|----------------|---------|
 | Backend | `/health/live` | `/metrics` |
-| TimescaleDB | `pg_isready` | — |
+| TimescaleDB | `pg_isready` | â€” |
 | Redis | `redis-cli ping` | `/metrics` |
 | Kafka | `kafka-broker-api-versions` | JMX |
 | ClickHouse | `SELECT 1` | `/metrics` |
@@ -165,8 +165,8 @@ docker compose -f docker-compose.prod.yml down
 docker compose -f docker-compose.prod.yml up -d  # restarts with same volumes
 
 # Kubernetes
-helm rollback aegisx -n aegisx
-kubectl rollout undo deployment/aegisx-backend -n aegisx
+helm rollback AEGIS -n AEGIS
+kubectl rollout undo deployment/AEGIS-backend -n AEGIS
 ```
 
 ## Disaster Recovery

@@ -1,5 +1,5 @@
 """
-AEGISX - Auto-Containment Service
+AEGIS - Auto-Containment Service
 Automatic containment actions triggered by critical detection events.
 Wires AI remediation into the detection pipeline for instant response.
 """
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 CONTAINMENT_RULES = [
     {
-        "name": "Critical Ransomware — Auto-Isolate",
+        "name": "Critical Ransomware â€” Auto-Isolate",
         "condition": {
             "severity": "critical",
             "keywords": ["ransomware", "wannacry", "lockbit", "conti", "ryuk", ".encrypted"],
@@ -25,7 +25,7 @@ CONTAINMENT_RULES = [
         ],
     },
     {
-        "name": "Reverse Shell — Kill Process",
+        "name": "Reverse Shell â€” Kill Process",
         "condition": {
             "severity": "critical",
             "keywords": ["reverse_shell", "bash -i >&", "/dev/tcp/", "netcat"],
@@ -37,7 +37,7 @@ CONTAINMENT_RULES = [
         ],
     },
     {
-        "name": "Credential Dumping — Suspend + Reset",
+        "name": "Credential Dumping â€” Suspend + Reset",
         "condition": {
             "severity": "critical",
             "keywords": ["mimikatz", "lsass", "credential_dump", "procdump"],
@@ -50,7 +50,7 @@ CONTAINMENT_RULES = [
         ],
     },
     {
-        "name": "Defense Evasion — Scan + Alert",
+        "name": "Defense Evasion â€” Scan + Alert",
         "condition": {
             "severity": "high",
             "keywords": ["defense_evasion", "disable_defense", "stop.*defender", "sc stop"],
@@ -61,7 +61,7 @@ CONTAINMENT_RULES = [
         ],
     },
     {
-        "name": "High-Confidence External Threat — Block IP",
+        "name": "High-Confidence External Threat â€” Block IP",
         "condition": {
             "severity": "high",
             "confidence": 0.8,
@@ -72,7 +72,7 @@ CONTAINMENT_RULES = [
         ],
     },
     {
-        "name": "Any Critical Alert — Forensic Collection",
+        "name": "Any Critical Alert â€” Forensic Collection",
         "condition": {
             "severity": "critical",
         },
@@ -149,7 +149,7 @@ class AutoContainmentEngine:
                         action_result["result"] = result
                         results["auto_actions"].append(action_result)
                         results["containment_active"] = True
-                        logger.info("Auto-containment: %s → %s",
+                        logger.info("Auto-containment: %s â†’ %s",
                                     rule["name"], action_def["action"])
                     except Exception as e:
                         action_result["status"] = "error"

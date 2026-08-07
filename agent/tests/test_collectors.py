@@ -1,5 +1,5 @@
 """
-Unit tests for AEGISX agent collectors.
+Unit tests for AEGIS agent collectors.
 """
 import pytest
 import sys
@@ -228,8 +228,8 @@ class TestAgentEntry:
         assert agent is not None
 
     def test_agent_class_import(self):
-        from agent.agent import AEGISXAgent
-        assert AEGISXAgent is not None
+        from agent.agent import AEGISAgent
+        assert AEGISAgent is not None
 
     def test_agent_version(self):
         from agent.agent import __version__

@@ -1,5 +1,5 @@
 """
-AEGISX - Incident Management API Router
+AEGIS - Incident Management API Router
 Incidents, timeline, notes, evidence, MITRE, playbooks, reports
 """
 import enum
@@ -56,7 +56,7 @@ async def _audit(
     db.add(entry)
 
 
-# ── Enums ─────────────────────────────────────────────────────────
+# â”€â”€ Enums â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class IncidentSeverity(str, enum.Enum):
     LOW = "low"
@@ -101,7 +101,7 @@ class ResolutionType(str, enum.Enum):
     TEST = "test"
 
 
-# ── Response Models ───────────────────────────────────────────────
+# â”€â”€ Response Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class MessageResponse(BaseModel):
     message: str
@@ -114,7 +114,7 @@ class PaginationMeta(BaseModel):
     total_pages: int
 
 
-# ── Incident Models ───────────────────────────────────────────────
+# â”€â”€ Incident Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class IncidentCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=500)
@@ -339,7 +339,7 @@ class IncidentStatsResponse(BaseModel):
     mean_time_to_resolve_hours: Optional[float] = None
 
 
-# ── Incident Endpoints ────────────────────────────────────────────
+# â”€â”€ Incident Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/", response_model=IncidentResponse, status_code=status.HTTP_201_CREATED)
 async def create_incident(
@@ -1036,7 +1036,7 @@ async def merge_incident(
     )
 
 
-# ── Timeline Endpoints ────────────────────────────────────────────
+# â”€â”€ Timeline Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{incident_id}/timeline", response_model=List[TimelineEntryResponse])
 async def get_incident_timeline(
@@ -1114,7 +1114,7 @@ async def create_timeline_entry(
     )
 
 
-# ── Notes Endpoints ───────────────────────────────────────────────
+# â”€â”€ Notes Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/{incident_id}/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
 async def create_incident_note(
@@ -1190,7 +1190,7 @@ async def get_incident_notes(
     ]
 
 
-# ── Evidence Endpoints ────────────────────────────────────────────
+# â”€â”€ Evidence Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/{incident_id}/evidence", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
 async def add_incident_evidence(
@@ -1339,7 +1339,7 @@ async def delete_incident_evidence(
     return MessageResponse(message="Evidence deleted", detail=f"Evidence '{evidence.filename}' has been deleted")
 
 
-# ── MinIO Evidence Storage Endpoints ──────────────────────────────
+# â”€â”€ MinIO Evidence Storage Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/{incident_id}/evidence/upload", status_code=status.HTTP_201_CREATED)
 async def upload_evidence_file(
@@ -1413,7 +1413,7 @@ async def download_evidence_file(
 
     object_name = evidence.file_path or f"evidence/{iid}/{eid}/{evidence.filename}"
     data = await minio_service.download_evidence(
-        bucket="aegisx-evidence",
+        bucket="AEGIS-evidence",
         object_name=object_name,
     )
 
@@ -1461,7 +1461,7 @@ async def set_evidence_legal_hold(
 
     object_name = evidence.file_path or f"evidence/{iid}/{eid}/{evidence.filename}"
     success = await minio_service.set_legal_hold(
-        bucket="aegisx-evidence",
+        bucket="AEGIS-evidence",
         object_name=object_name,
         hold=True,
     )
@@ -1481,7 +1481,7 @@ async def set_evidence_legal_hold(
     return {"status": "ok", "legal_hold": True, "evidence_id": str(eid)}
 
 
-# ── MITRE ATT&CK Endpoints ────────────────────────────────────────
+# â”€â”€ MITRE ATT&CK Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{incident_id}/mitre", response_model=MitreResponse)
 async def get_incident_mitre(
@@ -1550,7 +1550,7 @@ async def add_incident_mitre_technique(
     )
 
 
-# ── Attack Graph ─────────────────────────────────────────────────
+# â”€â”€ Attack Graph â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{incident_id}/attack-graph", response_model=AttackGraphResponse)
 async def get_attack_graph(
@@ -1690,7 +1690,7 @@ async def get_attack_graph(
     )
 
 
-# ── Playbooks ────────────────────────────────────────────────────
+# â”€â”€ Playbooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{incident_id}/playbooks", response_model=PlaybookListResponse)
 async def get_incident_playbooks(
@@ -1811,7 +1811,7 @@ async def run_incident_playbook(
     )
 
 
-# ── Report ───────────────────────────────────────────────────────
+# â”€â”€ Report â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{incident_id}/report", response_model=ReportResponse)
 async def generate_incident_report(
@@ -1951,7 +1951,7 @@ async def generate_incident_report(
     )
 
 
-# ── Stats ─────────────────────────────────────────────────────────
+# â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/stats", response_model=IncidentStatsResponse)
 async def get_incident_stats(
@@ -2010,7 +2010,7 @@ async def get_incident_stats(
     )
 
 
-# ── Cases (Alias) ─────────────────────────────────────────────────
+# â”€â”€ Cases (Alias) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/cases", response_model=IncidentListResponse)
 async def list_cases(

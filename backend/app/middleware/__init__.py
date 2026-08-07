@@ -1,5 +1,5 @@
 """
-AEGISX - Middleware Stack
+AEGIS - Middleware Stack
 Security, rate limiting, tenant isolation, audit logging, CORS
 """
 import time

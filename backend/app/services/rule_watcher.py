@@ -1,5 +1,5 @@
 """
-AEGISX - Rule Watcher Service
+AEGIS - Rule Watcher Service
 ConfigMap-based hot-reload of detection rules. Watches for changes
 in Kubernetes ConfigMaps and reloads Sigma/Falco rules without restart.
 """
@@ -13,8 +13,8 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
-RULES_DIR = os.environ.get("AEGISX_RULES_DIR", "/etc/aegisx/rules")
-CHECK_INTERVAL = int(os.environ.get("AEGISX_RULES_CHECK_INTERVAL", "30"))
+RULES_DIR = os.environ.get("AEGIS_RULES_DIR", "/etc/AEGIS/rules")
+CHECK_INTERVAL = int(os.environ.get("AEGIS_RULES_CHECK_INTERVAL", "30"))
 
 
 class RuleWatcher:

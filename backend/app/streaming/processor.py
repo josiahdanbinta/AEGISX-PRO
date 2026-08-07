@@ -1,5 +1,5 @@
 """
-AEGISX - Kafka Stream Processor (Tier 3)
+AEGIS - Kafka Stream Processor (Tier 3)
 Stateful, low-latency event processing pipeline:
 1. Event Normalization
 2. Enrichment (TI lookups, asset metadata)
@@ -291,7 +291,7 @@ class StreamProcessor:
             self._stats_reporter(),
         ]
         tasks = [asyncio.create_task(c) for c in consumers]
-        logger.info("Stream processor running — events.raw → events.normalized → alerts")
+        logger.info("Stream processor running â€” events.raw â†’ events.normalized â†’ alerts")
         try:
             await asyncio.gather(*tasks)
         except asyncio.CancelledError:
@@ -300,7 +300,7 @@ class StreamProcessor:
 
     async def _process_raw_events(self):
         async for msg in kafka_service.consume_events(
-            ["events.raw"], group_id="aegisx-stream-processor"
+            ["events.raw"], group_id="AEGIS-stream-processor"
         ):
             try:
                 value = msg["value"]
@@ -329,7 +329,7 @@ class StreamProcessor:
 
     async def _process_normalized_events(self):
         async for msg in kafka_service.consume_events(
-            ["events.normalized"], group_id="aegisx-stream-enricher"
+            ["events.normalized"], group_id="AEGIS-stream-enricher"
         ):
             try:
                 value = msg["value"]

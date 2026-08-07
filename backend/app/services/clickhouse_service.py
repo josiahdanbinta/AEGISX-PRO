@@ -1,5 +1,5 @@
 """
-AEGISX - ClickHouse Analytics Service
+AEGIS - ClickHouse Analytics Service
 Tier 5: Columnar analytics for pre-aggregated metrics, detection rule statistics,
 and high-performance analytical queries.
 """
@@ -25,9 +25,9 @@ class ClickHouseService:
     def __init__(self):
         self.host = getattr(settings, 'CLICKHOUSE_HOST', 'localhost')
         self.port = getattr(settings, 'CLICKHOUSE_PORT', 8123)
-        self.user = getattr(settings, 'CLICKHOUSE_USER', 'aegisx')
-        self.password = getattr(settings, 'CLICKHOUSE_PASSWORD', 'aegisx')
-        self.database = getattr(settings, 'CLICKHOUSE_DB', 'aegisx')
+        self.user = getattr(settings, 'CLICKHOUSE_USER', 'AEGIS')
+        self.password = getattr(settings, 'CLICKHOUSE_PASSWORD', 'AEGIS')
+        self.database = getattr(settings, 'CLICKHOUSE_DB', 'AEGIS')
         self._session: Optional[aiohttp.ClientSession] = None
 
     @property

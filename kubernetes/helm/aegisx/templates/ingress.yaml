@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "aegisx.fullname" . }}
+  name: {{ include "AEGIS.fullname" . }}
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
   annotations:
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -31,7 +31,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ printf "%s-%s" (include "aegisx.fullname" $) .service }}
+                name: {{ printf "%s-%s" (include "AEGIS.fullname" $) .service }}
                 port:
                   number: {{ if eq .service "frontend" }}{{ $.Values.frontend.service.port }}{{ else if eq .service "backend" }}{{ $.Values.backend.service.port }}{{ end }}
           {{- end }}

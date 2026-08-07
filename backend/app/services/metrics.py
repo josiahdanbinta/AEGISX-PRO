@@ -1,36 +1,36 @@
 """
-AEGISX - Prometheus Metrics
+AEGIS - Prometheus Metrics
 Tier 9: Platform observability metrics for ingestion rate, alert latency, API response time.
 """
 from prometheus_client import Counter, Histogram, Gauge, Info, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 METRICS_REGISTRY = CollectorRegistry()
 
-# ── Ingestion Metrics ─────────────────────────────────────────
+# â”€â”€ Ingestion Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 events_ingested_total = Counter(
-    "aegisx_events_ingested_total",
+    "AEGIS_events_ingested_total",
     "Total number of events ingested",
     ["tenant_id", "source_type"],
     registry=METRICS_REGISTRY,
 )
 
 events_duplicated_total = Counter(
-    "aegisx_events_duplicated_total",
+    "AEGIS_events_duplicated_total",
     "Total number of duplicate events deduplicated",
     ["tenant_id"],
     registry=METRICS_REGISTRY,
 )
 
-# ── Alert Metrics ─────────────────────────────────────────────
+# â”€â”€ Alert Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alerts_created_total = Counter(
-    "aegisx_alerts_created_total",
+    "AEGIS_alerts_created_total",
     "Total number of alerts created",
     ["tenant_id", "severity", "rule_name"],
     registry=METRICS_REGISTRY,
 )
 
 alert_generation_duration_seconds = Histogram(
-    "aegisx_alert_generation_duration_seconds",
+    "AEGIS_alert_generation_duration_seconds",
     "Alert generation duration in seconds",
     ["rule_name"],
     buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0],
@@ -38,44 +38,44 @@ alert_generation_duration_seconds = Histogram(
 )
 
 alerts_open = Gauge(
-    "aegisx_alerts_open",
+    "AEGIS_alerts_open",
     "Number of currently open alerts",
     ["tenant_id", "severity"],
     registry=METRICS_REGISTRY,
 )
 
 alerts_assigned_total = Counter(
-    "aegisx_alerts_assigned_total",
+    "AEGIS_alerts_assigned_total",
     "Total number of alerts assigned",
     ["tenant_id", "user_id"],
     registry=METRICS_REGISTRY,
 )
 
 alert_resolution_time_seconds = Histogram(
-    "aegisx_alert_resolution_time_seconds",
+    "AEGIS_alert_resolution_time_seconds",
     "Time from alert creation to resolution",
     ["tenant_id", "severity"],
     buckets=[60, 300, 900, 1800, 3600, 7200, 14400, 43200, 86400],
     registry=METRICS_REGISTRY,
 )
 
-# ── Detection Metrics ─────────────────────────────────────────
+# â”€â”€ Detection Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 detection_rule_executions_total = Counter(
-    "aegisx_detection_rule_executions_total",
+    "AEGIS_detection_rule_executions_total",
     "Total number of detection rule executions",
     ["tenant_id", "rule_name"],
     registry=METRICS_REGISTRY,
 )
 
 detection_rule_duration_seconds = Histogram(
-    "aegisx_detection_rule_duration_seconds",
+    "AEGIS_detection_rule_duration_seconds",
     "Detection rule execution duration",
     ["rule_name"],
     buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
     registry=METRICS_REGISTRY,
 )
 
-# ── API Metrics ───────────────────────────────────────────────
+# â”€â”€ API Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 http_requests_total = Counter(
     "http_requests_total",
     "Total HTTP requests",
@@ -91,76 +91,76 @@ http_request_duration_seconds = Histogram(
     registry=METRICS_REGISTRY,
 )
 
-# ── Database Metrics ──────────────────────────────────────────
+# â”€â”€ Database Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 db_connections_active = Gauge(
-    "aegisx_db_connections_active",
+    "AEGIS_db_connections_active",
     "Active database connections",
     registry=METRICS_REGISTRY,
 )
 
 db_connections_max = Gauge(
-    "aegisx_db_connections_max",
+    "AEGIS_db_connections_max",
     "Maximum database connections",
     registry=METRICS_REGISTRY,
 )
 
-# ── Stream Processing ─────────────────────────────────────────
+# â”€â”€ Stream Processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 stream_events_processed_total = Counter(
-    "aegisx_stream_events_processed_total",
+    "AEGIS_stream_events_processed_total",
     "Total events processed by the stream processor",
     ["tenant_id"],
     registry=METRICS_REGISTRY,
 )
 
 stream_duplicates_total = Counter(
-    "aegisx_stream_duplicates_total",
+    "AEGIS_stream_duplicates_total",
     "Total duplicate events filtered",
     ["tenant_id"],
     registry=METRICS_REGISTRY,
 )
 
 stream_alerts_generated_total = Counter(
-    "aegisx_stream_alerts_generated_total",
+    "AEGIS_stream_alerts_generated_total",
     "Total alerts generated by stream processor",
     ["tenant_id"],
     registry=METRICS_REGISTRY,
 )
 
 stream_errors_total = Counter(
-    "aegisx_stream_errors_total",
+    "AEGIS_stream_errors_total",
     "Total stream processor errors",
     ["error_type"],
     registry=METRICS_REGISTRY,
 )
 
-# ── UEBA Metrics ──────────────────────────────────────────────
+# â”€â”€ UEBA Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ueba_score = Histogram(
-    "aegisx_ueba_score",
+    "AEGIS_ueba_score",
     "UEBA anomaly scores",
     ["tenant_id", "entity_type"],
     buckets=[0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99],
     registry=METRICS_REGISTRY,
 )
 
-# ── Storage Metrics ───────────────────────────────────────────
+# â”€â”€ Storage Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 storage_bytes_used = Gauge(
-    "aegisx_storage_bytes_used",
+    "AEGIS_storage_bytes_used",
     "Storage bytes used per tenant",
     ["tenant_id", "storage_type"],
     registry=METRICS_REGISTRY,
 )
 
 storage_bytes_quota = Gauge(
-    "aegisx_storage_bytes_quota",
+    "AEGIS_storage_bytes_quota",
     "Storage quota bytes per tenant",
     ["tenant_id"],
     registry=METRICS_REGISTRY,
 )
 
-# ── Platform Info ─────────────────────────────────────────────
+# â”€â”€ Platform Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 platform_info = Info(
-    "aegisx_platform",
-    "AEGISX platform information",
+    "AEGIS_platform",
+    "AEGIS platform information",
     registry=METRICS_REGISTRY,
 )
 

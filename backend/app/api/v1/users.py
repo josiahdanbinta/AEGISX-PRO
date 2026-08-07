@@ -1,5 +1,5 @@
 """
-AEGISX - User, Role, and Department Management Endpoints (Tenant Admin)
+AEGIS - User, Role, and Department Management Endpoints (Tenant Admin)
 """
 import math
 import uuid
@@ -77,7 +77,7 @@ def _build_dept_tree(departments) -> list:
     return roots
 
 
-# ── User Models ───────────────────────────────────────────────────
+# â”€â”€ User Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -155,7 +155,7 @@ class ResetPasswordResponse(BaseModel):
     message: str
 
 
-# ── Role Models ───────────────────────────────────────────────────
+# â”€â”€ Role Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RoleCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=150)
@@ -187,7 +187,7 @@ class RoleResponse(BaseModel):
         from_attributes = True
 
 
-# ── Department Models ─────────────────────────────────────────────
+# â”€â”€ Department Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class DepartmentCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -218,7 +218,7 @@ class DepartmentResponse(BaseModel):
         from_attributes = True
 
 
-# ── User Endpoints ────────────────────────────────────────────────
+# â”€â”€ User Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/",
@@ -417,7 +417,7 @@ async def list_users(
     )
 
 
-# ── Role Endpoints ────────────────────────────────────────────────
+# â”€â”€ Role Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get(
     "/roles",
@@ -589,7 +589,7 @@ async def delete_role(
     )
 
 
-# ── Department Endpoints ──────────────────────────────────────────
+# â”€â”€ Department Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get(
     "/departments",

@@ -9,7 +9,7 @@ from typing import Optional, Callable
 import aiohttp
 import websocket
 
-logger = logging.getLogger("aegisx.communication")
+logger = logging.getLogger("AEGIS.communication")
 
 
 class CommunicationModule:

@@ -4,7 +4,7 @@ Revision ID: 001
 Revises: 
 Create Date: 2026-08-07
 
-Creates all core AEGISX tables for multi-tenant cybersecurity platform.
+Creates all core AEGIS tables for multi-tenant cybersecurity platform.
 """
 from typing import Sequence, Union
 

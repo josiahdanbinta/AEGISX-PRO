@@ -74,7 +74,7 @@ export function LoginPage() {
               label="Tenant ID"
               value={tenantId}
               onChange={(e) => setTenantId(e.target.value)}
-              placeholder="Optional — your tenant identifier"
+              placeholder="Optional â€” your tenant identifier"
             />
             <Input
               label="Email"
@@ -118,7 +118,7 @@ export function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
-          AEGISX Platform v2.0.0 — Protected by industry-standard encryption
+          AEGIS Platform v2.0.0 â€” Protected by industry-standard encryption
         </p>
 
         {/* Theme Toggle */}

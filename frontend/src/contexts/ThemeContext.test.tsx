@@ -55,7 +55,7 @@ describe('ThemeContext', () => {
   it('persists theme to localStorage after toggle', async () => {
     renderWithProvider();
     await userEvent.click(screen.getByTestId('toggle-btn'));
-    const stored = localStorage.getItem('aegisx-theme');
+    const stored = localStorage.getItem('AEGIS-theme');
     expect(stored).toBeTruthy();
     expect(stored === 'light' || stored === 'dark').toBe(true);
   });

@@ -77,7 +77,6 @@ export function Sidebar() {
               </div>
               <span className="font-bold text-base tracking-tight">
                 <span className="text-white">AEGIS</span>
-                <span className="text-brand-400">X</span>
               </span>
             </motion.div>
           ) : (

@@ -1,5 +1,5 @@
 """
-AEGISX - Apache Flink Stream Processing Jobs (Tier 3)
+AEGIS - Apache Flink Stream Processing Jobs (Tier 3)
 Python-based Flink job definitions for event normalization, enrichment,
 deduplication, window operations, and alert triggering.
 Uses PyFlink Table API for stateful stream processing.
@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Flink Job 1: Event Normalization
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 EVENT_NORMALIZATION_SQL = """
 CREATE TABLE raw_events (
@@ -96,9 +96,9 @@ FROM raw_events;
 """
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Flink Job 2: Window Operations & Aggregation
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 WINDOW_AGGREGATION_SQL = """
 CREATE TABLE normalized_source (
@@ -138,11 +138,11 @@ CREATE TABLE event_windows_5min (
     PRIMARY KEY (tenant_id, window_start, event_type) NOT ENFORCED
 ) WITH (
     'connector' = 'jdbc',
-    'url' = 'jdbc:clickhouse://clickhouse:8123/aegisx',
+    'url' = 'jdbc:clickhouse://clickhouse:8123/AEGIS',
     'table-name' = 'event_metrics_hourly',
     'driver' = 'ru.yandex.clickhouse.ClickHouseDriver',
-    'username' = 'aegisx',
-    'password' = 'aegisx'
+    'username' = 'AEGIS',
+    'password' = 'AEGIS'
 );
 
 CREATE TABLE alert_triggers (
@@ -199,9 +199,9 @@ HAVING COUNT(*) > 100;
 """
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Flink Job 3: Deduplication (Deduplicate within 1-hour window)
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 DEDUP_SQL = """
 CREATE TABLE events_with_dedup (
@@ -261,9 +261,9 @@ FROM events_with_dedup;
 """
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Flink Job 4: UEBA Anomaly Detection Integration
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 UEBA_SQL = """
 CREATE TABLE event_stream (
@@ -306,11 +306,11 @@ CREATE TABLE hourly_baselines (
     PRIMARY KEY (tenant_id, hostname, window_start) NOT ENFORCED
 ) WITH (
     'connector' = 'jdbc',
-    'url' = 'jdbc:clickhouse://clickhouse:8123/aegisx',
+    'url' = 'jdbc:clickhouse://clickhouse:8123/AEGIS',
     'table-name' = 'ueba_hourly_baselines',
     'driver' = 'ru.yandex.clickhouse.ClickHouseDriver',
-    'username' = 'aegisx',
-    'password' = 'aegisx'
+    'username' = 'AEGIS',
+    'password' = 'AEGIS'
 );
 
 INSERT INTO hourly_baselines
@@ -336,9 +336,9 @@ GROUP BY
 """
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Flink Job 5: Telemetry Aggregation
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 TELEMETRY_SQL = """
 CREATE TABLE agent_telemetry (
@@ -381,11 +381,11 @@ CREATE TABLE agent_health_metrics (
     PRIMARY KEY (agent_id, window_start) NOT ENFORCED
 ) WITH (
     'connector' = 'jdbc',
-    'url' = 'jdbc:clickhouse://clickhouse:8123/aegisx',
+    'url' = 'jdbc:clickhouse://clickhouse:8123/AEGIS',
     'table-name' = 'agent_health_metrics_hourly',
     'driver' = 'ru.yandex.clickhouse.ClickHouseDriver',
-    'username' = 'aegisx',
-    'password' = 'aegisx'
+    'username' = 'AEGIS',
+    'password' = 'AEGIS'
 );
 
 INSERT INTO agent_health_metrics
@@ -426,9 +426,9 @@ HAVING AVG(cpu_percent) > 90 OR AVG(memory_percent) > 95;
 """
 
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Job Factory
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 FLINK_JOBS = {
     "event-normalization": {

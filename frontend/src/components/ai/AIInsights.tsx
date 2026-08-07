@@ -293,7 +293,7 @@ export function AIInsights() {
         <div className="flex items-center gap-2 mb-3">
           <MessageSquare className="w-4 h-4 text-slate-400" />
           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Ask AEGISX AI
+            Ask AEGIS AI
           </span>
         </div>
         {answer && (
@@ -307,7 +307,7 @@ export function AIInsights() {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={aiEnabled ? 'Ask about your security posture...' : 'AI is offline — no questions can be processed'}
+            placeholder={aiEnabled ? 'Ask about your security posture...' : 'AI is offline â€” no questions can be processed'}
             disabled={!aiEnabled && aiEnabled !== null}
             className={clsx(
               'flex-1 px-3 py-2 text-sm rounded-lg border',

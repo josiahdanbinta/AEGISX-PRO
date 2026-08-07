@@ -1,6 +1,6 @@
 apiVersion: v2
-name: aegisx
-description: AEGISX Enterprise Cybersecurity Operations Platform
+name: aegis
+description: AEGIS â€” Unified Security Operations Platform (SIEM + SOAR + XDR + VM + TI)
 type: application
 version: 2.0.0
 appVersion: "2.0.0"
@@ -11,10 +11,10 @@ keywords:
   - xdr
   - cybersecurity
   - compliance
-home: https://aegisx.com
+home: https://AEGIS.com
 sources:
-  - https://github.com/org/aegisx
+  - https://github.com/org/AEGIS
 maintainers:
-  - name: AEGISX Team
-    email: dev@aegisx.com
-icon: https://aegisx.com/icon.png
+  - name: AEGIS Team
+    email: dev@AEGIS.com
+icon: https://AEGIS.com/icon.png

@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX AI API endpoints.
+Integration tests for AEGIS AI API endpoints.
 """
 import uuid
 

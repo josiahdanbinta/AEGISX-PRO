@@ -1,5 +1,5 @@
 """
-AEGISX - Threat Intelligence Celery Tasks
+AEGIS - Threat Intelligence Celery Tasks
 Sync MISP/OpenCTI feeds, enrich IOCs, and refresh indicators.
 """
 import asyncio

@@ -1,7 +1,7 @@
 {
   "title": "SOC Analyst Dashboard",
-  "uid": "aegisx-soc-analyst",
-  "tags": ["aegisx", "soc", "alerts"],
+  "uid": "AEGIS-soc-analyst",
+  "tags": ["AEGIS", "soc", "alerts"],
   "timezone": "browser",
   "editable": true,
   "panels": [
@@ -12,7 +12,7 @@
       "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
       "targets": [
         {
-          "expr": "sum(aegisx_alerts_open{severity=\"critical\"})",
+          "expr": "sum(AEGIS_alerts_open{severity=\"critical\"})",
           "legendFormat": "Critical",
           "refId": "A"
         }
@@ -33,7 +33,7 @@
       "title": "High Severity",
       "type": "stat",
       "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
-      "targets": [{"expr": "sum(aegisx_alerts_open{severity=\"high\"})", "refId": "A"}],
+      "targets": [{"expr": "sum(AEGIS_alerts_open{severity=\"high\"})", "refId": "A"}],
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
         {"color": "green", "value": 0}, {"color": "orange", "value": 5}, {"color": "red", "value": 20}
       ]}}}
@@ -43,7 +43,7 @@
       "title": "Medium Severity",
       "type": "stat",
       "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
-      "targets": [{"expr": "sum(aegisx_alerts_open{severity=\"medium\"})", "refId": "A"}],
+      "targets": [{"expr": "sum(AEGIS_alerts_open{severity=\"medium\"})", "refId": "A"}],
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
         {"color": "blue", "value": 0}, {"color": "yellow", "value": 10}
       ]}}}
@@ -53,7 +53,7 @@
       "title": "Low / Info",
       "type": "stat",
       "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
-      "targets": [{"expr": "sum(aegisx_alerts_open{severity=~\"low|info\"})", "refId": "A"}]
+      "targets": [{"expr": "sum(AEGIS_alerts_open{severity=~\"low|info\"})", "refId": "A"}]
     },
     {
       "id": 5,
@@ -62,7 +62,7 @@
       "gridPos": {"x": 16, "y": 0, "w": 8, "h": 4},
       "targets": [
         {
-          "expr": "sum(rate(aegisx_alerts_created_total[5m])) by (severity)",
+          "expr": "sum(rate(AEGIS_alerts_created_total[5m])) by (severity)",
           "legendFormat": "{{severity}}",
           "refId": "A"
         }
@@ -76,7 +76,7 @@
       "gridPos": {"x": 0, "y": 4, "w": 24, "h": 6},
       "targets": [
         {
-          "expr": "aegisx_alerts_open",
+          "expr": "AEGIS_alerts_open",
           "legendFormat": "Alerts",
           "refId": "A"
         }
@@ -89,7 +89,7 @@
       "gridPos": {"x": 0, "y": 10, "w": 12, "h": 7},
       "targets": [
         {
-          "expr": "topk(10, sum(aegisx_alerts_created_total) by (rule_name))",
+          "expr": "topk(10, sum(AEGIS_alerts_created_total) by (rule_name))",
           "legendFormat": "{{rule_name}}",
           "refId": "A"
         }
@@ -102,7 +102,7 @@
       "gridPos": {"x": 12, "y": 10, "w": 12, "h": 7},
       "targets": [
         {
-          "expr": "topk(10, sum(aegisx_events_by_hostname) by (hostname))",
+          "expr": "topk(10, sum(AEGIS_events_by_hostname) by (hostname))",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -115,7 +115,7 @@
       "gridPos": {"x": 0, "y": 17, "w": 24, "h": 8},
       "targets": [
         {
-          "expr": "topk(20, sort_desc(avg by (rule_name, rule_id) (aegisx_detection_rule_executions_total)))",
+          "expr": "topk(20, sort_desc(avg by (rule_name, rule_id) (AEGIS_detection_rule_executions_total)))",
           "format": "table",
           "refId": "A"
         }
@@ -138,7 +138,7 @@
       "gridPos": {"x": 0, "y": 25, "w": 24, "h": 7},
       "targets": [
         {
-          "expr": "sort_desc(aegisx_alerts_assigned_total)",
+          "expr": "sort_desc(AEGIS_alerts_assigned_total)",
           "format": "table",
           "refId": "A"
         }

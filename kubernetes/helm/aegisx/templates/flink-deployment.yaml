@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-flink-jobmanager
+  name: {{ include "AEGIS.fullname" . }}-flink-jobmanager
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: flink-jobmanager
 spec:
   type: ClusterIP
@@ -20,15 +20,15 @@ spec:
       port: 8081
       targetPort: 8081
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: flink-jobmanager
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-flink-taskmanager
+  name: {{ include "AEGIS.fullname" . }}-flink-taskmanager
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: flink-taskmanager
 spec:
   type: ClusterIP
@@ -41,19 +41,19 @@ spec:
       port: 6122
       targetPort: 6122
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: flink-taskmanager
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-flink-config
+  name: {{ include "AEGIS.fullname" . }}-flink-config
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: flink
 data:
   flink-conf.yaml: |
-    jobmanager.rpc.address: {{ include "aegisx.fullname" . }}-flink-jobmanager
+    jobmanager.rpc.address: {{ include "AEGIS.fullname" . }}-flink-jobmanager
     jobmanager.rpc.port: 6123
     jobmanager.memory.process.size: {{ .Values.flink.jobmanager.memory }}
     taskmanager.memory.process.size: {{ .Values.flink.taskmanager.memory }}
@@ -83,20 +83,20 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-flink-jobmanager
+  name: {{ include "AEGIS.fullname" . }}-flink-jobmanager
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: flink-jobmanager
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: flink-jobmanager
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: flink-jobmanager
       annotations:
         prometheus.io/scrape: "true"
@@ -108,11 +108,11 @@ spec:
       {{- end }}
       containers:
         - name: flink-jobmanager
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.flink.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.flink.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.flink.image.pullPolicy }}
           command: ["/opt/flink/bin/jobmanager.sh", "start-foreground"]
           args:
-            - -Djobmanager.rpc.address={{ include "aegisx.fullname" . }}-flink-jobmanager
+            - -Djobmanager.rpc.address={{ include "AEGIS.fullname" . }}-flink-jobmanager
           ports:
             - name: rpc
               containerPort: 6123
@@ -147,27 +147,27 @@ spec:
       volumes:
         - name: flink-config
           configMap:
-            name: {{ include "aegisx.fullname" . }}-flink-config
+            name: {{ include "AEGIS.fullname" . }}-flink-config
         - name: data
           emptyDir: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-flink-taskmanager
+  name: {{ include "AEGIS.fullname" . }}-flink-taskmanager
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: flink-taskmanager
 spec:
   replicas: {{ .Values.flink.taskmanager.replicas }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: flink-taskmanager
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: flink-taskmanager
       annotations:
         prometheus.io/scrape: "true"
@@ -190,11 +190,11 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: flink-taskmanager
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.flink.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.flink.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.flink.image.pullPolicy }}
           command: ["/opt/flink/bin/taskmanager.sh", "start-foreground"]
           args:
-            - -Djobmanager.rpc.address={{ include "aegisx.fullname" . }}-flink-jobmanager
+            - -Djobmanager.rpc.address={{ include "AEGIS.fullname" . }}-flink-jobmanager
           ports:
             - name: data
               containerPort: 6121
@@ -227,7 +227,7 @@ spec:
       volumes:
         - name: flink-config
           configMap:
-            name: {{ include "aegisx.fullname" . }}-flink-config
+            name: {{ include "AEGIS.fullname" . }}-flink-config
         - name: data
           emptyDir: {}
 {{- end }}

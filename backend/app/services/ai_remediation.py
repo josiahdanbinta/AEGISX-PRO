@@ -1,5 +1,5 @@
 """
-AEGISX - AI Auto-Remediation Engine
+AEGIS - AI Auto-Remediation Engine
 Analyzes alerts/incidents, generates remediation plans, and executes
 approved actions automatically. Requires human approval for critical actions.
 """
@@ -144,7 +144,7 @@ class AIRemediationEngine:
     def __init__(self):
         self._pending_approvals: Dict[str, Dict] = {}
 
-    # ── Analyze & Recommend ───────────────────────────────────
+    # â”€â”€ Analyze & Recommend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def analyze_alert(self, alert: Dict[str, Any]) -> Dict[str, Any]:
         findings = []
@@ -171,7 +171,7 @@ class AIRemediationEngine:
         if hostname and severity in ("critical", "high") and confidence > 0.6:
             findings.append({
                 "action": "collect_forensics",
-                "reason": f"High-severity alert on {hostname} — collect forensic evidence",
+                "reason": f"High-severity alert on {hostname} â€” collect forensic evidence",
                 "priority": 1,
             })
             findings.append({
@@ -183,14 +183,14 @@ class AIRemediationEngine:
         if "credential" in alert_type.lower() or "login" in alert_type.lower():
             findings.append({
                 "action": "revoke_sessions",
-                "reason": "Credential-related alert — revoke active sessions",
+                "reason": "Credential-related alert â€” revoke active sessions",
                 "priority": 1,
             })
 
         if "ransomware" in alert_type.lower() or "malware" in alert_type.lower():
             findings.append({
                 "action": "isolate_endpoint",
-                "reason": f"Ransomware/malware alert — isolate {hostname or 'endpoint'}",
+                "reason": f"Ransomware/malware alert â€” isolate {hostname or 'endpoint'}",
                 "priority": 1,
             })
 
@@ -261,7 +261,7 @@ class AIRemediationEngine:
         if "T1486" in mitre or severity == "critical":
             findings.append({
                 "action": "isolate_endpoint",
-                "reason": "Critical incident — isolate affected endpoints",
+                "reason": "Critical incident â€” isolate affected endpoints",
                 "priority": 1,
             })
 
@@ -302,7 +302,7 @@ class AIRemediationEngine:
 
         return plan
 
-    # ── Execute ───────────────────────────────────────────────
+    # â”€â”€ Execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def execute_action(self, action: str, params: Dict[str, Any],
                               executor: str = "soar") -> Dict[str, Any]:
@@ -341,7 +341,7 @@ class AIRemediationEngine:
         for action in plan.get("auto_actions", []):
             r = await self.execute_action(action["action"], params)
             results["auto"].append({"action": action["action"], "result": r})
-            logger.info("Auto-remediated: %s → %s", action["action"], r.get("success"))
+            logger.info("Auto-remediated: %s â†’ %s", action["action"], r.get("success"))
 
         if approved_by:
             for action in plan.get("approval_actions", []):
@@ -351,7 +351,7 @@ class AIRemediationEngine:
                     "result": r,
                     "approved_by": approved_by,
                 })
-                logger.info("Approved remediation: %s by %s → %s",
+                logger.info("Approved remediation: %s by %s â†’ %s",
                             action["action"], approved_by, r.get("success"))
 
         return results
@@ -369,7 +369,7 @@ class AIRemediationEngine:
         results = await self.execute_plan(plan, params)
         return {"plan": plan, "results": results}
 
-    # ── Approval Workflow ─────────────────────────────────────
+    # â”€â”€ Approval Workflow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def request_approval(self, plan: Dict[str, Any]) -> str:
         approval_id = str(uuid.uuid4())[:12]

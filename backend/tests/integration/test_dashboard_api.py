@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX Dashboard API endpoints.
+Integration tests for AEGIS Dashboard API endpoints.
 """
 import uuid
 

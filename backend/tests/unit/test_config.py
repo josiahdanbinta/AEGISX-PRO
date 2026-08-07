@@ -1,5 +1,5 @@
 """
-Unit tests for AEGISX configuration module.
+Unit tests for AEGIS configuration module.
 """
 import pytest
 from unittest.mock import patch
@@ -10,7 +10,7 @@ class TestSettings:
     @patch.dict('os.environ', {}, clear=True)
     def test_default_values(self):
         settings = Settings()
-        assert settings.APP_NAME == "AEGISX"
+        assert settings.APP_NAME == "AEGIS"
         assert settings.APP_VERSION == "1.0.0"
         assert settings.API_V1_PREFIX == "/api/v1"
         assert settings.PORT == 8000

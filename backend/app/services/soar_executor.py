@@ -1,5 +1,5 @@
 """
-AEGISX - SOAR Action Executor
+AEGIS - SOAR Action Executor
 Real implementations for security automation actions
 """
 import asyncio
@@ -58,13 +58,13 @@ class SOARExecutor:
                 "message": f"Action '{action_type}' execution failed: {e}",
             }
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # EMAIL
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_send_email(self, params: Dict[str, Any]) -> Dict[str, Any]:
         to = params.get("to", "")
-        subject = params.get("subject", "AEGISX Notification")
+        subject = params.get("subject", "AEGIS Notification")
         body = params.get("body", "")
         body_html = params.get("body_html")
         cc = params.get("cc")
@@ -115,9 +115,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Failed to send email: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # SLACK / TEAMS / WEBHOOK NOTIFICATIONS
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_notify_slack(self, params: Dict[str, Any]) -> Dict[str, Any]:
         message = params.get("message", "")
@@ -142,9 +142,9 @@ class SOARExecutor:
         payload = {
             "attachments": [{
                 "color": color,
-                "title": f"AEGISX Alert - {severity.upper()}",
+                "title": f"AEGIS Alert - {severity.upper()}",
                 "text": message,
-                "footer": f"AEGISX SOAR | {datetime.now(timezone.utc).isoformat()}",
+                "footer": f"AEGIS SOAR | {datetime.now(timezone.utc).isoformat()}",
             }]
         }
         if channel:
@@ -182,8 +182,8 @@ class SOARExecutor:
             "@type": "MessageCard",
             "@context": "https://schema.org/extensions",
             "themeColor": theme_color,
-            "summary": f"AEGISX Alert - {severity.upper()}",
-            "title": f"AEGISX Alert - {severity.upper()}",
+            "summary": f"AEGIS Alert - {severity.upper()}",
+            "title": f"AEGIS Alert - {severity.upper()}",
             "text": message,
             "sections": [{
                 "text": message,
@@ -230,9 +230,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Webhook call failed: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # SCRIPT EXECUTION
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_execute_script(self, params: Dict[str, Any]) -> Dict[str, Any]:
         command = params.get("command", params.get("script_content", ""))
@@ -286,9 +286,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Script execution failed: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # THREAT INTELLIGENCE WATCHLIST
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_add_to_watchlist(self, params: Dict[str, Any]) -> Dict[str, Any]:
         indicator = params.get("indicator", "")
@@ -352,9 +352,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Failed to add to watchlist: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # INCIDENT MANAGEMENT
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_create_incident(self, params: Dict[str, Any]) -> Dict[str, Any]:
         title = params.get("title", "SOAR-Generated Incident")
@@ -456,9 +456,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Failed to update ticket: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # THREAT INTELLIGENCE ENRICHMENT
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_enrich_ip(self, params: Dict[str, Any]) -> Dict[str, Any]:
         ip_address = params.get("ip_address", "")
@@ -620,9 +620,9 @@ class SOARExecutor:
             "details": {"hash": file_hash, "sources_used": sources_used, "enrichment": enrichment},
         }
 
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # USER IDENTITY ACTIONS
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_force_password_reset(self, params: Dict[str, Any]) -> Dict[str, Any]:
         user_id = params.get("user_id", "")
@@ -740,9 +740,9 @@ class SOARExecutor:
         except Exception as e:
             return {"success": False, "error": str(e), "message": f"Failed to revoke sessions: {e}"}
 
-    # ═════════════════════════════════════════════════════════════
-    # UNAVAILABLE ACTIONS — clear "requires integration" message
-    # ═════════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    # UNAVAILABLE ACTIONS â€” clear "requires integration" message
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async def _action_block_ip(self, params: Dict[str, Any]) -> Dict[str, Any]:
         return {
@@ -776,7 +776,7 @@ class SOARExecutor:
         return {
             "success": False,
             "error": "Integration required",
-            "message": "Restart service requires endpoint agent or Ansible integration. Deploy an AEGISX agent on the target endpoint.",
+            "message": "Restart service requires endpoint agent or Ansible integration. Deploy an AEGIS agent on the target endpoint.",
         }
 
     async def _action_kill_process(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -804,7 +804,7 @@ class SOARExecutor:
         return {
             "success": False,
             "error": "Integration required",
-            "message": "Collect forensics requires endpoint agent with forensic capabilities. Deploy AEGISX agent on target endpoint.",
+            "message": "Collect forensics requires endpoint agent with forensic capabilities. Deploy AEGIS agent on target endpoint.",
         }
 
     async def _action_open_jira(self, params: Dict[str, Any]) -> Dict[str, Any]:

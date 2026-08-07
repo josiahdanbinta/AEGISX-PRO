@@ -1,5 +1,5 @@
 """
-AEGISX - AI Remediation API Router
+AEGIS - AI Remediation API Router
 Analyze alerts/incidents, generate remediation plans, execute approved actions.
 """
 from typing import Any, Dict, List, Optional

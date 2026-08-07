@@ -1,5 +1,5 @@
 """
-AEGISX - Asset Management API Router
+AEGIS - Asset Management API Router
 Assets, agents, groups, discovery, monitoring
 """
 import enum
@@ -53,7 +53,7 @@ async def _audit(
     db.add(entry)
 
 
-# ── Enums ─────────────────────────────────────────────────────────
+# â”€â”€ Enums â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AssetType(str, enum.Enum):
     ENDPOINT = "endpoint"
@@ -94,7 +94,7 @@ class AgentStatus(str, enum.Enum):
     UNINSTALLED = "uninstalled"
 
 
-# ── Response Models ───────────────────────────────────────────────
+# â”€â”€ Response Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class MessageResponse(BaseModel):
     message: str
@@ -107,7 +107,7 @@ class PaginationMeta(BaseModel):
     total_pages: int
 
 
-# ── Asset Models ──────────────────────────────────────────────────
+# â”€â”€ Asset Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AssetCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -183,7 +183,7 @@ class AssetListResponse(BaseModel):
     meta: PaginationMeta
 
 
-# ── Agent Models ──────────────────────────────────────────────────
+# â”€â”€ Agent Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AgentResponse(BaseModel):
     id: str
@@ -224,7 +224,7 @@ class AgentListResponse(BaseModel):
     meta: PaginationMeta
 
 
-# ── Group Models ──────────────────────────────────────────────────
+# â”€â”€ Group Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AssetGroupCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -264,7 +264,7 @@ class GroupAssetsRequest(BaseModel):
     asset_ids: List[str] = Field(..., min_length=1)
 
 
-# ── Discovery Models ──────────────────────────────────────────────
+# â”€â”€ Discovery Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class DiscoveryScanResponse(BaseModel):
     scan_id: str
@@ -272,7 +272,7 @@ class DiscoveryScanResponse(BaseModel):
     message: str
 
 
-# ── Alert / Vulnerability / Incident List Models ─────────────────
+# â”€â”€ Alert / Vulnerability / Incident List Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AlertItem(BaseModel):
     id: str
@@ -326,7 +326,7 @@ class PaginatedIncidents(BaseModel):
     meta: PaginationMeta
 
 
-# ── Asset Endpoints ───────────────────────────────────────────────
+# â”€â”€ Asset Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
 async def create_asset(
@@ -612,7 +612,7 @@ async def delete_asset(
     return MessageResponse(message="Asset decommissioned", detail=f"Asset '{a.name}' has been decommissioned")
 
 
-# ── Discovery Endpoints ───────────────────────────────────────────
+# â”€â”€ Discovery Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/discover/scan", response_model=DiscoveryScanResponse, status_code=status.HTTP_201_CREATED)
 async def create_discovery_scan(
@@ -669,7 +669,7 @@ async def get_discovery_scan_status(
     )
 
 
-# ── Asset Info Endpoints ──────────────────────────────────────────
+# â”€â”€ Asset Info Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{asset_id}/hardware")
 async def get_asset_hardware(
@@ -755,7 +755,7 @@ async def get_asset_processes(
     }
 
 
-# ── Monitoring Endpoints ──────────────────────────────────────────
+# â”€â”€ Monitoring Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/{asset_id}/monitor/start", response_model=MessageResponse)
 async def start_monitoring(
@@ -812,7 +812,7 @@ async def stop_monitoring(
     return MessageResponse(message="Monitoring stopped", detail=f"Asset '{a.name}' monitoring has been stopped")
 
 
-# ── Asset Relationships ───────────────────────────────────────────
+# â”€â”€ Asset Relationships â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/{asset_id}/vulnerabilities", response_model=PaginatedVulnerabilities)
 async def get_asset_vulnerabilities(
@@ -965,7 +965,7 @@ async def get_asset_incidents(
     )
 
 
-# ── Tag Endpoints ─────────────────────────────────────────────────
+# â”€â”€ Tag Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post("/{asset_id}/tags", response_model=AssetResponse)
 async def add_asset_tags(
@@ -1046,7 +1046,7 @@ async def remove_asset_tags(
     )
 
 
-# ── Agent Endpoints ───────────────────────────────────────────────
+# â”€â”€ Agent Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/agents", response_model=AgentListResponse)
 async def list_agents(
@@ -1161,7 +1161,7 @@ async def send_agent_command(
     )
 
 
-# ── Group Endpoints ───────────────────────────────────────────────
+# â”€â”€ Group Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/groups", response_model=AssetGroupListResponse)
 async def list_groups(

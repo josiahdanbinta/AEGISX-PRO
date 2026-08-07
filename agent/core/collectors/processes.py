@@ -6,7 +6,7 @@ from agent.core.collector import BaseCollector
 from agent.platforms import is_windows
 
 
-logger = logging.getLogger("aegisx.collector.processes")
+logger = logging.getLogger("AEGIS.collector.processes")
 
 
 class ProcessCollector(BaseCollector):

@@ -1,5 +1,5 @@
 """
-AEGISX - Request Logging Middleware
+AEGIS - Request Logging Middleware
 Logs every API request to the immutable audit trail with body capture.
 """
 import time
@@ -12,7 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 from app.core.config import settings
 
-logger = logging.getLogger("aegisx.request")
+logger = logging.getLogger("AEGIS.request")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):

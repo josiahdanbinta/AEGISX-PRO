@@ -1,5 +1,5 @@
 """
-AEGISX - AI Services
+AEGIS - AI Services
 Incident analysis, alert explanation, recommendations, threat analysis
 """
 import json
@@ -286,7 +286,7 @@ class AIInvestigator:
     @staticmethod
     async def answer_question(question: str, context: Dict) -> str:
         """Answer natural language questions about platform data."""
-        prompt = f"""You are AEGISX AI Assistant, a cybersecurity operations expert. Answer based on the provided context data.
+        prompt = f"""You are AEGIS AI Assistant, a cybersecurity operations expert. Answer based on the provided context data.
         
 Question: {question}
 
@@ -394,7 +394,7 @@ Return JSON: {{"tactics": ["tactic1"], "techniques": [{{"id": "T1234", "name": "
             return _fallback_mitre()
 
 
-# ── Fallback functions when AI is unavailable ──────────────────────
+# â”€â”€ Fallback functions when AI is unavailable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 def _is_error(result) -> bool:
@@ -418,7 +418,7 @@ def _fallback_summary(incident: Dict) -> str:
 
 def _fallback_root_cause(incident: Dict) -> Dict:
     return {
-        "root_cause": "Analysis unavailable — enable AI for automated root cause analysis.",
+        "root_cause": "Analysis unavailable â€” enable AI for automated root cause analysis.",
         "attack_chain": [],
         "initial_access": "unknown",
         "confidence": 0,
@@ -452,7 +452,7 @@ def _fallback_false_positive() -> Dict:
     return {
         "is_false_positive": False,
         "confidence": 0.5,
-        "reasoning": "Unable to classify — enable AI for automated classification.",
+        "reasoning": "Unable to classify â€” enable AI for automated classification.",
         "indicators": [],
     }
 
@@ -484,7 +484,7 @@ def _fallback_threat_actor() -> Dict:
     return {
         "likely_actors": [],
         "confidence": 0,
-        "motivation": "Unable to determine — enable AI for threat actor analysis.",
+        "motivation": "Unable to determine â€” enable AI for threat actor analysis.",
         "targeting_pattern": "Unknown",
         "mitre_mapping": {},
     }
@@ -550,7 +550,7 @@ def _fallback_report() -> str:
 def _fallback_investigation(entity_type: str, entity_value: str) -> Dict:
     return {
         "risk_assessment": "unknown",
-        "threat_intelligence_hypothesis": "Investigation unavailable — enable AI for automated analysis.",
+        "threat_intelligence_hypothesis": "Investigation unavailable â€” enable AI for automated analysis.",
         "recommended_actions": [f"Manually investigate {entity_type}: {entity_value}"],
         "indicators_of_compromise": [],
         "related_known_threats": [],

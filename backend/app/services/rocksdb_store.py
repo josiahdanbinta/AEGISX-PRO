@@ -1,5 +1,5 @@
 """
-AEGISX - RocksDB State Backend (Tier 3)
+AEGIS - RocksDB State Backend (Tier 3)
 Durable local state store for the stream processor using RocksDB.
 Stores checkpoints, window state, and baseline data for crash recovery.
 """
@@ -14,7 +14,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-STATE_DIR = os.path.join(tempfile.gettempdir(), "aegisx-rocksdb-state")
+STATE_DIR = os.path.join(tempfile.gettempdir(), "AEGIS-rocksdb-state")
 os.makedirs(STATE_DIR, exist_ok=True)
 
 
@@ -74,7 +74,7 @@ class RocksDBStore:
         if self._db is None:
             self._init_rocksdb()
 
-    # ── Key-Value Operations ─────────────────────────────────
+    # â”€â”€ Key-Value Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def put(self, key: str, value: Any) -> None:
         self._ensure_db()
@@ -146,7 +146,7 @@ class RocksDBStore:
             )
             self._db.commit()
 
-    # ── Checkpoint & Recovery ────────────────────────────────
+    # â”€â”€ Checkpoint & Recovery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def checkpoint(self, checkpoint_id: str, state: Dict[str, Any]) -> None:
         key = f"checkpoint:{checkpoint_id}"
@@ -163,7 +163,7 @@ class RocksDBStore:
             prefixes.add(cid)
         return sorted(prefixes)
 
-    # ── Window State ─────────────────────────────────────────
+    # â”€â”€ Window State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def put_window(self, window_id: str, tenant_key: str, events: List[Dict]) -> None:
         key = f"window:{window_id}:{tenant_key}"
@@ -187,7 +187,7 @@ class RocksDBStore:
             self._db.commit()
         return expired
 
-    # ── Baseline Storage ─────────────────────────────────────
+    # â”€â”€ Baseline Storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def put_baseline(self, entity_id: str, entity_type: str, profile: Dict[str, Any]) -> None:
         key = f"ueba:baseline:{entity_type}:{entity_id}"

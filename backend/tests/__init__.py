@@ -1,3 +1,3 @@
 """
-AEGISX - Unit Tests Package
+AEGIS - Unit Tests Package
 """

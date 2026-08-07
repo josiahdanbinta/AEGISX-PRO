@@ -1,5 +1,5 @@
 """
-AEGISX - Password Reset Email Service
+AEGIS - Password Reset Email Service
 Sends password reset emails via SMTP with secure time-limited tokens.
 """
 import logging
@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 async def send_reset_email(to_email: str, reset_token: str, reset_url: str,
                             username: str = "User") -> bool:
     if not settings.SMTP_HOST or not settings.SMTP_FROM:
-        logger.warning("SMTP not configured — reset email not sent to %s", to_email)
+        logger.warning("SMTP not configured â€” reset email not sent to %s", to_email)
         return False
 
-    subject = "AEGISX - Password Reset Request"
+    subject = "AEGIS - Password Reset Request"
     body_html = f"""
     <html>
     <body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #1e3a5f, #0f172a); padding: 30px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #38bdf8; margin: 0; font-size: 24px;">AEGISX</h1>
+            <h1 style="color: #38bdf8; margin: 0; font-size: 24px;">AEGIS</h1>
             <p style="color: #94a3b8; margin: 8px 0 0;">Enterprise Cybersecurity Platform</p>
         </div>
         <div style="background: #1e293b; padding: 30px; border-radius: 0 0 12px 12px;">
@@ -51,7 +51,7 @@ async def send_reset_email(to_email: str, reset_token: str, reset_url: str,
             </p>
             <hr style="border: none; border-top: 1px solid #334155; margin: 24px 0;">
             <p style="color: #475569; font-size: 11px;">
-                This is an automated security notification from AEGISX.
+                This is an automated security notification from AEGIS.
                 Requested at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}.
             </p>
         </div>

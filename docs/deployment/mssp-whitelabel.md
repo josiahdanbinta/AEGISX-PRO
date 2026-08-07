@@ -1,11 +1,11 @@
-# AEGISX PRO — White-Label Configuration for MSSPs
+# AEGIS â€” White-Label Configuration for MSSPs
 
-Managed Security Service Providers can rebrand and resell AEGISX PRO to their customers.
+Managed Security Service Providers can rebrand and resell AEGIS to their customers.
 
 ## Quick White-Label
 
 ```bash
-helm install aegisx ./kubernetes/helm/aegisx \
+helm install AEGIS ./kubernetes/helm/AEGIS \
   --namespace yourbrand-soc \
   --set config.appName="YourBrand SOC" \
   --set config.corsOrigins="https://soc.yourbrand.com" \
@@ -28,19 +28,19 @@ helm install aegisx ./kubernetes/helm/aegisx \
 
 ```bash
 # Row-level (shared DB, filtered by tenant_id)
-helm install customer-acme ./kubernetes/helm/aegisx \
+helm install customer-acme ./kubernetes/helm/AEGIS \
   --set config.tenantIsolationMode=row \
   --set config.appName="ACME Corp SOC"
 
 # Schema-level (each customer gets their own DB schema)
-helm install customer-acme ./kubernetes/helm/aegisx \
+helm install customer-acme ./kubernetes/helm/AEGIS \
   --set config.tenantIsolationMode=schema \
   --set config.appName="ACME Corp SOC"
 
-# Database-level (fully isolated — recommended for regulated industries)
-helm install customer-acme ./kubernetes/helm/aegisx \
+# Database-level (fully isolated â€” recommended for regulated industries)
+helm install customer-acme ./kubernetes/helm/AEGIS \
   --set config.tenantIsolationMode=database \
-  --set timescaledb.postgresDb=acme_aegisx \
+  --set timescaledb.postgresDb=acme_AEGIS \
   --set config.appName="ACME Corp SOC"
 ```
 

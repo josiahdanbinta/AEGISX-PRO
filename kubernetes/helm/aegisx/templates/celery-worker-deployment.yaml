@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-celery-worker
+  name: {{ include "AEGIS.fullname" . }}-celery-worker
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery-worker
 spec:
   replicas: {{ .Values.celeryWorker.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: celery-worker
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: celery-worker
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -25,15 +25,15 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: celery-worker
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.celeryWorker.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.celeryWorker.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           command: ["celery"]
-          args: ["-A", "aegisx", "worker", "-l", {{ .Values.config.logLevel | lower | quote }}]
+          args: ["-A", "AEGIS", "worker", "-l", {{ .Values.config.logLevel | lower | quote }}]
           envFrom:
             - configMapRef:
-                name: {{ include "aegisx.fullname" . }}-config
+                name: {{ include "AEGIS.fullname" . }}-config
             - secretRef:
-                name: {{ include "aegisx.fullname" . }}-secrets
+                name: {{ include "AEGIS.fullname" . }}-secrets
           resources:
             {{- toYaml .Values.celeryWorker.resources | nindent 12 }}
           securityContext:

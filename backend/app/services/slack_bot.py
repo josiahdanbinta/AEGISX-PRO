@@ -1,5 +1,5 @@
 """
-AEGISX - Slack Bot Integration
+AEGIS - Slack Bot Integration
 Interactive Slack bot for SOC operations: alert triage, investigation,
 AI-powered remediation, and real-time notifications.
 Uses Slack Bolt SDK with Socket Mode (no public HTTP endpoint required).
@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 
-class AEGISXSlackBot:
+class AEGISSlackBot:
     """Slack bot for SOC operations with slash commands and interactive messages."""
 
     def __init__(self):
@@ -39,7 +39,7 @@ class AEGISXSlackBot:
         self._running = False
         self._thread: Optional[threading.Thread] = None
 
-    # ── Lifecycle ─────────────────────────────────────────────
+    # â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def start(self):
         if not HAS_SLACK:
@@ -69,15 +69,15 @@ class AEGISXSlackBot:
             self.handler.close()
         logger.info("Slack bot stopped")
 
-    # ── Slash Commands ────────────────────────────────────────
+    # â”€â”€ Slash Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _register_commands(self):
-        self.app.command("/aegisx-alerts")(self._cmd_alerts)
-        self.app.command("/aegisx-investigate")(self._cmd_investigate)
-        self.app.command("/aegisx-remediate")(self._cmd_remediate)
-        self.app.command("/aegisx-status")(self._cmd_status)
-        self.app.command("/aegisx-help")(self._cmd_help)
-        self.app.command("/aegisx-search")(self._cmd_search)
+        self.app.command("/AEGIS-alerts")(self._cmd_alerts)
+        self.app.command("/AEGIS-investigate")(self._cmd_investigate)
+        self.app.command("/AEGIS-remediate")(self._cmd_remediate)
+        self.app.command("/AEGIS-status")(self._cmd_status)
+        self.app.command("/AEGIS-help")(self._cmd_help)
+        self.app.command("/AEGIS-search")(self._cmd_search)
 
     async def _cmd_alerts(self, ack, command, respond):
         await ack()
@@ -129,7 +129,7 @@ class AEGISXSlackBot:
         await ack()
         query = command.get("text", "").strip()
         if not query:
-            await respond("Usage: `/aegisx-investigate <IP|hostname|user|alert-id>`")
+            await respond("Usage: `/AEGIS-investigate <IP|hostname|user|alert-id>`")
             return
 
         blocks = [{
@@ -201,18 +201,18 @@ class AEGISXSlackBot:
 
     async def _investigate_alert(self, alert_id: str) -> List[Dict]:
         return [{"type": "section", "text": {"type": "mrkdwn",
-            "text": f"Alert `{alert_id}` — use `/aegisx-alerts` to see full list."}}]
+            "text": f"Alert `{alert_id}` â€” use `/AEGIS-alerts` to see full list."}}]
 
     async def _investigate_host_or_user(self, query: str) -> List[Dict]:
         return [{"type": "section", "text": {"type": "mrkdwn",
-            "text": f"Searching for `{query}` across assets, alerts, and incidents.\n_Results available in AEGISX console._"}}]
+            "text": f"Searching for `{query}` across assets, alerts, and incidents.\n_Results available in AEGIS console._"}}]
 
     async def _cmd_remediate(self, ack, command, respond):
         await ack()
         text = command.get("text", "").strip()
         parts = text.split()
         if len(parts) < 2:
-            await respond("Usage: `/aegisx-remediate <alert-id> <action>`\n"
+            await respond("Usage: `/AEGIS-remediate <alert-id> <action>`\n"
                           "Actions: isolate, kill, block, reset-password, suspend, quarantine, scan, collect")
             return
 
@@ -226,7 +226,7 @@ class AEGISXSlackBot:
 
         mapped = action_map.get(action)
         if not mapped:
-            await respond(f"Unknown action: {action}. Use `/aegisx-help` for options.")
+            await respond(f"Unknown action: {action}. Use `/AEGIS-help` for options.")
             return
 
         action_def = REMEDIATION_ACTIONS.get(mapped, {})
@@ -264,7 +264,7 @@ class AEGISXSlackBot:
             await poll_db_connections()
 
             stats = []
-            stats.append(":large_green_circle: AEGISX Platform — Online")
+            stats.append(":large_green_circle: AEGIS Platform â€” Online")
             stats.append(f"Environment: `{settings.APP_ENV}`")
             stats.append(f"Version: `{settings.APP_VERSION}`")
             stats.append(f"Kafka: `{'enabled' if settings.FEATURE_KAFKA else 'disabled'}`")
@@ -277,15 +277,15 @@ class AEGISXSlackBot:
     async def _cmd_help(self, ack, command, respond):
         await ack()
         await respond({
-            "text": "AEGISX SOC Bot Commands",
+            "text": "AEGIS SOC Bot Commands",
             "blocks": [{"type": "section", "text": {"type": "mrkdwn",
-                "text": "*AEGISX SOC Bot — Commands*\n\n"
-                        "`/aegisx-alerts [tenant]` — View open alerts\n"
-                        "`/aegisx-investigate <IP|host|user|id>` — Investigate entity\n"
-                        "`/aegisx-remediate <target> <action>` — Remediate threat\n"
-                        "`/aegisx-search <query>` — Search across platform\n"
-                        "`/aegisx-status` — Platform health check\n"
-                        "`/aegisx-help` — Show this message\n\n"
+                "text": "*AEGIS SOC Bot â€” Commands*\n\n"
+                        "`/AEGIS-alerts [tenant]` â€” View open alerts\n"
+                        "`/AEGIS-investigate <IP|host|user|id>` â€” Investigate entity\n"
+                        "`/AEGIS-remediate <target> <action>` â€” Remediate threat\n"
+                        "`/AEGIS-search <query>` â€” Search across platform\n"
+                        "`/AEGIS-status` â€” Platform health check\n"
+                        "`/AEGIS-help` â€” Show this message\n\n"
                         "Actions: `isolate`, `kill`, `block`, `reset-password`, `suspend`, `quarantine`, `scan`, `collect`"
             }}]
         })
@@ -294,12 +294,12 @@ class AEGISXSlackBot:
         await ack()
         query = command.get("text", "").strip()
         if not query:
-            await respond("Usage: `/aegisx-search <query>`")
+            await respond("Usage: `/AEGIS-search <query>`")
             return
         await respond(f"Searching for `{query}` across alerts, incidents, assets, and IOCs...\n"
-                      f"_Full results available in AEGISX Threat Hunting console._")
+                      f"_Full results available in AEGIS Threat Hunting console._")
 
-    # ── Interactive Actions ────────────────────────────────────
+    # â”€â”€ Interactive Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _register_actions(self):
         self.app.action("investigate_alert")(self._on_investigate_alert)
@@ -313,7 +313,7 @@ class AEGISXSlackBot:
         await ack()
         alert_id = body["actions"][0]["value"].replace("investigate_", "")
         await respond(f"Opening investigation for alert `{alert_id}`...\n"
-                       f"View details: <http://aegisx/debug|AEGISX Console>")
+                       f"View details: <http://AEGIS/debug|AEGIS Console>")
 
     async def _on_auto_remediate(self, ack, body, respond):
         await ack()
@@ -325,7 +325,7 @@ class AEGISXSlackBot:
         auto_actions = plan.get("auto_actions", [])
         await respond(
             f":robot_face: *AI Remediation Plan*\n\n"
-            + "\n".join(f"• {a['action_name']} ({a['risk']})" for a in plan["recommendations"])
+            + "\n".join(f"â€¢ {a['action_name']} ({a['risk']})" for a in plan["recommendations"])
             + f"\n\nAuto-actions queued: {len(auto_actions)}\n"
             f"Approval ID: `{approval_id}`"
         )
@@ -359,7 +359,7 @@ class AEGISXSlackBot:
         await ack()
         await respond("Alert dismissed.")
 
-    # ── Push Notifications ────────────────────────────────────
+    # â”€â”€ Push Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def push_alert(self, channel: str, alert: Dict[str, Any]):
         if not self.app:
@@ -389,11 +389,11 @@ class AEGISXSlackBot:
 
         try:
             self.app.client.chat_postMessage(channel=channel, blocks=blocks,
-                                              text=f"AEGISX Alert: {alert.get('title', '')}")
+                                              text=f"AEGIS Alert: {alert.get('title', '')}")
         except Exception as e:
             logger.error("Failed to push to Slack: %s", e)
 
-    # ── Helpers ───────────────────────────────────────────────
+    # â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _is_ip(self, s: str) -> bool:
         return bool(re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', s))
@@ -407,7 +407,7 @@ class AEGISXSlackBot:
             return False
 
 
-aegisx_slack_bot = AEGISXSlackBot()
+AEGIS_slack_bot = AEGISSlackBot()
 
 # Lazy imports (avoid circular deps)
 from sqlalchemy import select

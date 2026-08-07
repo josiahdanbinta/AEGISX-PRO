@@ -7,7 +7,7 @@ from datetime import datetime
 from agent.core.collector import BaseCollector
 from agent.platforms import is_windows, is_linux, is_macos
 
-logger = logging.getLogger("aegisx.collector.services")
+logger = logging.getLogger("AEGIS.collector.services")
 
 # Outdated/vulnerable service versions with fix recommendations
 _OUTDATED_SERVICES = {
@@ -416,7 +416,7 @@ class ServicesCollector(BaseCollector):
                     svc["fix_url"] = svc_info["url"]
                     svc["current_version"] = svc_version
                 elif not svc_version:
-                    # Can't determine version — flag as needing verification
+                    # Can't determine version â€” flag as needing verification
                     flags.append("version_unknown")
                     svc["fix_action"] = svc_info["fix"]
                     svc["fix_url"] = svc_info["url"]

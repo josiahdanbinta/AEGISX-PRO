@@ -16,12 +16,12 @@ from agent.core.communication import CommunicationModule
 from agent.core.collector import BaseCollector
 from agent.platforms import get_platform, get_os_info, is_windows, is_linux, is_macos
 
-logger = logging.getLogger("aegisx.agent")
+logger = logging.getLogger("AEGIS.agent")
 
 __version__ = "1.1.0"
 
 
-class AEGISXAgent:
+class AEGISAgent:
     def __init__(self, config_path: str = None):
         self._config = self._load_config(config_path)
         self._setup_logging()
@@ -38,7 +38,7 @@ class AEGISXAgent:
     def _load_config(self, config_path: str = None) -> dict:
         search_paths = [
             config_path,
-            os.environ.get("AEGISX_CONFIG"),
+            os.environ.get("AEGIS_CONFIG"),
             os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yaml"),
             os.path.join(os.getcwd(), "config.yaml"),
         ]
@@ -50,7 +50,7 @@ class AEGISXAgent:
                 logger.info(f"Loaded config from {path}")
 
                 for key in ["server_url", "registration_key", "tenant_id"]:
-                    env_key = f"AEGISX_{key.upper()}"
+                    env_key = f"AEGIS_{key.upper()}"
                     if os.environ.get(env_key):
                         config[key] = os.environ[env_key]
 
@@ -58,9 +58,9 @@ class AEGISXAgent:
 
         logger.warning("No config file found, using defaults")
         return {
-            "server_url": os.environ.get("AEGISX_SERVER_URL", "https://api.aegisx.local"),
-            "registration_key": os.environ.get("AEGISX_REGISTRATION_KEY", ""),
-            "tenant_id": os.environ.get("AEGISX_TENANT_ID", ""),
+            "server_url": os.environ.get("AEGIS_SERVER_URL", "https://api.AEGIS.local"),
+            "registration_key": os.environ.get("AEGIS_REGISTRATION_KEY", ""),
+            "tenant_id": os.environ.get("AEGIS_TENANT_ID", ""),
             "heartbeat_interval": 60,
             "monitoring_interval": 30,
             "log_level": "INFO",
@@ -78,7 +78,7 @@ class AEGISXAgent:
             datefmt="%Y-%m-%dT%H:%M:%S",
         )
 
-        root = logging.getLogger("aegisx")
+        root = logging.getLogger("AEGIS")
         root.setLevel(log_level)
 
         console = logging.StreamHandler(sys.stdout)
@@ -354,8 +354,8 @@ class AEGISXAgent:
         if "log_level" in params:
             level = getattr(logging, params["log_level"].upper(), None)
             if level:
-                logging.getLogger("aegisx").setLevel(level)
-                for handler in logging.getLogger("aegisx").handlers:
+                logging.getLogger("AEGIS").setLevel(level)
+                for handler in logging.getLogger("AEGIS").handlers:
                     handler.setLevel(level)
 
     def _cmd_restart(self, params: dict):
@@ -426,7 +426,7 @@ class AEGISXAgent:
                 return
 
     async def start(self):
-        logger.info(f"AEGISX Agent v{__version__} starting on {get_platform()}")
+        logger.info(f"AEGIS Agent v{__version__} starting on {get_platform()}")
         self._start_time = time.time()
 
         self._comm = CommunicationModule(self._config)
@@ -594,7 +594,7 @@ class AEGISXAgent:
         await self.start()
 
 
-def _setup_signal_handlers(agent: AEGISXAgent, loop: asyncio.AbstractEventLoop):
+def _setup_signal_handlers(agent: AEGISAgent, loop: asyncio.AbstractEventLoop):
     def handle_signal(sig, frame):
         sig_name = signal.Signals(sig).name
         logger.info(f"Received signal: {sig_name}")
@@ -614,15 +614,15 @@ def _setup_signal_handlers(agent: AEGISXAgent, loop: asyncio.AbstractEventLoop):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AEGISX Security Agent")
+    parser = argparse.ArgumentParser(description="AEGIS Security Agent")
     parser.add_argument("--config", help="Path to config.yaml file")
-    parser.add_argument("--server", help="AEGISX server URL (overrides config)")
+    parser.add_argument("--server", help="AEGIS server URL (overrides config)")
     parser.add_argument("--key", help="Agent registration key (overrides config)")
     parser.add_argument("--tenant", help="Tenant ID (overrides config)")
-    parser.add_argument("--version", action="version", version=f"AEGISX Agent v{__version__}")
+    parser.add_argument("--version", action="version", version=f"AEGIS Agent v{__version__}")
     args = parser.parse_args()
 
-    agent = AEGISXAgent(config_path=args.config)
+    agent = AEGISAgent(config_path=args.config)
 
     # Override config with CLI arguments
     if args.server:
@@ -632,7 +632,7 @@ def main():
     if args.tenant:
         agent._config["tenant_id"] = args.tenant
 
-    logger.info(f"AEGISX Agent v{__version__} starting")
+    logger.info(f"AEGIS Agent v{__version__} starting")
     logger.info(f"Server: {agent._config.get('server_url', 'not configured')}")
     logger.info(f"Tenant: {agent._config.get('tenant_id', 'not configured')}")
 

@@ -1,5 +1,5 @@
 """
-AEGISX - Security & Cryptographic Module
+AEGIS - Security & Cryptographic Module
 JWT, password hashing, encryption, token management
 """
 import base64 as _base64
@@ -17,7 +17,7 @@ from jose import JWTError, jwt as jose_jwt
 from app.core.config import settings
 
 
-# ── Password Hashing ─────────────────────────────────────────────
+# â”€â”€ Password Hashing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
@@ -47,7 +47,7 @@ def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-# ── JWT Token Management ─────────────────────────────────────────
+# â”€â”€ JWT Token Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def create_access_token(
     subject: str,
@@ -123,7 +123,7 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-# ── Encryption ───────────────────────────────────────────────────
+# â”€â”€ Encryption â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_fernet() -> Fernet:
     raw = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
@@ -141,9 +141,9 @@ def decrypt_value(encrypted: str) -> str:
     return f.decrypt(encrypted.encode()).decode()
 
 
-# ── API Keys ─────────────────────────────────────────────────────
+# â”€â”€ API Keys â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-def generate_api_key(prefix: str = "aegisx") -> str:
+def generate_api_key(prefix: str = "AEGIS") -> str:
     raw = secrets.token_hex(32)
     return f"{prefix}_{raw}"
 
@@ -152,7 +152,7 @@ def hash_api_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()
 
 
-# ── Secure Random ────────────────────────────────────────────────
+# â”€â”€ Secure Random â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def generate_secure_token(length: int = 64) -> str:
     return secrets.token_urlsafe(length)
@@ -162,7 +162,7 @@ def generate_otp(length: int = 6) -> str:
     return "".join(str(secrets.randbelow(10)) for _ in range(length))
 
 
-# ── HMAC Verification ───────────────────────────────────────────
+# â”€â”€ HMAC Verification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def generate_hmac_signature(payload: str, key: Optional[str] = None) -> str:
     if key is None:
@@ -179,7 +179,7 @@ def verify_hmac_signature(payload: str, signature: str, key: Optional[str] = Non
     return hmac.compare_digest(expected, signature)
 
 
-# ── Sensitive Data Masking ───────────────────────────────────────
+# â”€â”€ Sensitive Data Masking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def mask_string(value: str, visible_chars: int = 4) -> str:
     if len(value) <= visible_chars:

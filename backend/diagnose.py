@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""AEGISX Startup Diagnostic — logs exact import failures."""
+"""AEGIS Startup Diagnostic â€” logs exact import failures."""
 import sys, traceback
 
-print("=== AEGISX Startup Diagnostic ===")
+print("=== AEGIS Startup Diagnostic ===")
 
 modules = [
     ("config", "app.core.config"),
@@ -23,9 +23,9 @@ failed = []
 for name, module in modules:
     try:
         __import__(module)
-        print(f"  ✓ {name}")
+        print(f"  âœ“ {name}")
     except Exception as e:
-        print(f"  ✗ {name}: {e}")
+        print(f"  âœ— {name}: {e}")
         failed.append((name, str(e)))
 
 if failed:
@@ -38,9 +38,9 @@ if failed:
 print("\n=== Creating FastAPI app ===")
 try:
     from app.main import app
-    print("  ✓ App created successfully")
+    print("  âœ“ App created successfully")
 except Exception as e:
-    print(f"  ✗ App creation failed: {e}")
+    print(f"  âœ— App creation failed: {e}")
     traceback.print_exc()
     sys.exit(1)
 

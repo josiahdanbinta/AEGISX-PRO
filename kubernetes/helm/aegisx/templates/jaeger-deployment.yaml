@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-jaeger-collector
+  name: {{ include "AEGIS.fullname" . }}-jaeger-collector
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: jaeger
 spec:
   type: ClusterIP
@@ -17,15 +17,15 @@ spec:
       port: 14268
       targetPort: 14268
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: jaeger
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-jaeger-query
+  name: {{ include "AEGIS.fullname" . }}-jaeger-query
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: jaeger
 spec:
   type: ClusterIP
@@ -34,26 +34,26 @@ spec:
       port: 16686
       targetPort: 16686
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: jaeger
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-jaeger
+  name: {{ include "AEGIS.fullname" . }}-jaeger
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: jaeger
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: jaeger
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: jaeger
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -62,7 +62,7 @@ spec:
       {{- end }}
       containers:
         - name: jaeger
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.jaeger.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.jaeger.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.jaeger.image.pullPolicy }}
           args:
             - --memory.max-traces={{ .Values.jaeger.maxTraces }}
@@ -115,7 +115,7 @@ spec:
         - name: data
           {{- if .Values.jaeger.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "aegisx.fullname" . }}-jaeger
+            claimName: {{ include "AEGIS.fullname" . }}-jaeger
           {{- else }}
           emptyDir: {}
           {{- end }}
@@ -124,9 +124,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "aegisx.fullname" . }}-jaeger
+  name: {{ include "AEGIS.fullname" . }}-jaeger
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce

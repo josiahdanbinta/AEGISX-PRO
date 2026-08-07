@@ -6,7 +6,7 @@ from agent.core.collector import BaseCollector
 from agent.platforms import is_windows, is_linux, is_macos
 
 
-logger = logging.getLogger("aegisx.collector.hardware")
+logger = logging.getLogger("AEGIS.collector.hardware")
 
 
 class HardwareCollector(BaseCollector):

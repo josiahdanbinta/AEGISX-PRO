@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX SSO API endpoints.
+Integration tests for AEGIS SSO API endpoints.
 """
 import uuid
 

@@ -1,5 +1,5 @@
 """
-AEGISX - Kafka Messaging Service
+AEGIS - Kafka Messaging Service
 Tier 2 Data Ingestion: Producer/Consumer for events.raw, events.normalized,
 alerts.triggered, telemetry.agent topics with Avro schema support.
 """
@@ -299,7 +299,7 @@ class KafkaService:
             if remaining:
                 logger.warning("%d messages still pending after flush", remaining)
 
-    async def consume_events(self, topics: List[str], group_id: str = "aegisx-consumer",
+    async def consume_events(self, topics: List[str], group_id: str = "AEGIS-consumer",
                               auto_offset_reset: str = "earliest") -> AsyncIterator[Dict[str, Any]]:
         conf = {
             'bootstrap.servers': self.bootstrap_servers,

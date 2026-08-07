@@ -1,5 +1,5 @@
 """
-AEGISX - Suricata Rule Parser & Evaluation Engine
+AEGIS - Suricata Rule Parser & Evaluation Engine
 Parses Suricata IDS rules and converts them into OpenSearch queries
 for evaluation against ingested events.
 """

@@ -1,5 +1,5 @@
 """
-AEGISX - Redis Cache Module
+AEGIS - Redis Cache Module
 """
 import json
 from typing import Any, AsyncGenerator, Optional

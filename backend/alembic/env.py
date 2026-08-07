@@ -1,5 +1,5 @@
 """
-AEGISX - Alembic Async Migration Environment
+AEGIS - Alembic Async Migration Environment
 """
 import asyncio
 from logging.config import fileConfig

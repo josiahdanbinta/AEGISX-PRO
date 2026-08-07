@@ -1,5 +1,5 @@
 """
-AEGISX - Sigma Rule Execution Engine
+AEGIS - Sigma Rule Execution Engine
 Parses Sigma detection rules, converts to OpenSearch queries,
 executes against log data, and creates Alert records.
 """
@@ -281,7 +281,7 @@ def _extract_keywords(rule_content: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 class SigmaEngine:
     """Executes Sigma-formatted detection rules against OpenSearch log data."""
 
-    LOG_INDEX_PREFIX = "aegisx-logs"
+    LOG_INDEX_PREFIX = "AEGIS-logs"
 
     def __init__(self, tenant_id: str):
         self.tenant_id = tenant_id

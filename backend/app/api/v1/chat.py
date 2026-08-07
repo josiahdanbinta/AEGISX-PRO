@@ -1,5 +1,5 @@
 """
-AEGISX - SOC Chat WebSocket API
+AEGIS - SOC Chat WebSocket API
 Real-time SOC analyst chat with AI assistant bot and RBAC room access.
 """
 import json

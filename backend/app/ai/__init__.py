@@ -1,5 +1,5 @@
 """
-AEGISX - AI Module
+AEGIS - AI Module
 Provides LLM client, AI services, and intelligent automation.
 """
 from app.ai.llm import llm_client, LLMClient

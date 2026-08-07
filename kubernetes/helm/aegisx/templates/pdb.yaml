@@ -4,9 +4,9 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "aegisx.fullname" $ }}-{{ $component.name }}
+  name: {{ include "AEGIS.fullname" $ }}-{{ $component.name }}
   labels:
-    {{- include "aegisx.labels" $ | nindent 4 }}
+    {{- include "AEGIS.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $component.name }}
 spec:
   {{- if $component.minAvailable }}
@@ -16,7 +16,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" $ | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/component: {{ $component.name }}
 {{- end }}
 {{- end }}

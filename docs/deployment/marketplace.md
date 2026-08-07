@@ -1,10 +1,10 @@
-# AEGISX PRO — AWS Marketplace Deployment
+# AEGIS â€” AWS Marketplace Deployment
 
 ## One-Click Deploy (CloudFormation)
 
 ```yaml
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AEGISX PRO — Unified Security Operations Platform
+Description: AEGIS â€” Unified Security Operations Platform
 Parameters:
   InstanceType:
     Type: String
@@ -20,21 +20,21 @@ Parameters:
     MinLength: 16
 
 Resources:
-  AEGISXSecurityGroup:
+  AEGISSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: AEGISX PRO security group
+      GroupDescription: AEGIS security group
       SecurityGroupIngress:
         - IpProtocol: tcp; FromPort: 22;  ToPort: 22;   CidrIp: 0.0.0.0/0
         - IpProtocol: tcp; FromPort: 443; ToPort: 443;  CidrIp: 0.0.0.0/0
         - IpProtocol: tcp; FromPort: 8001;ToPort: 8001; CidrIp: 0.0.0.0/0
 
-  AEGISXInstance:
+  AEGISInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      SecurityGroupIds: [!Ref AEGISXSecurityGroup]
+      SecurityGroupIds: [!Ref AEGISSecurityGroup]
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs: { VolumeSize: 100, VolumeType: gp3 }
@@ -50,8 +50,8 @@ Resources:
           curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
 
-          mkdir -p /opt/aegisx
-          cd /opt/aegisx
+          mkdir -p /opt/AEGIS
+          cd /opt/AEGIS
 
           cat > .env <<EOF
           APP_ENV=production
@@ -63,41 +63,41 @@ Resources:
           MINIO_ROOT_PASSWORD=$(openssl rand -hex 16)
           CLICKHOUSE_PASSWORD=$(openssl rand -hex 16)
           GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 12)
-          AEGISX_ADMIN_EMAIL=${AdminEmail}
-          AEGISX_ADMIN_PASSWORD=$(openssl rand -hex 12)
+          AEGIS_ADMIN_EMAIL=${AdminEmail}
+          AEGIS_ADMIN_PASSWORD=$(openssl rand -hex 12)
           EOF
 
           docker compose -f docker-compose.prod.yml up -d
 
 Outputs:
   DashboardURL:
-    Value: !Sub https://${AEGISXInstance.PublicDnsName}:8443
+    Value: !Sub https://${AEGISInstance.PublicDnsName}:8443
   APIDocs:
-    Value: !Sub https://${AEGISXInstance.PublicDnsName}:8001/docs
+    Value: !Sub https://${AEGISInstance.PublicDnsName}:8001/docs
 ```
 
 ## EKS Deployment
 
 ```bash
 # 1. Create EKS cluster
-eksctl create cluster --name aegisx-prod --region us-east-1 --nodes 3 --node-type m5.xlarge
+eksctl create cluster --name AEGIS-prod --region us-east-1 --nodes 3 --node-type m5.xlarge
 
 # 2. Deploy with Helm
-aws eks update-kubeconfig --region us-east-1 --name aegisx-prod
-bash deploy/k8s-deploy.sh aegisx production
+aws eks update-kubeconfig --region us-east-1 --name AEGIS-prod
+bash deploy/k8s-deploy.sh AEGISduction
 
 # 3. Expose via AWS Load Balancer
-kubectl expose deployment aegisx-frontend --type=LoadBalancer --name=aegisx-lb -n aegisx
+kubectl expose deployment AEGIS-frontend --type=LoadBalancer --name=AEGIS-lb -n AEGIS
 
 # 4. Get public URL
-kubectl get svc aegisx-lb -n aegisx
+kubectl get svc AEGIS-lb -n AEGIS
 ```
 
 ## RDS Integration
 
 ```bash
 # Use AWS RDS PostgreSQL instead of in-cluster TimescaleDB
-helm install aegisx ./kubernetes/helm/aegisx \
+helm install AEGIS ./kubernetes/helm/AEGIS \
   --set timescaledb.enabled=false \
   --set postgresql.enabled=false \
   --set config.timescaledbHost=your-rds-instance.region.rds.amazonaws.com
@@ -105,7 +105,7 @@ helm install aegisx ./kubernetes/helm/aegisx \
 
 ---
 
-# AEGISX PRO — Azure Marketplace Deployment
+# AEGIS â€” Azure Marketplace Deployment
 
 ## One-Click Deploy (ARM Template)
 
@@ -114,7 +114,7 @@ helm install aegisx ./kubernetes/helm/aegisx \
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "vmName": { "type": "string", "defaultValue": "aegisx-prod" },
+    "vmName": { "type": "string", "defaultValue": "AEGIS-prod" },
     "adminUsername": { "type": "string" },
     "adminPassword": { "type": "securestring", "minLength": 12 },
     "vmSize": { "type": "string", "defaultValue": "Standard_D4s_v3" }
@@ -131,7 +131,7 @@ helm install aegisx ./kubernetes/helm/aegisx \
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]",
-          "customData": "[base64(concat('#!/bin/bash\n','curl -fsSL https://get.docker.com | sh\n','docker compose -f /opt/aegisx/docker-compose.prod.yml up -d\n'))]"
+          "customData": "[base64(concat('#!/bin/bash\n','curl -fsSL https://get.docker.com | sh\n','docker compose -f /opt/AEGIS/docker-compose.prod.yml up -d\n'))]"
         },
         "storageProfile": {
           "imageReference": {
@@ -153,13 +153,13 @@ helm install aegisx ./kubernetes/helm/aegisx \
 
 ```bash
 # 1. Create AKS cluster
-az aks create --resource-group aegisx-rg --name aegisx-aks \
+az aks create --resource-group AEGIS-rg --name AEGIS-aks \
   --node-count 3 --node-vm-size Standard_D4s_v3 --enable-addons monitoring
 
 # 2. Deploy
-az aks get-credentials --resource-group aegisx-rg --name aegisx-aks
-bash deploy/k8s-deploy.sh aegisx production
+az aks get-credentials --resource-group AEGIS-rg --name AEGIS-aks
+bash deploy/k8s-deploy.sh AEGISduction
 
 # 3. Expose
-kubectl expose deployment aegisx-frontend --type=LoadBalancer --name=aegisx-lb -n aegisx
+kubectl expose deployment AEGIS-frontend --type=LoadBalancer --name=AEGIS-lb -n AEGIS
 ```

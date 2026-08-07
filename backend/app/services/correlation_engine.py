@@ -1,5 +1,5 @@
 """
-AEGISX - Event Correlation Engine
+AEGIS - Event Correlation Engine
 Groups related alerts into potential incidents using
 similarity scoring across multiple dimensions.
 """

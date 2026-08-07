@@ -1,5 +1,5 @@
 """
-AEGISX - TimescaleDB Hypertable Models
+AEGIS - TimescaleDB Hypertable Models
 Tier 5: Raw events, parsed alerts, audit trail as hypertables with retention policies.
 """
 import uuid

@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 
 
-logger = logging.getLogger("aegisx.collector")
+logger = logging.getLogger("AEGIS.collector")
 
 
 class BaseCollector(abc.ABC):

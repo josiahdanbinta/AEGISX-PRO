@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: aegisx
+namespace: AEGIS
 
 resources:
   - ../../base
@@ -12,7 +12,7 @@ patches:
       kind: Deployment
       metadata:
         name: backend
-        namespace: aegisx
+        namespace: AEGIS
       spec:
         replicas: 1
     target:

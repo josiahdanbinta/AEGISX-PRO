@@ -1,7 +1,7 @@
 """
-AEGISX - Real-Time WebSocket Endpoints
+AEGIS - Real-Time WebSocket Endpoints
 Live dashboard updates, agent communication, alert streaming, incident watching.
-Event-driven via Redis PubSub (EventBus) — no polling.
+Event-driven via Redis PubSub (EventBus) â€” no polling.
 """
 import asyncio
 import json
@@ -173,9 +173,9 @@ async def _alert_to_dict(alert: Alert) -> dict:
     }
 
 
-# ═══════════════════════════════════════════════════════════════════
-# WebSocket Endpoints — Event-Driven via Redis PubSub
-# ═══════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# WebSocket Endpoints â€” Event-Driven via Redis PubSub
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @router.websocket("/live/dashboard")
 async def websocket_dashboard(websocket: WebSocket):
@@ -192,7 +192,7 @@ async def websocket_dashboard(websocket: WebSocket):
         initial = await _get_dashboard_stats(tenant_id)
         await manager.send_personal(websocket, {"type": "dashboard_init", "data": initial})
 
-        async for msg in event_bus.subscribe("aegisx:dashboard:updates"):
+        async for msg in event_bus.subscribe("AEGIS:dashboard:updates"):
             try:
                 await manager.send_personal(websocket, msg)
             except Exception:
@@ -235,7 +235,7 @@ async def websocket_alerts(websocket: WebSocket):
                     "data": await _alert_to_dict(alert),
                 })
 
-        async for msg in event_bus.subscribe(f"aegisx:alerts:{tenant_id}"):
+        async for msg in event_bus.subscribe(f"AEGIS:alerts:{tenant_id}"):
             try:
                 await manager.send_personal(websocket, msg)
             except Exception:
@@ -264,7 +264,7 @@ async def websocket_anomalies(websocket: WebSocket):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
-        async for msg in event_bus.subscribe(f"aegisx:anomaly:{tenant_id}"):
+        async for msg in event_bus.subscribe(f"AEGIS:anomaly:{tenant_id}"):
             try:
                 await manager.send_personal(websocket, msg)
             except Exception:
@@ -366,7 +366,7 @@ async def websocket_agent(websocket: WebSocket, agent_id: str):
 
 @router.websocket("/live/incidents/{incident_id}")
 async def websocket_incident(websocket: WebSocket, incident_id: str):
-    """Live incident watcher — event-driven via Redis PubSub + direct client messages."""
+    """Live incident watcher â€” event-driven via Redis PubSub + direct client messages."""
     user = await _ws_authenticate(websocket)
     if not user:
         return
@@ -418,7 +418,7 @@ async def _listen_incident_pubsub(incident_id: str, websocket: WebSocket, tenant
     """Listen for incident updates from Redis PubSub and push to client."""
     from app.services.event_bus import event_bus
     try:
-        async for msg in event_bus.subscribe(f"aegisx:incident:{incident_id}"):
+        async for msg in event_bus.subscribe(f"AEGIS:incident:{incident_id}"):
             try:
                 await websocket.send_json(msg)
             except Exception:

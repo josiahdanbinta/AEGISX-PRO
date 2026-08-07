@@ -1,5 +1,5 @@
 """
-AEGISX - Cleanup & Retention Tasks
+AEGIS - Cleanup & Retention Tasks
 TimescaleDB cold archive management, token cleanup, log rotation.
 """
 import logging

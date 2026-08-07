@@ -16,7 +16,7 @@ datasources:
     type: elasticsearch
     access: proxy
     url: http://elasticsearch:9200
-    database: "[aegisx-]YYYY.MM.DD"
+    database: "[AEGIS-]YYYY.MM.DD"
     jsonData:
       timeField: "@timestamp"
       interval: Daily

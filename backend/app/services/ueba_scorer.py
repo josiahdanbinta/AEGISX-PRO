@@ -1,6 +1,6 @@
 """
-AEGISX - UEBA Scorer (Tier 4)
-User and Entity Behavior Analytics — baseline computation and anomaly detection.
+AEGIS - UEBA Scorer (Tier 4)
+User and Entity Behavior Analytics â€” baseline computation and anomaly detection.
 Implements statistical anomaly scoring across multiple behavioral dimensions.
 """
 import json
@@ -16,9 +16,9 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Behavioral Dimensions
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class BaselineProfile:
     """Statistical baseline for a single entity (user, host, IP)."""
@@ -93,7 +93,7 @@ class UEBAEngine:
             )
         return self._redis
 
-    # ── Profile Management ─────────────────────────────────────
+    # â”€â”€ Profile Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _get_profile(self, entity_id: str, entity_type: str) -> BaselineProfile:
         key = f"{entity_type}:{entity_id}"
@@ -127,7 +127,7 @@ class UEBAEngine:
                 pass
         return None
 
-    # ── Feature Extraction ──────────────────────────────────────
+    # â”€â”€ Feature Extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _extract_features(self, event: Dict[str, Any]) -> Dict[str, float]:
         features = {}
@@ -166,7 +166,7 @@ class UEBAEngine:
 
         return features
 
-    # ── Scoring ─────────────────────────────────────────────────
+    # â”€â”€ Scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def score_event(self, tenant_id: str, event: Dict[str, Any]) -> Dict[str, Any]:
         features = self._extract_features(event)
@@ -238,7 +238,7 @@ class UEBAEngine:
             "confidence": round(composite_score * 1.2, 4),  # UEBA confidence boost
         }
 
-    # ── Correlation Scoring ────────────────────────────────────
+    # â”€â”€ Correlation Scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def correlate_entities(self, events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         entity_map: Dict[str, List[int]] = defaultdict(list)

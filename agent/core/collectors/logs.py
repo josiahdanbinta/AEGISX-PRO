@@ -16,7 +16,7 @@ except ImportError:
     _has_watchdog = False
 
 
-logger = logging.getLogger("aegisx.collector.logs")
+logger = logging.getLogger("AEGIS.collector.logs")
 
 
 class LogFileHandler(FileSystemEventHandler):

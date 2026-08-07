@@ -9,7 +9,7 @@ global:
     fsGroup: 1001
 
 config:
-  appName: "AEGISX"
+  appName: "AEGIS"
   appEnv: "production"
   logLevel: "INFO"
   apiPrefix: "/api/v1"
@@ -35,7 +35,7 @@ secrets:
   opensearchAdminPassword: ""
   rabbitmqErlangCookie: ""
 
-# ── PostgreSQL (OLTP) ──────────────────────────────────────────
+# â”€â”€ PostgreSQL (OLTP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 postgresql:
   enabled: true
   image:
@@ -57,10 +57,10 @@ postgresql:
     limits:
       cpu: "2"
       memory: "4Gi"
-  postgresUser: aegisx
-  postgresDb: aegisx
+  postgresUser: AEGIS
+  postgresDb: AEGIS
 
-# ── Redis (Cache + Session Store) ──────────────────────────────
+# â”€â”€ Redis (Cache + Session Store) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 redis:
   enabled: true
   image:
@@ -91,14 +91,14 @@ redis:
       cpu: "500m"
       memory: "1Gi"
 
-# ── OpenSearch (Search + Log Aggregation) ──────────────────────
+# â”€â”€ OpenSearch (Search + Log Aggregation) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 opensearch:
   enabled: true
   image:
     repository: opensearchproject/opensearch
     tag: "2.14.0"
     pullPolicy: IfNotPresent
-  clusterName: aegisx-opensearch
+  clusterName: AEGIS-opensearch
   replicaCount: 3
   securityDisabled: "true"
   javaOpts:
@@ -119,7 +119,7 @@ opensearch:
       cpu: "4"
       memory: "8Gi"
 
-# ── RabbitMQ (Message Broker) ──────────────────────────────────
+# â”€â”€ RabbitMQ (Message Broker) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 rabbitmq:
   enabled: true
   image:
@@ -127,7 +127,7 @@ rabbitmq:
     tag: "3.12-management-alpine"
     pullPolicy: IfNotPresent
   replicaCount: 3
-  defaultUser: aegisx
+  defaultUser: AEGIS
   defaultVhost: "/"
   service:
     type: ClusterIP
@@ -145,7 +145,7 @@ rabbitmq:
       cpu: "1"
       memory: "1Gi"
 
-# ── Kafka (Event Streaming) ────────────────────────────────────
+# â”€â”€ Kafka (Event Streaming) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 kafka:
   enabled: true
   image:
@@ -171,7 +171,7 @@ kafka:
       cpu: "4"
       memory: "8Gi"
 
-# ── Schema Registry (Kafka) ────────────────────────────────────
+# â”€â”€ Schema Registry (Kafka) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 schemaRegistry:
   enabled: true
   image:
@@ -189,7 +189,7 @@ schemaRegistry:
       cpu: "1"
       memory: "1Gi"
 
-# ── TimescaleDB (Time-Series Events) ───────────────────────────
+# â”€â”€ TimescaleDB (Time-Series Events) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 timescaledb:
   enabled: true
   image:
@@ -197,8 +197,8 @@ timescaledb:
     tag: "2.14.2-pg15"
     pullPolicy: IfNotPresent
   replicaCount: 2
-  postgresUser: aegisx
-  postgresDb: aegisx_tsdb
+  postgresUser: AEGIS
+  postgresDb: AEGIS_tsdb
   persistence:
     enabled: true
     size: 200Gi
@@ -211,7 +211,7 @@ timescaledb:
       cpu: "4"
       memory: "8Gi"
 
-# ── ClickHouse (Columnar Analytics) ────────────────────────────
+# â”€â”€ ClickHouse (Columnar Analytics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 clickhouse:
   enabled: true
   image:
@@ -219,9 +219,9 @@ clickhouse:
     tag: "24.3"
     pullPolicy: IfNotPresent
   replicaCount: 2
-  username: aegisx
+  username: AEGIS
   password: ""
-  dbName: aegisx_analytics
+  dbName: AEGIS_analytics
   persistence:
     enabled: true
     size: 100Gi
@@ -234,7 +234,7 @@ clickhouse:
       cpu: "2"
       memory: "4Gi"
 
-# ── MinIO (S3-Compatible Object Storage) ───────────────────────
+# â”€â”€ MinIO (S3-Compatible Object Storage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 minio:
   enabled: true
   image:
@@ -242,7 +242,7 @@ minio:
     tag: "RELEASE.2024-06-13T22-53-53Z"
     pullPolicy: IfNotPresent
   replicaCount: 4
-  rootUser: aegisx
+  rootUser: AEGIS
   persistence:
     enabled: true
     size: 250Gi
@@ -255,7 +255,7 @@ minio:
       cpu: "2"
       memory: "4Gi"
 
-# ── Apache Flink (Stream Processing) ───────────────────────────
+# â”€â”€ Apache Flink (Stream Processing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 flink:
   enabled: true
   image:
@@ -285,11 +285,11 @@ flink:
         cpu: "4"
         memory: "8Gi"
 
-# ── Backend (FastAPI) ──────────────────────────────────────────
+# â”€â”€ Backend (FastAPI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 backend:
   replicaCount: 3
   image:
-    repository: aegisx-backend
+    repository: AEGIS-backend
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -320,7 +320,7 @@ backend:
 celeryWorker:
   replicaCount: 2
   image:
-    repository: aegisx-backend
+    repository: AEGIS-backend
     tag: latest
   resources:
     requests:
@@ -346,11 +346,11 @@ celeryBeat:
       cpu: "500m"
       memory: "512Mi"
 
-# ── Frontend (React SPA) ───────────────────────────────────────
+# â”€â”€ Frontend (React SPA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 frontend:
   replicaCount: 2
   image:
-    repository: aegisx-frontend
+    repository: AEGIS-frontend
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -369,7 +369,7 @@ frontend:
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
 
-# ── Prometheus (Metrics) ───────────────────────────────────────
+# â”€â”€ Prometheus (Metrics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 prometheus:
   enabled: true
   image:
@@ -391,7 +391,7 @@ prometheus:
       cpu: "1"
       memory: "2Gi"
 
-# ── Grafana (Dashboards) ───────────────────────────────────────
+# â”€â”€ Grafana (Dashboards) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 grafana:
   enabled: true
   image:
@@ -412,7 +412,7 @@ grafana:
       cpu: "500m"
       memory: "512Mi"
 
-# ── Jaeger (Distributed Tracing) ───────────────────────────────
+# â”€â”€ Jaeger (Distributed Tracing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 jaeger:
   enabled: true
   image:
@@ -433,18 +433,18 @@ jaeger:
       cpu: "1"
       memory: "1Gi"
 
-# ── ArgoCD (GitOps) ────────────────────────────────────────────
+# â”€â”€ ArgoCD (GitOps) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 argocd:
   enabled: false
-  repoURL: https://github.com/org/aegisx
+  repoURL: https://github.com/org/AEGIS
   targetRevision: main
-  path: kubernetes/helm/aegisx
+  path: kubernetes/helm/AEGIS
   valuesFile: values-prod.yaml
 
 sealedSecrets:
   enabled: false
 
-# ── Ingress ────────────────────────────────────────────────────
+# â”€â”€ Ingress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ingress:
   enabled: true
   className: nginx
@@ -455,7 +455,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
   hosts:
-    - host: aegisx.example.com
+    - host: AEGIS.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -473,11 +473,11 @@ ingress:
           pathType: Prefix
           service: grafana
   tls:
-    - secretName: aegisx-tls
+    - secretName: AEGIS-tls
       hosts:
-        - aegisx.example.com
+        - AEGIS.example.com
 
-# ── Network Policies ───────────────────────────────────────────
+# â”€â”€ Network Policies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 networkPolicy:
   enabled: true
   backendEgress:
@@ -493,13 +493,13 @@ networkPolicy:
 
 serviceAccount:
   create: true
-  name: aegisx
+  name: AEGIS
   annotations: {}
 
 podSecurityContext:
   fsGroup: 1001
 
-# ── Pod Disruption Budgets ───────────────────────────────────────
+# â”€â”€ Pod Disruption Budgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 podDisruptionBudget:
   enabled: true
   components:
@@ -522,7 +522,7 @@ podDisruptionBudget:
     - name: backend
       minAvailable: 2
 
-# ── Monitoring (Legacy — now using dedicated Prometheus/Grafana)
+# â”€â”€ Monitoring (Legacy â€” now using dedicated Prometheus/Grafana)
 monitoring:
   prometheus:
     enabled: true

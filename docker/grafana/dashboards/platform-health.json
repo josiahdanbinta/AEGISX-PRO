@@ -1,7 +1,7 @@
 {
   "title": "Platform Health",
-  "uid": "aegisx-platform-health",
-  "tags": ["aegisx", "platform", "operations"],
+  "uid": "AEGIS-platform-health",
+  "tags": ["AEGIS", "platform", "operations"],
   "timezone": "browser",
   "editable": true,
   "panels": [
@@ -12,7 +12,7 @@
       "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
       "targets": [
         {
-          "expr": "rate(aegisx_events_ingested_total[5m])",
+          "expr": "rate(AEGIS_events_ingested_total[5m])",
           "legendFormat": "events/sec",
           "refId": "A"
         }
@@ -26,17 +26,17 @@
       "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.50, rate(AEGIS_alert_generation_duration_seconds_bucket[5m]))",
           "legendFormat": "P50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.95, rate(AEGIS_alert_generation_duration_seconds_bucket[5m]))",
           "legendFormat": "P95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(aegisx_alert_generation_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.99, rate(AEGIS_alert_generation_duration_seconds_bucket[5m]))",
           "legendFormat": "P99",
           "refId": "C"
         }
@@ -93,7 +93,7 @@
       "gridPos": {"x": 16, "y": 8, "w": 8, "h": 8},
       "targets": [
         {
-          "expr": "sum(kafka_consumer_group_lag{group=~\"aegisx.*\"}) by (topic)",
+          "expr": "sum(kafka_consumer_group_lag{group=~\"AEGIS.*\"}) by (topic)",
           "legendFormat": "{{topic}}",
           "refId": "A"
         }
@@ -106,7 +106,7 @@
       "gridPos": {"x": 0, "y": 16, "w": 8, "h": 7},
       "targets": [
         {
-          "expr": "aegisx_db_connections_active",
+          "expr": "AEGIS_db_connections_active",
           "legendFormat": "PostgreSQL",
           "refId": "A"
         },
@@ -124,17 +124,17 @@
       "gridPos": {"x": 8, "y": 16, "w": 8, "h": 7},
       "targets": [
         {
-          "expr": "rate(aegisx_stream_events_processed_total[5m])",
+          "expr": "rate(AEGIS_stream_events_processed_total[5m])",
           "legendFormat": "processed/sec",
           "refId": "A"
         },
         {
-          "expr": "rate(aegisx_stream_duplicates_total[5m])",
+          "expr": "rate(AEGIS_stream_duplicates_total[5m])",
           "legendFormat": "duplicates/sec",
           "refId": "B"
         },
         {
-          "expr": "rate(aegisx_stream_alerts_generated_total[5m])",
+          "expr": "rate(AEGIS_stream_alerts_generated_total[5m])",
           "legendFormat": "alerts/sec",
           "refId": "C"
         }
@@ -172,7 +172,7 @@
       "gridPos": {"x": 0, "y": 23, "w": 12, "h": 7},
       "targets": [
         {
-          "expr": "topk(10, sum(rate(aegisx_detection_rule_executions_total[5m])) by (rule_name))",
+          "expr": "topk(10, sum(rate(AEGIS_detection_rule_executions_total[5m])) by (rule_name))",
           "legendFormat": "{{rule_name}}",
           "refId": "A"
         }
@@ -185,7 +185,7 @@
       "gridPos": {"x": 12, "y": 23, "w": 12, "h": 7},
       "targets": [
         {
-          "expr": "sum(rate(aegisx_ueba_score_bucket[5m])) by (le)",
+          "expr": "sum(rate(AEGIS_ueba_score_bucket[5m])) by (le)",
           "legendFormat": "score {{le}}",
           "refId": "A"
         }

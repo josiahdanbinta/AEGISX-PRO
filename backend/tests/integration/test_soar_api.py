@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX SOAR API endpoints.
+Integration tests for AEGIS SOAR API endpoints.
 """
 import uuid
 

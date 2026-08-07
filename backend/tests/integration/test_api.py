@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX API endpoints.
+Integration tests for AEGIS API endpoints.
 Uses httpx AsyncClient with ASGITransport to test against the FastAPI app directly.
 
 Tests are designed to run both with and without a running database:
@@ -82,7 +82,7 @@ class TestHealthEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["app"] == "AEGISX"
+        assert data["app"] == "AEGIS"
         assert "version" in data
         assert "environment" in data
 

@@ -1,5 +1,5 @@
 # ================================================================
-# AEGISX PRO — Production Docker Compose
+# AEGIS â€” Production Docker Compose
 # This file is for single-node production deployments.
 # For multi-node, use Kubernetes Helm charts.
 # ================================================================
@@ -11,18 +11,18 @@
 version: "3.9"
 
 services:
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   # DATA STORAGE
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   timescaledb:
     image: timescale/timescaledb:2.16.1-pg15
-    container_name: aegisx-timescaledb
+    container_name: AEGIS-timescaledb
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
-      POSTGRES_DB: ${POSTGRES_DB:-aegisx}
+      POSTGRES_DB: ${POSTGRES_DB:-AEGIS}
       TIMESCALEDB_TELEMETRY: "off"
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
@@ -31,9 +31,9 @@ services:
     ports:
       - "127.0.0.1:5433:5432"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-aegisx}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-AEGIS}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: aegisx-redis
+    container_name: AEGIS-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
     volumes:
@@ -60,7 +60,7 @@ services:
     ports:
       - "127.0.0.1:6380:6379"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -73,14 +73,14 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:2.14.0
-    container_name: aegisx-opensearch
+    container_name: AEGIS-opensearch
     restart: unless-stopped
     environment:
       discovery.type: single-node
       DISABLE_SECURITY_PLUGIN: "true"
       OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD:?required}
       OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g"
-      cluster.name: aegisx-prod
+      cluster.name: AEGIS-prod
       bootstrap.memory_lock: "true"
     ulimits: { memlock: { soft: -1, hard: -1 }, nofile: { soft: 65536, hard: 65536 } }
     volumes:
@@ -88,7 +88,7 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
       interval: 15s
@@ -102,10 +102,10 @@ services:
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.8-alpine
-    container_name: aegisx-clickhouse
+    container_name: AEGIS-clickhouse
     restart: unless-stopped
     environment:
-      CLICKHOUSE_DB: aegisx
+      CLICKHOUSE_DB: AEGIS
       CLICKHOUSE_USER: ${CLICKHOUSE_USER}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?required}
     volumes:
@@ -113,7 +113,7 @@ services:
     ports:
       - "127.0.0.1:8123:8123"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client -u ${CLICKHOUSE_USER} --password ${CLICKHOUSE_PASSWORD} -q 'SELECT 1'"]
       interval: 10s
@@ -126,7 +126,7 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2024-08-29T01-40-52Z
-    container_name: aegisx-minio
+    container_name: AEGIS-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -137,20 +137,20 @@ services:
     ports:
       - "127.0.0.1:9002:9000"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   # MESSAGING & STREAMING
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
-    container_name: aegisx-zookeeper
+    container_name: AEGIS-zookeeper
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -158,7 +158,7 @@ services:
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "echo srvr | nc localhost 2181 || exit 1"]
       interval: 10s
@@ -167,7 +167,7 @@ services:
 
   kafka-1:
     image: confluentinc/cp-kafka:7.6.1
-    container_name: aegisx-kafka-1
+    container_name: AEGIS-kafka-1
     restart: unless-stopped
     depends_on: { zookeeper: { condition: service_healthy } }
     environment:
@@ -183,7 +183,7 @@ services:
     volumes:
       - kafka1_data:/var/lib/kafka/data
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       resources:
         limits: { cpus: "2", memory: "4G" }
@@ -191,7 +191,7 @@ services:
 
   kafka-2:
     image: confluentinc/cp-kafka:7.6.1
-    container_name: aegisx-kafka-2
+    container_name: AEGIS-kafka-2
     restart: unless-stopped
     depends_on: { zookeeper: { condition: service_healthy } }
     environment:
@@ -206,7 +206,7 @@ services:
     volumes:
       - kafka2_data:/var/lib/kafka/data
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       resources:
         limits: { cpus: "2", memory: "4G" }
@@ -214,7 +214,7 @@ services:
 
   kafka-3:
     image: confluentinc/cp-kafka:7.6.1
-    container_name: aegisx-kafka-3
+    container_name: AEGIS-kafka-3
     restart: unless-stopped
     depends_on: { zookeeper: { condition: service_healthy } }
     environment:
@@ -229,7 +229,7 @@ services:
     volumes:
       - kafka3_data:/var/lib/kafka/data
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       resources:
         limits: { cpus: "2", memory: "4G" }
@@ -237,7 +237,7 @@ services:
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.1
-    container_name: aegisx-schema-registry
+    container_name: AEGIS-schema-registry
     restart: unless-stopped
     depends_on: [kafka-1, kafka-2, kafka-3]
     environment:
@@ -248,24 +248,24 @@ services:
     ports:
       - "127.0.0.1:8081:8081"
     networks:
-      - aegisx-network
+      - AEGIS-network
 
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   # APPLICATION SERVICES
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: aegisx-backend
+    container_name: AEGIS-backend
     restart: unless-stopped
     env_file: .env
     environment:
       - APP_ENV=production
       - POSTGRES_HOST=timescaledb
-      - POSTGRES_DB=${POSTGRES_DB:-aegisx}
+      - POSTGRES_DB=${POSTGRES_DB:-AEGIS}
       - REDIS_HOST=redis
       - OPENSEARCH_HOST=opensearch
       - KAFKA_BOOTSTRAP_SERVERS=kafka-1:9092,kafka-2:9092,kafka-3:9092
@@ -282,7 +282,7 @@ services:
       redis: { condition: service_healthy }
       kafka-1: { condition: service_healthy }
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       replicas: 2
       resources:
@@ -294,7 +294,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: aegisx-celery-worker
+    container_name: AEGIS-celery-worker
     restart: unless-stopped
     command: celery -A app.core.celery_config.celery_app worker --concurrency=4 --max-tasks-per-child=1000 --queues=agent,detection,notification,report,compliance,vulnerability,threat_intel,cleanup
     env_file: .env
@@ -307,7 +307,7 @@ services:
       timescaledb: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       resources:
         limits: { cpus: "2", memory: "2G" }
@@ -318,7 +318,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: aegisx-celery-beat
+    container_name: AEGIS-celery-beat
     restart: unless-stopped
     command: celery -A app.core.celery_config.celery_app beat --scheduler=celery.beat:PersistentScheduler
     env_file: .env
@@ -330,14 +330,14 @@ services:
       timescaledb: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks:
-      - aegisx-network
+      - AEGIS-network
 
   stream-processor:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: aegisx-stream-processor
+    container_name: AEGIS-stream-processor
     restart: unless-stopped
     command: python -m app.streaming.processor
     env_file: .env
@@ -351,7 +351,7 @@ services:
       kafka-1: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks:
-      - aegisx-network
+      - AEGIS-network
     deploy:
       replicas: 2
       resources:
@@ -362,19 +362,19 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
-    container_name: aegisx-frontend
+    container_name: AEGIS-frontend
     restart: unless-stopped
     environment:
       - VITE_API_BASE_URL=/api/v1
     ports:
       - "127.0.0.1:5174:80"
     networks:
-      - aegisx-network
+      - AEGIS-network
     depends_on: [backend]
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: aegisx-nginx
+    container_name: AEGIS-nginx
     restart: unless-stopped
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -383,19 +383,19 @@ services:
       - "8080:80"
       - "8443:443"
     networks:
-      - aegisx-network
+      - AEGIS-network
     depends_on: [backend, frontend]
     deploy:
       resources:
         limits: { cpus: "0.5", memory: "256M" }
 
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   # OBSERVABILITY
-  # ═══════════════════════════════════════════════════════════════
+  # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   prometheus:
     image: prom/prometheus:v2.54.1
-    container_name: aegisx-prometheus
+    container_name: AEGIS-prometheus
     restart: unless-stopped
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -408,11 +408,11 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
     networks:
-      - aegisx-network
+      - AEGIS-network
 
   grafana:
     image: grafana/grafana:11.1.4
-    container_name: aegisx-grafana
+    container_name: AEGIS-grafana
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
@@ -424,11 +424,11 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     networks:
-      - aegisx-network
+      - AEGIS-network
 
   jaeger:
     image: jaegertracing/all-in-one:1.60
-    container_name: aegisx-jaeger
+    container_name: AEGIS-jaeger
     restart: unless-stopped
     environment:
       SPAN_STORAGE_TYPE: badger
@@ -441,11 +441,11 @@ services:
     ports:
       - "127.0.0.1:16686:16686"
     networks:
-      - aegisx-network
+      - AEGIS-network
 
 networks:
-  aegisx-network:
-    name: aegisx-network
+  AEGIS-network:
+    name: AEGIS-network
     driver: bridge
 
 volumes:

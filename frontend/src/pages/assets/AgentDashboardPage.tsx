@@ -133,7 +133,7 @@ export default function AgentDashboard() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-800">{agent.hostname}</p>
-                        <p className="text-xs text-gray-400">{agent.ip_address || 'No IP'} · {agent.platform}</p>
+                        <p className="text-xs text-gray-400">{agent.ip_address || 'No IP'} Â· {agent.platform}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export default function AgentDashboard() {
                       <div className="bg-gray-50 rounded-lg p-2.5">
                         <span className="text-gray-400">CPU</span>
                         <p className="text-gray-700 font-medium">{inventory.hardware.cpu.model}</p>
-                        <p className="text-gray-500">{inventory.hardware.cpu.cores} cores · {inventory.hardware.cpu.threads} threads · {inventory.hardware.cpu.frequency_mhz}MHz</p>
+                        <p className="text-gray-500">{inventory.hardware.cpu.cores} cores Â· {inventory.hardware.cpu.threads} threads Â· {inventory.hardware.cpu.frequency_mhz}MHz</p>
                       </div>
                     )}
                     {inventory.hardware?.memory && (
@@ -178,15 +178,15 @@ export default function AgentDashboard() {
                         <span className="text-gray-400">RAM</span>
                         <p className="text-gray-700 font-medium">{inventory.hardware.memory.total_gb} GB</p>
                         {inventory.hardware.memory.modules?.map((m: any, i: number) => (
-                          <p key={i} className="text-gray-500">{m.capacity_gb}GB {m.speed_mhz}MHz · {m.manufacturer}</p>
+                          <p key={i} className="text-gray-500">{m.capacity_gb}GB {m.speed_mhz}MHz Â· {m.manufacturer}</p>
                         ))}
                       </div>
                     )}
                     {inventory.hardware?.disks?.map((d: any, i: number) => (
                       <div key={i} className="bg-gray-50 rounded-lg p-2.5">
                         <span className="text-gray-400">Disk {d.device}</span>
-                        <p className="text-gray-700 font-medium">{d.size_gb} GB · {d.model}</p>
-                        <p className="text-gray-500">Health: {d.health || 'OK'} · S/N: {d.serial?.slice(0, 12)}</p>
+                        <p className="text-gray-700 font-medium">{d.size_gb} GB Â· {d.model}</p>
+                        <p className="text-gray-500">Health: {d.health || 'OK'} Â· S/N: {d.serial?.slice(0, 12)}</p>
                       </div>
                     ))}
                     {inventory.hardware?.bios && (
@@ -200,7 +200,7 @@ export default function AgentDashboard() {
                       <div key={i} className="bg-gray-50 rounded-lg p-2.5">
                         <span className="text-gray-400">Network</span>
                         <p className="text-gray-700 font-medium">{n.name}</p>
-                        <p className="text-gray-500">MAC: {n.mac?.slice(0, 17)} · {n.speed_mbps}Mbps</p>
+                        <p className="text-gray-500">MAC: {n.mac?.slice(0, 17)} Â· {n.speed_mbps}Mbps</p>
                       </div>
                     ))}
                   </div>
@@ -238,7 +238,7 @@ export default function AgentDashboard() {
                             <div key={i} className="flex items-center justify-between bg-amber-50 rounded px-2.5 py-1.5 text-xs border border-amber-100">
                               <div>
                                 <span className="text-gray-700 font-medium">{app.name}</span>
-                                <span className="text-gray-400 ml-2">{app.current_version} → {app.latest_version}</span>
+                                <span className="text-gray-400 ml-2">{app.current_version} â†’ {app.latest_version}</span>
                               </div>
                               <Button size="sm" className="text-[10px] px-2 py-0.5 h-6">
                                 <ArrowUpCircle className="w-3 h-3" /> Update
@@ -344,7 +344,7 @@ export default function AgentDashboard() {
       {showEnroll && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowEnroll(false)}>
           <div className="bg-white rounded-modal shadow-modal w-full max-w-lg p-6 space-y-4" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-800">Deploy AEGISX Agent</h2>
+            <h2 className="text-lg font-bold text-gray-800">Deploy AEGIS Agent</h2>
             <div className="flex gap-2">
               {['linux', 'windows', 'macos'].map(p => (
                 <button key={p} onClick={() => setPlatform(p)} className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${

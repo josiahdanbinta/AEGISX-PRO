@@ -1,5 +1,5 @@
 """
-AEGISX API Reference Generator
+AEGIS API Reference Generator
 Generates standalone Markdown and PDF API documentation from OpenAPI schema.
 Usage: python docs/api/generate_api_docs.py [--format md|pdf|both]
 """
@@ -15,7 +15,7 @@ def generate_markdown_docs():
 
     schema = app.openapi()
 
-    doc = f"""# AEGISX API Reference v{schema['info']['version']}
+    doc = f"""# AEGIS API Reference v{schema['info']['version']}
 
 {schema['info']['description']}
 
@@ -69,7 +69,7 @@ def generate_markdown_docs():
         doc += "\n"
 
     for tag, endpoints in sorted(tags.items()):
-        doc += f"## {tag} — Detailed\n\n"
+        doc += f"## {tag} â€” Detailed\n\n"
         for ep in endpoints:
             doc += f"### {ep['method']} {ep['path']}\n\n"
             doc += f"{ep['description']}\n\n"
@@ -81,13 +81,13 @@ def generate_markdown_docs():
 
 | Code | Meaning |
 |------|---------|
-| 400 | Bad Request — invalid input |
-| 401 | Unauthorized — missing/invalid token |
-| 403 | Forbidden — insufficient permissions |
-| 404 | Not Found — resource doesn't exist |
-| 409 | Conflict — duplicate resource |
-| 422 | Validation Error — invalid fields |
-| 429 | Rate Limited — too many requests |
+| 400 | Bad Request â€” invalid input |
+| 401 | Unauthorized â€” missing/invalid token |
+| 403 | Forbidden â€” insufficient permissions |
+| 404 | Not Found â€” resource doesn't exist |
+| 409 | Conflict â€” duplicate resource |
+| 422 | Validation Error â€” invalid fields |
+| 429 | Rate Limited â€” too many requests |
 | 500 | Internal Server Error |
 
 ## Rate Limits
@@ -99,7 +99,7 @@ def generate_markdown_docs():
 
 ---
 
-*Generated from OpenAPI schema — AEGISX Platform v1.0.0*
+*Generated from OpenAPI schema â€” AEGIS Platform v1.0.0*
 """
 
     output_path = Path(__file__).parent / "api-reference.md"

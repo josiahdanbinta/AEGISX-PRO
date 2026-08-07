@@ -1,6 +1,6 @@
-# AEGISX PRO — Pricing
+# AEGIS â€” Pricing
 
-## Community Edition (AGPL v3 — Free Forever)
+## Community Edition (AGPL v3 â€” Free Forever)
 
 | What You Get | Limit |
 |--------------|-------|
@@ -69,7 +69,7 @@ For Managed Security Service Providers:
 | API access | Full API for automation |
 | Volume discount | >1,000 endpoints |
 
-**Contact:** enterprise@aegisx.com
+**Contact:** enterprise@AEGIS.com
 
 ---
 
@@ -84,5 +84,5 @@ For Managed Security Service Providers:
 | ThreatConnect | $50,000 |
 | **Total** | **$400,000** |
 
-**AEGISX PRO Professional:** $117,600/year (200 × $49 × 12)
+**AEGIS Professional:** $117,600/year (200 Ã— $49 Ã— 12)
 **Savings:** **$282,400/year (70%)**

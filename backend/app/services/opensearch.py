@@ -1,5 +1,5 @@
 """
-AEGISX - OpenSearch Full-Text Search Service
+AEGIS - OpenSearch Full-Text Search Service
 Index management, document search, log analytics
 """
 import json
@@ -13,9 +13,9 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # OpenSearch Client
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class OpenSearchClient:
     """Thin wrapper around opensearchpy providing index management,
@@ -100,7 +100,7 @@ class OpenSearchClient:
         except Exception:
             return False
 
-    # ── Index Management ──────────────────────────────────────────
+    # â”€â”€ Index Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def create_index(self, name: str, mappings: Optional[Dict[str, Any]] = None, settings_cfg: Optional[Dict[str, Any]] = None) -> bool:
         body: Dict[str, Any] = {}
@@ -159,7 +159,7 @@ class OpenSearchClient:
         except Exception:
             pass
 
-    # ── Document Operations ───────────────────────────────────────
+    # â”€â”€ Document Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def index_document(
         self,
@@ -245,7 +245,7 @@ class OpenSearchClient:
             logger.error("Failed to delete document '%s' from '%s': %s", doc_id, index, e)
             return False
 
-    # ── Search ────────────────────────────────────────────────────
+    # â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def search(
         self,
@@ -294,9 +294,9 @@ class OpenSearchClient:
             return 0
 
 
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Index Mapping Definitions
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 LOGS_MAPPING = {
     "properties": {
@@ -436,9 +436,9 @@ INDEX_MAPPINGS = {
 }
 
 
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Search Service
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class SearchService:
     """High-level search operations combining the OpenSearch client with
@@ -454,10 +454,10 @@ class SearchService:
         return self._client
 
     def _index_for(self, resource: str, tenant_id: Optional[str] = None) -> str:
-        """Build tenant-scoped index name: aegisx-logs-{tenant_id}"""
+        """Build tenant-scoped index name: AEGIS-logs-{tenant_id}"""
         return self.client._build_index_name(resource, tenant_id)
 
-    # ── Index Lifecycle ───────────────────────────────────────────
+    # â”€â”€ Index Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def ensure_index(self, resource: str, tenant_id: str) -> bool:
         index_name = self._index_for(resource, tenant_id)
@@ -486,7 +486,7 @@ class SearchService:
             results[resource] = self.ensure_index(resource, tenant_id)
         return results
 
-    # ── Full-Text Search ──────────────────────────────────────────
+    # â”€â”€ Full-Text Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def full_text_search(
         self,
@@ -536,7 +536,7 @@ class SearchService:
 
         return self.client.search(index, query_dsl, from_=from_, size=size)
 
-    # ── Log Aggregation ───────────────────────────────────────────
+    # â”€â”€ Log Aggregation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def aggregate_logs(
         self,
@@ -569,7 +569,7 @@ class SearchService:
         result = self.client.search(index, query_dsl, size=0, aggregations=aggs)
         return result.get("aggregations", {}).get(f"by_{field}", {}).get("buckets", [])
 
-    # ── Autocomplete ──────────────────────────────────────────────
+    # â”€â”€ Autocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def suggest(
         self,
@@ -602,7 +602,7 @@ class SearchService:
             pass
         return []
 
-    # ── Index Document Helpers ────────────────────────────────────
+    # â”€â”€ Index Document Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def index_alert(self, alert_data: Dict[str, Any], tenant_id: str) -> Optional[str]:
         self.ensure_index("alerts", tenant_id)
@@ -631,9 +631,9 @@ class SearchService:
         return self.client.bulk_index(idx, docs)
 
 
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Lazy Singleton
-# ════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 _opensearch_client: Optional[OpenSearchClient] = None
 _search_service: Optional[SearchService] = None

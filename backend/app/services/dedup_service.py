@@ -1,5 +1,5 @@
 """
-AEGISX - Deduplication Service
+AEGIS - Deduplication Service
 Tier 2: Redis bloom filters for event dedup with 1hr window.
 Tier 4: Alert dedup using bloom filters.
 """
@@ -35,7 +35,7 @@ class DedupService:
             )
         return self._redis
 
-    # ── Event Deduplication ──────────────────────────────────────
+    # â”€â”€ Event Deduplication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def is_event_duplicate(self, tenant_id: str, event_data: dict) -> tuple[bool, str]:
         """Check if an event is a duplicate within the 1-hour window.
@@ -84,7 +84,7 @@ class DedupService:
         ]
         return hashlib.sha256("|".join(fields).encode()).hexdigest()
 
-    # ── Alert Deduplication ──────────────────────────────────────
+    # â”€â”€ Alert Deduplication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def is_alert_duplicate(self, tenant_id: str, rule_id: str,
                                   source_ip: Optional[str],
@@ -107,7 +107,7 @@ class DedupService:
         except Exception:
             return False
 
-    # ── Rate-limiting token bucket ────────────────────────────────
+    # â”€â”€ Rate-limiting token bucket â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def check_rate_limit(self, key: str, max_tokens: int,
                                 window_seconds: int = 60) -> tuple[bool, int]:

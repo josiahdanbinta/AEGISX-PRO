@@ -1,5 +1,5 @@
 """
-AEGISX - Main FastAPI Application Entry Point
+AEGIS - Main FastAPI Application Entry Point
 """
 import os
 from contextlib import asynccontextmanager
@@ -57,7 +57,7 @@ async def _publish_dashboard_stats():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Startup — auto-initialize database, services, metrics, and telemetry."""
+    """Startup â€” auto-initialize database, services, metrics, and telemetry."""
     import os
     
     # DUMP: Print all env vars containing PG, POSTGRES, DATABASE, RAILWAY
@@ -66,11 +66,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             v2 = v[:3] + "***" + v[-3:] if len(v) > 10 else v
             print(f"ENV|{k}={v2}")
     
-    print(f"AEGISX starting... DB: {settings.DATABASE_URL and settings.DATABASE_URL[:30]}...")
+    print(f"AEGIS starting... DB: {settings.DATABASE_URL and settings.DATABASE_URL[:30]}...")
 
     setup_metrics(app)
 
-    # ── Tracing ───────────────────────────────────────────────
+    # â”€â”€ Tracing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if settings.TRACING_ENABLED:
         try:
             from app.services.tracing import setup_tracing
@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         except Exception as e:
             print(f"Tracing setup skipped: {e}")
 
-    # ── Kafka ─────────────────────────────────────────────────
+    # â”€â”€ Kafka â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if settings.FEATURE_KAFKA:
         try:
             from app.services.kafka_messaging import kafka_service
@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         except Exception as e:
             print(f"Kafka init skipped: {e}")
 
-    # ── MinIO ─────────────────────────────────────────────────
+    # â”€â”€ MinIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.minio_service import minio_service
         await minio_service.ensure_buckets()
@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         print(f"MinIO init skipped: {e}")
 
-    # ── ClickHouse ────────────────────────────────────────────
+    # â”€â”€ ClickHouse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if settings.FEATURE_CLICKHOUSE:
         try:
             from app.services.clickhouse_service import clickhouse_service
@@ -105,7 +105,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         except Exception as e:
             print(f"ClickHouse init skipped: {e}")
 
-    # ── TimescaleDB ───────────────────────────────────────────
+    # â”€â”€ TimescaleDB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.timescale_service import initialize_timescaledb
         await initialize_timescaledb()
@@ -113,7 +113,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         print(f"TimescaleDB init skipped: {e}")
 
-    # ── TimescaleDB Event Writer ──────────────────────────────
+    # â”€â”€ TimescaleDB Event Writer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.services.timescale_persistence import tsdb_writer
         await tsdb_writer.start()
@@ -121,11 +121,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         print(f"TSDB writer start skipped: {e}")
 
-    # ── Dashboard Stats Publisher (background task) ───────────
+    # â”€â”€ Dashboard Stats Publisher (background task) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _dash_task = asyncio.create_task(_publish_dashboard_stats())
     app.state.dashboard_task = _dash_task
 
-    # ── Database auto-setup (create tables, seed admin) ───────
+    # â”€â”€ Database auto-setup (create tables, seed admin) â”€â”€â”€â”€â”€â”€â”€
     try:
         from app.core.database import async_session_factory, engine
         from sqlalchemy import select
@@ -142,25 +142,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 from app.core.security import hash_password
                 from app.models.user import User, Role
 
-                admin_email = os.getenv("AEGISX_ADMIN_EMAIL", "admin@aegisx.com")
-                admin_password = os.getenv("AEGISX_ADMIN_PASSWORD", "Admin123!@#")
+                admin_email = os.getenv("AEGIS_ADMIN_EMAIL", "admin@AEGIS.com")
+                admin_password = os.getenv("AEGIS_ADMIN_PASSWORD", "Admin123!@#")
 
                 tid = _uuid.uuid4()
-                db.add(Tenant(id=tid, name="default", display_name="AEGISX", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
+                db.add(Tenant(id=tid, name="default", display_name="AEGIS", subscription_tier="enterprise", status="active", quota_assets=10000, quota_users=1000))
                 await db.flush()
                 db.add(User(id=_uuid.uuid4(), tenant_id=tid, username="admin", email=admin_email, hashed_password=hash_password(admin_password), full_name="Super Admin", roles=[{"role_name":"super_admin"}], status="active"))
                 for name, disp, p in [("tenant_admin","Tenant Admin",["users:*"]),("soc_manager","SOC Manager",["incidents:*"]),("soc_analyst_l1","Analyst L1",["incidents:read"]),("compliance_officer","Compliance",["compliance:*"])]:
                     db.add(Role(tenant_id=tid, name=name, display_name=disp, is_system=True, permissions=p))
                 await db.commit()
                 if settings.APP_ENV == "development":
-                    print(f"SETUP COMPLETE — Login: {admin_email}")
+                    print(f"SETUP COMPLETE â€” Login: {admin_email}")
     except Exception as e:
         print(f"DB setup skipped: {e}")
 
     yield
 
-    # ── Shutdown ──────────────────────────────────────────────
-    print("AEGISX shutting down...")
+    # â”€â”€ Shutdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    print("AEGIS shutting down...")
     if hasattr(app.state, "dashboard_task"):
         app.state.dashboard_task.cancel()
     try:
@@ -188,7 +188,7 @@ def create_application() -> FastAPI:
         title=settings.PROJECT_NAME,
         version=settings.APP_VERSION,
         description="""
-## AEGISX - Enterprise Cybersecurity Operations Platform
+## AEGIS - Enterprise Cybersecurity Operations Platform
 
 A comprehensive, AI-powered cybersecurity platform combining SIEM, SOAR, XDR,
 Vulnerability Management, Asset Management, Threat Intelligence, Compliance,
@@ -209,41 +209,41 @@ and Incident Response.
         openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
         lifespan=lifespan,
         contact={
-            "name": "AEGISX Security Team",
-            "email": "security@aegisx.com",
+            "name": "AEGIS Security Team",
+            "email": "security@AEGIS.com",
         },
         license_info={
             "name": "Proprietary",
-            "url": "https://aegisx.com/license",
+            "url": "https://AEGIS.com/license",
         },
     )
 
     setup_middleware(app)
     setup_exception_handlers(app)
 
-    # ── API Routes ───────────────────────────────────────────────
+    # â”€â”€ API Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     from app.api.v1.router import api_router
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
-    # ── Prometheus Metrics ───────────────────────────────────────
+    # â”€â”€ Prometheus Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     @app.get("/metrics", include_in_schema=False)
     async def prometheus_metrics():
         from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
         from fastapi.responses import Response
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-    # ── Health Check ─────────────────────────────────────────────
+    # â”€â”€ Health Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     from app.api.v1.health import router as health_router
     app.include_router(health_router, prefix="/health", tags=["Health"])
 
-    # ── Root endpoint ────────────────────────────────────────────
+    # â”€â”€ Root endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     @app.get("/")
     async def root():
         return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
     @app.get("/debug", include_in_schema=False)
     async def debug(current_user: dict = Depends(get_current_user)):
-        """Debug endpoint — shows configuration state. Requires authentication."""
+        """Debug endpoint â€” shows configuration state. Requires authentication."""
         from app.core.config import settings as s
         url = s.DATABASE_URL or "NOT SET"
         masked = url.split("://")[0] + "://****" if "://" in url else url
@@ -264,7 +264,7 @@ and Incident Response.
             "port": settings.PORT,
         }
 
-    # ── Documentation Routes ─────────────────────────────────────
+    # â”€â”€ Documentation Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html():
         return get_swagger_ui_html(
@@ -281,7 +281,7 @@ and Incident Response.
             redoc_favicon_url="/static/favicon.ico",
         )
 
-    # ── Custom OpenAPI Schema ────────────────────────────────────
+    # â”€â”€ Custom OpenAPI Schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema

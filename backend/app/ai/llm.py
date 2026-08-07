@@ -1,5 +1,5 @@
 """
-AEGISX - LLM Client Wrapper
+AEGIS - LLM Client Wrapper
 Supports OpenAI, Azure OpenAI, and local models.
 """
 import json

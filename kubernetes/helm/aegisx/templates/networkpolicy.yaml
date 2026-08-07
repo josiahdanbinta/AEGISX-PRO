@@ -2,14 +2,14 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "aegisx.fullname" . }}-backend
+  name: {{ include "AEGIS.fullname" . }}-backend
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   podSelector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: backend
   policyTypes:
     - Ingress
@@ -119,14 +119,14 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "aegisx.fullname" . }}-frontend
+  name: {{ include "AEGIS.fullname" . }}-frontend
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 spec:
   podSelector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: frontend
   policyTypes:
     - Ingress
@@ -142,9 +142,9 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "aegisx.fullname" . }}-datastores
+  name: {{ include "AEGIS.fullname" . }}-datastores
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: datastores
 spec:
   podSelector:
@@ -180,5 +180,5 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "aegisx.name" . }}
+              app.kubernetes.io/name: {{ include "AEGIS.name" . }}
 {{- end }}

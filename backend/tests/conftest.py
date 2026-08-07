@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for AEGISX tests.
+Pytest configuration and shared fixtures for AEGIS tests.
 """
 import pytest
 import sys

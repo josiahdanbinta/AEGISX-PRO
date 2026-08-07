@@ -1,5 +1,5 @@
 """
-AEGISX Load & Performance Test Suite
+AEGIS Load & Performance Test Suite
 Tests concurrent request handling, response times, and throughput.
 """
 import pytest

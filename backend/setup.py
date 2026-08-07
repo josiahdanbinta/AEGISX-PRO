@@ -1,5 +1,5 @@
 """
-AEGISX — First-Run Setup Script
+AEGIS â€” First-Run Setup Script
 Creates initial tenant, admin user, and displays all credentials.
 """
 import asyncio
@@ -30,7 +30,7 @@ async def setup():
         tenant = Tenant(
             id=tenant_id,
             name="default",
-            display_name="AEGISX Enterprise",
+            display_name="AEGIS Enterprise",
             subscription_tier="enterprise",
             status="active",
             quota_assets=10000,
@@ -46,7 +46,7 @@ async def setup():
             id=admin_id,
             tenant_id=tenant_id,
             username="admin",
-            email="admin@aegisx.com",
+            email="admin@AEGIS.com",
             hashed_password=hash_password("Admin123!@#"),
             full_name="Super Admin",
             roles=[{"role_name": "super_admin"}],
@@ -81,38 +81,38 @@ async def setup():
         await db.commit()
 
         print("""
-  ╔══════════════════════════════════════════════════════════╗
-  ║           AEGISX — Setup Complete                       ║
-  ╚══════════════════════════════════════════════════════════╝
+  â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+  â•‘           AEGIS â€” Setup Complete                       â•‘
+  â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  ┌─ Database ──────────────────────────────────────────────┐
-  │ Tables created successfully                              │
-  │ Tenant + Admin + 8 roles initialized                     │
-  └─────────────────────────────────────────────────────────┘
+  â”Œâ”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚ Tables created successfully                              â”‚
+  â”‚ Tenant + Admin + 8 roles initialized                     â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
-  ┌─ Login Credentials ─────────────────────────────────────┐
-  │ Dashboard  : http://YOUR_IP:80                           │
-  │ Email      : admin@aegisx.com                            │
-  │ Password   : Admin123!@#                                  │
-  │ Tenant ID  : {tenant_id}             │
-  │ Role       : super_admin                                │
-  └─────────────────────────────────────────────────────────┘
+  â”Œâ”€ Login Credentials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚ Dashboard  : http://YOUR_IP:80                           â”‚
+  â”‚ Email      : admin@AEGIS.com                            â”‚
+  â”‚ Password   : Admin123!@#                                  â”‚
+  â”‚ Tenant ID  : {tenant_id}             â”‚
+  â”‚ Role       : super_admin                                â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
-  ┌─ Agent Enrollment ──────────────────────────────────────┐
-  │ Registration Key : (set in backend/.env)                │
-  │ Tenant ID        : {tenant_id}          │
-  │                                                         │
-  │ Linux/macOS:                                            │
-  │   curl -sSL http://YOUR_IP:8000/deploy/install.sh | \   │
-  │   bash -s -- --server http://YOUR_IP:8000 \              │
-  │   --key YOUR_KEY --tenant {tenant_id} │
-  │                                                         │
-  │ Windows:                                                │
-  │   .\\install.ps1 -Server http://YOUR_IP:8000 \           │
-  │   -Key YOUR_KEY -Tenant {tenant_id}   │
-  └─────────────────────────────────────────────────────────┘
+  â”Œâ”€ Agent Enrollment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚ Registration Key : (set in backend/.env)                â”‚
+  â”‚ Tenant ID        : {tenant_id}          â”‚
+  â”‚                                                         â”‚
+  â”‚ Linux/macOS:                                            â”‚
+  â”‚   curl -sSL http://YOUR_IP:8000/deploy/install.sh | \   â”‚
+  â”‚   bash -s -- --server http://YOUR_IP:8000 \              â”‚
+  â”‚   --key YOUR_KEY --tenant {tenant_id} â”‚
+  â”‚                                                         â”‚
+  â”‚ Windows:                                                â”‚
+  â”‚   .\\install.ps1 -Server http://YOUR_IP:8000 \           â”‚
+  â”‚   -Key YOUR_KEY -Tenant {tenant_id}   â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
-  ⚠  Change the admin password on first login!
+  âš   Change the admin password on first login!
 """.format(tenant_id=tenant_id))
 
 

@@ -1,5 +1,5 @@
 """
-AEGISX - AI-Powered API Endpoints
+AEGIS - AI-Powered API Endpoints
 Incident analysis, alert explanation, recommendations, Q&A
 """
 import uuid

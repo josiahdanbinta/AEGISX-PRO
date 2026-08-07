@@ -1,6 +1,6 @@
 """
-AEGISX - Shadow Rule Engine (A/B Testing for Detection Rules)
-Tier 4: Shadow evaluation — rules evaluated silently without alerting,
+AEGIS - Shadow Rule Engine (A/B Testing for Detection Rules)
+Tier 4: Shadow evaluation â€” rules evaluated silently without alerting,
 enabling safe testing of new/pre-release detection rules in production.
 """
 import json
@@ -33,7 +33,7 @@ DEFAULT_WEIGHTS = {
 
 
 class ShadowRuleResult:
-    """Result of a shadow evaluation — not promoted to alert."""
+    """Result of a shadow evaluation â€” not promoted to alert."""
 
     __slots__ = ('rule_id', 'rule_name', 'matched', 'false_positive', 'event_type',
                  'severity_estimate', 'elapsed_ms', 'sample_event', 'evaluated_at')
@@ -70,7 +70,7 @@ class ShadowRuleResult:
 
 class ShadowRuleEngine:
     """
-    Evaluates detection rules in shadow mode — full evaluation but no alert generation.
+    Evaluates detection rules in shadow mode â€” full evaluation but no alert generation.
     Supports A/B testing of new rules against production traffic.
     """
 

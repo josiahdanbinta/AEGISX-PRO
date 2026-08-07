@@ -1,5 +1,5 @@
 """
-AEGISX - Falco-Style Kernel & Container Detection Rules (Tier 4)
+AEGIS - Falco-Style Kernel & Container Detection Rules (Tier 4)
 Syscall-level detection rules for host and container security monitoring.
 Implements Falco-compatible rule format for kernel events, file integrity,
 and container runtime security.
@@ -11,12 +11,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════
-# Rule Definitions (Falco-style YAML → runtime evaluation)
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Rule Definitions (Falco-style YAML â†’ runtime evaluation)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 FALCO_RULES = {
-    # ── Container Runtime ──────────────────────────────────
+    # â”€â”€ Container Runtime â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "container_privileged_started": {
         "rule": "Privileged Container Started",
         "desc": "Detect containers started with --privileged flag",
@@ -76,7 +76,7 @@ FALCO_RULES = {
         "binary_dirs": ["/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin"],
     },
 
-    # ── File Integrity ─────────────────────────────────────
+    # â”€â”€ File Integrity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "file_integrity_binary_modified": {
         "rule": "System Binary Modified",
         "desc": "Critical system binary files modified - possible rootkit or backdoor",
@@ -125,7 +125,7 @@ FALCO_RULES = {
         "paths": ["/etc/ld.so.preload", "/etc/ld.so.conf.d/"],
     },
 
-    # ── Process / Execution ────────────────────────────────
+    # â”€â”€ Process / Execution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "process_reverse_shell": {
         "rule": "Reverse Shell Detected",
         "desc": "Process spawning a shell with redirected stdin/stdout to a socket",
@@ -188,7 +188,7 @@ FALCO_RULES = {
                                r"curl\s+.*\|\s*python", r"curl\s+.*\|\s*perl"],
     },
 
-    # ── Network Activity ───────────────────────────────────
+    # â”€â”€ Network Activity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "network_outbound_to_unusual_port": {
         "rule": "Outbound Connection to Unusual Port",
         "desc": "Process connecting outbound to non-standard port",
@@ -220,7 +220,7 @@ FALCO_RULES = {
         "mitre": ["T1571"],
     },
 
-    # ── Kernel Events ──────────────────────────────────────
+    # â”€â”€ Kernel Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "kernel_module_load": {
         "rule": "Kernel Module Loaded",
         "desc": "New kernel module loaded - check for rootkits",
@@ -253,7 +253,7 @@ FALCO_RULES = {
         "syscall_patterns": ["bpf"],
     },
 
-    # ── Credential Access ──────────────────────────────────
+    # â”€â”€ Credential Access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "credential_dump_procdump": {
         "rule": "Process Memory Dump (LSASS)",
         "desc": "Attempt to dump process memory (potential credential theft)",

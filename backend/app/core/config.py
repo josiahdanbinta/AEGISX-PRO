@@ -1,5 +1,5 @@
 """
-AEGISX - Enterprise Cybersecurity Operations Platform
+AEGIS - Enterprise Cybersecurity Operations Platform
 Core Configuration Module
 """
 import os
@@ -25,22 +25,22 @@ class Settings(BaseSettings):
         extra="allow",
     )
 
-    # ── Application ──────────────────────────────────────────────
-    APP_NAME: str = "AEGISX"
+    # â”€â”€ Application â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    APP_NAME: str = "AEGIS"
     APP_VERSION: str = "2.0.0"
     APP_ENV: str = "development"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production-use-secrets-manager"
     API_V1_PREFIX: str = "/api/v1"
-    PROJECT_NAME: str = "AEGISX Platform"
+    PROJECT_NAME: str = "AEGIS Platform"
 
-    # ── Server ───────────────────────────────────────────────────
+    # â”€â”€ Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     HOST: str = "0.0.0.0"
     PORT: int = 8001
     WORKERS: int = 4
     RELOAD: bool = False
 
-    # ── CORS ─────────────────────────────────────────────────────
+    # â”€â”€ CORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
@@ -59,12 +59,12 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
-    # ── Database ─────────────────────────────────────────────────
+    # â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str = "aegisx"
-    POSTGRES_PASSWORD: str = "aegisx"
-    POSTGRES_DB: str = "aegisx"
+    POSTGRES_USER: str = "AEGIS"
+    POSTGRES_PASSWORD: str = "AEGIS"
+    POSTGRES_DB: str = "AEGIS"
     DATABASE_URL: Optional[str] = None
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 40
@@ -116,7 +116,7 @@ class Settings(BaseSettings):
             self.SQLALCHEMY_DATABASE_URL = "sqlite:///./fallback.db"
         return self
 
-    # ── Redis ────────────────────────────────────────────────────
+    # â”€â”€ Redis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: Optional[str] = None
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
             self.REDIS_URL = f"redis://{pwd}{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
         return self
 
-    # ── Celery ───────────────────────────────────────────────────
+    # â”€â”€ Celery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
 
@@ -142,29 +142,29 @@ class Settings(BaseSettings):
             self.CELERY_RESULT_BACKEND = self.REDIS_URL
         return self
 
-    # ── Elasticsearch / OpenSearch ───────────────────────────────
+    # â”€â”€ Elasticsearch / OpenSearch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     OPENSEARCH_HOST: str = "localhost"
     OPENSEARCH_PORT: int = 9200
     OPENSEARCH_USER: str = "admin"
     OPENSEARCH_PASSWORD: str = "admin"
     OPENSEARCH_USE_SSL: bool = False
-    OPENSEARCH_INDEX_PREFIX: str = "aegisx"
+    OPENSEARCH_INDEX_PREFIX: str = "AEGIS"
 
-    # ── RabbitMQ ─────────────────────────────────────────────────
+    # â”€â”€ RabbitMQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     RABBITMQ_HOST: str = "localhost"
     RABBITMQ_PORT: int = 5672
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASSWORD: str = "guest"
     RABBITMQ_VHOST: str = "/"
 
-    # ── JWT Authentication ───────────────────────────────────────
+    # â”€â”€ JWT Authentication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     JWT_SECRET_KEY: str = "change-me-jwt-secret-use-strong-random"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_RESET_TOKEN_EXPIRE_HOURS: int = 24
 
-    # ── Password Policy ──────────────────────────────────────────
+    # â”€â”€ Password Policy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     PASSWORD_MIN_LENGTH: int = 12
     PASSWORD_REQUIRE_UPPERCASE: bool = True
     PASSWORD_REQUIRE_LOWERCASE: bool = True
@@ -173,17 +173,17 @@ class Settings(BaseSettings):
     PASSWORD_LOCKOUT_ATTEMPTS: int = 5
     PASSWORD_LOCKOUT_MINUTES: int = 15
 
-    # ── MFA ──────────────────────────────────────────────────────
+    # â”€â”€ MFA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     MFA_ENABLED: bool = True
-    MFA_ISSUER: str = "AEGISX"
+    MFA_ISSUER: str = "AEGIS"
 
-    # ── Rate Limiting ────────────────────────────────────────────
+    # â”€â”€ Rate Limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_DEFAULT: str = "100/minute"
     RATE_LIMIT_AUTH: str = "10/minute"
     RATE_LIMIT_API: str = "1000/minute"
 
-    # ── File Upload ──────────────────────────────────────────────
+    # â”€â”€ File Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     MAX_UPLOAD_SIZE_MB: int = 100
     ALLOWED_UPLOAD_EXTENSIONS: List[str] = [
         "csv", "json", "xml", "pdf", "xlsx", "docx",
@@ -191,27 +191,27 @@ class Settings(BaseSettings):
     ]
     UPLOAD_DIR: str = "/app/uploads"
 
-    # ── Email ────────────────────────────────────────────────────
+    # â”€â”€ Email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     SMTP_HOST: str = "localhost"
     SMTP_PORT: int = 587
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
-    SMTP_FROM: str = "noreply@aegisx.com"
+    SMTP_FROM: str = "noreply@AEGIS.com"
     SMTP_TLS: bool = True
 
-    # ── Logging ──────────────────────────────────────────────────
+    # â”€â”€ Logging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"
     LOG_RETENTION_DAYS: int = 90
 
-    # ── Tenants ──────────────────────────────────────────────────
+    # â”€â”€ Tenants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     MAX_TENANTS: int = 10000
     TENANT_ISOLATION_MODE: str = "row"  # 'row' | 'schema' | 'database'
     DEFAULT_TENANT_QUOTA_ASSETS: int = 1000
     DEFAULT_TENANT_QUOTA_USERS: int = 100
     DEFAULT_TENANT_QUOTA_STORAGE_GB: int = 500
 
-    # ── AI / ML ──────────────────────────────────────────────────
+    # â”€â”€ AI / ML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     AI_ENABLED: bool = True
     AI_PROVIDER: str = "openai"
     AI_MODEL: str = "gpt-4"
@@ -223,7 +223,7 @@ class Settings(BaseSettings):
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_DEPLOYMENT: Optional[str] = None
 
-    # ── Threat Intelligence Integrations ─────────────────────────
+    # â”€â”€ Threat Intelligence Integrations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     VIRUSTOTAL_API_KEY: Optional[str] = None
     ABUSEIPDB_API_KEY: Optional[str] = None
     SHODAN_API_KEY: Optional[str] = None
@@ -232,54 +232,54 @@ class Settings(BaseSettings):
     OPENCTI_URL: Optional[str] = None
     OPENCTI_API_KEY: Optional[str] = None
 
-    # ── Agent Registration ──────────────────────────────────────
+    # â”€â”€ Agent Registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     AGENT_REGISTRATION_KEY: str = "change-me-agent-key"
     AGENT_HEARTBEAT_INTERVAL: int = 60
     AGENT_STALE_TIMEOUT: int = 300
 
-    # ── Kubernetes ───────────────────────────────────────────────
+    # â”€â”€ Kubernetes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     KUBERNETES_ENABLED: bool = False
-    KUBERNETES_NAMESPACE: str = "aegisx"
+    KUBERNETES_NAMESPACE: str = "AEGIS"
 
-    # ── Kafka ────────────────────────────────────────────────────
+    # â”€â”€ Kafka â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
     SCHEMA_REGISTRY_URL: str = "http://localhost:8081"
 
-    # ── ClickHouse ───────────────────────────────────────────────
+    # â”€â”€ ClickHouse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     CLICKHOUSE_HOST: str = "localhost"
     CLICKHOUSE_PORT: int = 8123
-    CLICKHOUSE_USER: str = "aegisx"
-    CLICKHOUSE_PASSWORD: str = "aegisx"
-    CLICKHOUSE_DB: str = "aegisx"
+    CLICKHOUSE_USER: str = "AEGIS"
+    CLICKHOUSE_PASSWORD: str = "AEGIS"
+    CLICKHOUSE_DB: str = "AEGIS"
 
-    # ── MinIO ────────────────────────────────────────────────────
+    # â”€â”€ MinIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     MINIO_ENDPOINT: str = "localhost:9002"
-    MINIO_ROOT_USER: str = "aegisx-admin"
-    MINIO_ROOT_PASSWORD: str = "aegisx-minio-secure"
+    MINIO_ROOT_USER: str = "AEGIS-admin"
+    MINIO_ROOT_PASSWORD: str = "AEGIS-minio-secure"
     MINIO_SECURE: bool = False
 
-    # ── Observability ───────────────────────────────────────────
+    # â”€â”€ Observability â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     PROMETHEUS_ENABLED: bool = True
     PROMETHEUS_METRICS_PORT: int = 9090
 
-    # ── Elasticsearch (ELK) ──────────────────────────────────────
+    # â”€â”€ Elasticsearch (ELK) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     ELASTICSEARCH_HOST: str = "localhost"
     ELASTICSEARCH_PORT: int = 9201
 
-    # ── Jaeger Tracing ───────────────────────────────────────────
+    # â”€â”€ Jaeger Tracing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     JAEGER_HOST: str = "localhost"
     JAEGER_PORT: int = 6831
     JAEGER_SAMPLING_RATE: float = 0.1
     TRACING_ENABLED: bool = True
-    OTEL_SERVICE_NAME: str = "aegisx-backend"
+    OTEL_SERVICE_NAME: str = "AEGIS-backend"
 
-    # ── UEBA ─────────────────────────────────────────────────────
+    # â”€â”€ UEBA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     UEBA_ENABLED: bool = True
     UEBA_ANOMALY_THRESHOLD: float = 0.7
     UEBA_CRITICAL_THRESHOLD: float = 0.85
     UEBA_BASELINE_WINDOW_DAYS: int = 30
 
-    # ── Feature Flags ────────────────────────────────────────────
+    # â”€â”€ Feature Flags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     FEATURE_SOAR: bool = True
     FEATURE_THREAT_INTEL: bool = True
     FEATURE_AI: bool = True
@@ -295,13 +295,13 @@ class Settings(BaseSettings):
     FEATURE_SLACK_BOT: bool = False
     FEATURE_AI_REMEDIATION: bool = False
 
-    # ── Edition ──────────────────────────────────────────────────
+    # â”€â”€ Edition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     EDITION: str = "community"  # "community" | "enterprise"
     MAX_TENANTS_COMMUNITY: int = 3
     MAX_ENDPOINTS_COMMUNITY: int = 50
     MAX_SOAR_PLAYBOOKS_COMMUNITY: int = 5
 
-    # ── Slack Bot ─────────────────────────────────────────────────
+    # â”€â”€ Slack Bot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     SLACK_BOT_TOKEN: Optional[str] = None
     SLACK_APP_TOKEN: Optional[str] = None
     SLACK_SIGNING_SECRET: Optional[str] = None
@@ -313,13 +313,13 @@ class Settings(BaseSettings):
         "change-me-postgres-password",
     ]
     _INSECURE_PASSWORDS = {
-        "POSTGRES_PASSWORD": ["aegisx", "postgres", "password", "change-me"],
+        "POSTGRES_PASSWORD": ["AEGIS", "postgres", "password", "change-me"],
         "OPENSEARCH_PASSWORD": ["admin", "password", "change-me"],
         "RABBITMQ_PASSWORD": ["guest", "password", "change-me"],
-        "CLICKHOUSE_PASSWORD": ["aegisx", "password", "change-me"],
-        "MINIO_ROOT_PASSWORD": ["aegisx-minio-secure", "minioadmin", "password", "change-me"],
+        "CLICKHOUSE_PASSWORD": ["AEGIS", "password", "change-me"],
+        "MINIO_ROOT_PASSWORD": ["AEGIS-minio-secure", "minioadmin", "password", "change-me"],
         "REDIS_PASSWORD": [],
-        "GRAFANA_PASSWORD": ["admin", "aegisx-grafana", "password"],
+        "GRAFANA_PASSWORD": ["admin", "AEGIS-grafana", "password"],
     }
 
     @model_validator(mode="after")

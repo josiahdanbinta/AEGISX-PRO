@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX Detection API endpoints.
+Integration tests for AEGIS Detection API endpoints.
 """
 import uuid
 

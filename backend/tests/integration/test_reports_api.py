@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX Reports API endpoints.
+Integration tests for AEGIS Reports API endpoints.
 """
 import uuid
 

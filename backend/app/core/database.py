@@ -1,5 +1,5 @@
 """
-AEGISX - Database Engine
+AEGIS - Database Engine
 Async PostgreSQL with SQLAlchemy 2.0
 """
 from typing import AsyncGenerator, Optional

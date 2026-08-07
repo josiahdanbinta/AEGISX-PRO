@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-rabbitmq
+  name: {{ include "AEGIS.fullname" . }}-rabbitmq
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 spec:
   type: ClusterIP
@@ -24,15 +24,15 @@ spec:
       port: 25672
       targetPort: 25672
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-rabbitmq-lb
+  name: {{ include "AEGIS.fullname" . }}-rabbitmq-lb
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 spec:
   type: ClusterIP
@@ -44,22 +44,22 @@ spec:
       port: {{ .Values.rabbitmq.service.managementPort }}
       targetPort: management
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-rabbitmq-config
+  name: {{ include "AEGIS.fullname" . }}-rabbitmq-config
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 data:
   rabbitmq.conf: |
     cluster_formation.peer_discovery_backend = rabbit_peer_discovery_k8s
     cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
     cluster_formation.k8s.address_type = hostname
-    cluster_formation.k8s.service_name = {{ include "aegisx.fullname" . }}-rabbitmq
+    cluster_formation.k8s.service_name = {{ include "AEGIS.fullname" . }}-rabbitmq
     cluster_formation.node_cleanup.only_log_warning = true
     cluster_partition_handling = pause_minority
     vm_memory_high_watermark.relative = 0.7
@@ -72,22 +72,22 @@ data:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "aegisx.fullname" . }}-rabbitmq
+  name: {{ include "AEGIS.fullname" . }}-rabbitmq
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: rabbitmq
 spec:
-  serviceName: {{ include "aegisx.fullname" . }}-rabbitmq
+  serviceName: {{ include "AEGIS.fullname" . }}-rabbitmq
   replicas: {{ .Values.rabbitmq.replicaCount }}
   podManagementPolicy: Parallel
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: rabbitmq
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: rabbitmq
       annotations:
         prometheus.io/scrape: "true"
@@ -110,29 +110,29 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: rabbitmq
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.rabbitmq.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.rabbitmq.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
           env:
             - name: RABBITMQ_DEFAULT_USER
-              value: {{ .Values.rabbitmq.defaultUser | default "aegisx" | quote }}
+              value: {{ .Values.rabbitmq.defaultUser | default "AEGIS" | quote }}
             - name: RABBITMQ_DEFAULT_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: RABBITMQ_PASSWORD
             - name: RABBITMQ_DEFAULT_VHOST
               value: {{ .Values.rabbitmq.defaultVhost | default "/" | quote }}
             - name: RABBITMQ_ERLANG_COOKIE
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "aegisx.fullname" . }}-secrets
+                  name: {{ include "AEGIS.fullname" . }}-secrets
                   key: RABBITMQ_ERLANG_COOKIE
             - name: RABBITMQ_USE_LONGNAME
               value: "true"
             - name: K8S_SERVICE_NAME
-              value: {{ include "aegisx.fullname" . }}-rabbitmq
+              value: {{ include "AEGIS.fullname" . }}-rabbitmq
             - name: RABBITMQ_NODENAME
-              value: "rabbit@$(HOSTNAME).{{ include "aegisx.fullname" . }}-rabbitmq.{{ include "aegisx.namespace" . }}.svc.cluster.local"
+              value: "rabbit@$(HOSTNAME).{{ include "AEGIS.fullname" . }}-rabbitmq.{{ include "AEGIS.namespace" . }}.svc.cluster.local"
           ports:
             - name: amqp
               containerPort: 5672
@@ -184,12 +184,12 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "aegisx.fullname" . }}-rabbitmq-config
+            name: {{ include "AEGIS.fullname" . }}-rabbitmq-config
   volumeClaimTemplates:
     - metadata:
         name: data
         labels:
-          {{- include "aegisx.labels" . | nindent 10 }}
+          {{- include "AEGIS.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce

@@ -19,7 +19,7 @@ export const useAppStore = create<AppState>()(
       setSelectedTenant: (selectedTenantId) => set({ selectedTenantId }),
     }),
     {
-      name: 'aegisx-app',
+      name: 'AEGIS-app',
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         selectedTenantId: state.selectedTenantId,

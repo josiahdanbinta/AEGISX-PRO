@@ -1,5 +1,5 @@
 """
-AEGISX - Real-Time Notification Webhooks
+AEGIS - Real-Time Notification Webhooks
 Tier 6: Push alerts/incidents to Slack, Teams, PagerDuty, Discord, and
 generic webhooks from the detection pipeline.
 """
@@ -35,7 +35,7 @@ class NotificationWebhookService:
             self._clients[key] = httpx.AsyncClient(timeout=timeout)
         return self._clients[key]
 
-    # ── Slack ───────────────────────────────────────────────────
+    # â”€â”€ Slack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_slack(self, webhook_url: str, alert: Dict[str, Any],
                             channel: Optional[str] = None) -> Dict[str, Any]:
@@ -45,14 +45,14 @@ class NotificationWebhookService:
         payload = {
             "attachments": [{
                 "color": color,
-                "pretext": f":rotating_light: *AEGISX Alert — {severity}*",
+                "pretext": f":rotating_light: *AEGIS Alert â€” {severity}*",
                 "title": alert.get("title", "Security Alert"),
                 "text": alert.get("description", "")[:3000],
                 "fields": [
                     {"title": "Severity", "value": severity, "short": True},
                     {"title": "Confidence", "value": f"{alert.get('confidence', 0.5) * 100:.0f}%", "short": True},
                 ],
-                "footer": f"AEGISX SOAR | {datetime.now(timezone.utc).isoformat()}",
+                "footer": f"AEGIS SOAR | {datetime.now(timezone.utc).isoformat()}",
                 "ts": int(datetime.now(timezone.utc).timestamp()),
             }]
         }
@@ -79,7 +79,7 @@ class NotificationWebhookService:
             logger.error("Slack notification failed: %s", e)
             return {"success": False, "error": str(e), "platform": "slack"}
 
-    # ── Microsoft Teams ─────────────────────────────────────────
+    # â”€â”€ Microsoft Teams â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_teams(self, webhook_url: str, alert: Dict[str, Any]) -> Dict[str, Any]:
         color = SEVERITY_COLORS.get(alert.get("severity", "info"), "439FE0").lstrip("#")
@@ -89,7 +89,7 @@ class NotificationWebhookService:
             "@type": "MessageCard",
             "@context": "https://schema.org/extensions",
             "themeColor": color,
-            "summary": f"AEGISX Alert — {severity}",
+            "summary": f"AEGIS Alert â€” {severity}",
             "title": f":rotating_light: {alert.get('title', 'Security Alert')}",
             "text": alert.get("description", "")[:3000],
             "sections": [{
@@ -115,7 +115,7 @@ class NotificationWebhookService:
             logger.error("Teams notification failed: %s", e)
             return {"success": False, "error": str(e), "platform": "teams"}
 
-    # ── PagerDuty ───────────────────────────────────────────────
+    # â”€â”€ PagerDuty â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_pagerduty(self, routing_key: str, alert: Dict[str, Any]) -> Dict[str, Any]:
         severity = alert.get("severity", "info")
@@ -126,8 +126,8 @@ class NotificationWebhookService:
             "event_action": "trigger",
             "dedup_key": alert.get("alert_id") or alert.get("id"),
             "payload": {
-                "summary": alert.get("title", "AEGISX Alert"),
-                "source": "aegisx-detection",
+                "summary": alert.get("title", "AEGIS Alert"),
+                "source": "AEGIS-detection",
                 "severity": pd_severity,
                 "custom_details": {
                     "rule_name": alert.get("rule_name"),
@@ -152,7 +152,7 @@ class NotificationWebhookService:
             logger.error("PagerDuty notification failed: %s", e)
             return {"success": False, "error": str(e), "platform": "pagerduty"}
 
-    # ── Discord ─────────────────────────────────────────────────
+    # â”€â”€ Discord â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_discord(self, webhook_url: str, alert: Dict[str, Any]) -> Dict[str, Any]:
         color_hex = SEVERITY_COLORS.get(alert.get("severity", "info"), "#439FE0")
@@ -161,14 +161,14 @@ class NotificationWebhookService:
 
         payload = {
             "embeds": [{
-                "title": f":rotating_light: {alert.get('title', 'AEGISX Alert')}",
+                "title": f":rotating_light: {alert.get('title', 'AEGIS Alert')}",
                 "description": alert.get("description", "")[:2000],
                 "color": color_int,
                 "fields": [
                     {"name": "Severity", "value": severity, "inline": True},
                     {"name": "Confidence", "value": f"{alert.get('confidence', 0.5) * 100:.0f}%", "inline": True},
                 ],
-                "footer": {"text": "AEGISX SOAR"},
+                "footer": {"text": "AEGIS SOAR"},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }]
         }
@@ -187,7 +187,7 @@ class NotificationWebhookService:
             logger.error("Discord notification failed: %s", e)
             return {"success": False, "error": str(e), "platform": "discord"}
 
-    # ── Generic Webhook ─────────────────────────────────────────
+    # â”€â”€ Generic Webhook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_webhook(self, url: str, alert: Dict[str, Any],
                               method: str = "POST", headers: Optional[Dict] = None,
@@ -219,7 +219,7 @@ class NotificationWebhookService:
             logger.error("Webhook notification failed: %s", e)
             return {"success": False, "error": str(e), "platform": "webhook"}
 
-    # ── Batch Notification ──────────────────────────────────────
+    # â”€â”€ Batch Notification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def notify_all_configured(self, alert: Dict[str, Any],
                                      channels: List[Dict[str, Any]]) -> Dict[str, Any]:

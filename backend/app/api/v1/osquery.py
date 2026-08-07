@@ -1,5 +1,5 @@
 """
-AEGISX - Osquery API Router
+AEGIS - Osquery API Router
 Osquery query builder, template library, and scheduling for endpoint interrogation.
 """
 import uuid as uuid_mod

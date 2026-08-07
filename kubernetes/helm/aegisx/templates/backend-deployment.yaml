@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aegisx.fullname" . }}-backend
+  name: {{ include "AEGIS.fullname" . }}-backend
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: backend
       {{- if .Values.monitoring.prometheus.enabled }}
       annotations:
@@ -27,18 +27,18 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "aegisx.fullname" . }}
+      serviceAccountName: {{ include "AEGIS.fullname" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: backend
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.backend.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.backend.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "aegisx.fullname" . }}-config
+                name: {{ include "AEGIS.fullname" . }}-config
             - secretRef:
-                name: {{ include "aegisx.fullname" . }}-secrets
+                name: {{ include "AEGIS.fullname" . }}-secrets
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.port }}
@@ -69,14 +69,14 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "aegisx.fullname" . }}-backend
+  name: {{ include "AEGIS.fullname" . }}-backend
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: backend
   endpoints:
     - port: http

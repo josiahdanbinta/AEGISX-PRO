@@ -3,7 +3,7 @@ import logging
 from agent.core.collector import BaseCollector
 
 
-logger = logging.getLogger("aegisx.collector.system")
+logger = logging.getLogger("AEGIS.collector.system")
 
 
 class SystemCollector(BaseCollector):

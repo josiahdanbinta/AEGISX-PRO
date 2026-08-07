@@ -1,5 +1,5 @@
 """
-AEGISX - Osquery Service (Tier 6)
+AEGIS - Osquery Service (Tier 6)
 Query builder, template management, and scheduling for osquery-based
 endpoint interrogation across the fleet.
 """

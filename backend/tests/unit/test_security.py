@@ -1,5 +1,5 @@
 """
-Unit tests for AEGISX core security module.
+Unit tests for AEGIS core security module.
 """
 import pytest
 from app.core.security import (
@@ -105,7 +105,7 @@ class TestJWT:
 class TestAPIKeys:
     def test_generate_api_key_format(self):
         key = generate_api_key()
-        assert key.startswith("aegisx_")
+        assert key.startswith("AEGIS_")
         assert len(key) > 30
 
     def test_generate_api_key_uniqueness(self):
@@ -113,7 +113,7 @@ class TestAPIKeys:
         assert len(set(keys)) == 10
 
     def test_hash_api_key_consistent(self):
-        key = "aegisx_abcdef1234567890fedcba0987654321"
+        key = "AEGIS_abcdef1234567890fedcba0987654321"
         hash1 = hash_api_key(key)
         hash2 = hash_api_key(key)
         assert hash1 == hash2
@@ -181,7 +181,7 @@ class TestMasking:
 class TestExceptionClasses:
     def test_import_exceptions(self):
         from app.core.exceptions import (
-            AegisxException,
+            AEGISException,
             AuthenticationError,
             AuthorizationError,
             NotFoundError,
@@ -194,7 +194,7 @@ class TestExceptionClasses:
             MFARrequiredError,
             TenantQuotaExceededError,
         )
-        assert AegisxException is not None
+        assert AEGISException is not None
         assert AuthenticationError("test").status_code == 401
         assert AuthorizationError("test").status_code == 403
         assert NotFoundError("Resource", "id").status_code == 404

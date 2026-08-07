@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (isLoading) => set({ isLoading }),
     }),
     {
-      name: 'aegisx-auth',
+      name: 'AEGIS-auth',
       partialize: (state) => ({
         token: state.token,
         refreshToken: state.refreshToken,

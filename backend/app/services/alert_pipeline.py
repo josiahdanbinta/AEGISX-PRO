@@ -1,5 +1,5 @@
 """
-AEGISX - Alert Generation Pipeline
+AEGIS - Alert Generation Pipeline
 Creates Alert records from Sigma matches with deduplication,
 severity mapping, MITRE enrichment, and asset context.
 """

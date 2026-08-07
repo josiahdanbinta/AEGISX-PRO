@@ -1,34 +1,34 @@
 groups:
-  - name: aegisx-platform-alerts
+  - name: AEGIS-platform-alerts
     rules:
 
-      # ── Ingestion Rate ───────────────────────────────
+      # â”€â”€ Ingestion Rate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: LowIngestionRate
         expr: |
-          rate(aegisx_events_ingested_total[5m]) < 1
+          rate(AEGIS_events_ingested_total[5m]) < 1
         for: 10m
         labels:
           severity: warning
           component: ingestion
         annotations:
-          summary: "AEGISX event ingestion rate is critically low"
+          summary: "AEGIS event ingestion rate is critically low"
           description: "Less than 1 event/sec over the past 10 minutes. Check data sources and ingestion pipeline."
 
       - alert: HighIngestionRate
         expr: |
-          rate(aegisx_events_ingested_total[5m]) > 10000
+          rate(AEGIS_events_ingested_total[5m]) > 10000
         for: 5m
         labels:
           severity: warning
           component: ingestion
         annotations:
-          summary: "AEGISX event ingestion rate is abnormally high"
+          summary: "AEGIS event ingestion rate is abnormally high"
           description: "Over 10,000 events/sec. Verify for potential DoS or log storm."
 
-      # ── Alert Latency ────────────────────────────────
+      # â”€â”€ Alert Latency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: HighAlertLatency
         expr: |
-          histogram_quantile(0.95, rate(aegisx_alert_generation_duration_seconds_bucket[5m])) > 10
+          histogram_quantile(0.95, rate(AEGIS_alert_generation_duration_seconds_bucket[5m])) > 10
         for: 10m
         labels:
           severity: warning
@@ -37,7 +37,7 @@ groups:
           summary: "Alert generation latency is high (P95 > 10s)"
           description: "95th percentile alert generation latency exceeds 10 seconds."
 
-      # ── API Response Time ────────────────────────────
+      # â”€â”€ API Response Time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: SlowAPIResponse
         expr: |
           histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{handler!~"/metrics|/health"}[5m])) > 2
@@ -60,10 +60,10 @@ groups:
           summary: "API error rate > 5%"
           description: "Server error rate for {{ $labels.handler }} is {{ $value | humanizePercentage }}."
 
-      # ── Kafka Lag ─────────────────────────────────────
+      # â”€â”€ Kafka Lag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: KafkaConsumerLag
         expr: |
-          sum(kafka_consumer_group_lag{group=~"aegisx.*"}) by (group, topic) > 10000
+          sum(kafka_consumer_group_lag{group=~"AEGIS.*"}) by (group, topic) > 10000
         for: 15m
         labels:
           severity: warning
@@ -72,10 +72,10 @@ groups:
           summary: "Kafka consumer lag > 10,000"
           description: "Consumer group {{ $labels.group }} has {{ $value }} messages lagging on topic {{ $labels.topic }}."
 
-      # ── Database Health ──────────────────────────────
+      # â”€â”€ Database Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: DatabaseConnectionPoolExhausted
         expr: |
-          aegisx_db_connections_active / aegisx_db_connections_max > 0.9
+          AEGIS_db_connections_active / AEGIS_db_connections_max > 0.9
         for: 5m
         labels:
           severity: critical
@@ -95,10 +95,10 @@ groups:
           summary: "Redis error rate elevated"
           description: "Redis is experiencing {{ $value }} command failures/sec."
 
-      # ── Stream Processing ─────────────────────────────
+      # â”€â”€ Stream Processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: StreamProcessorErrorRate
         expr: |
-          rate(aegisx_stream_errors_total[5m]) > 5
+          rate(AEGIS_stream_errors_total[5m]) > 5
         for: 5m
         labels:
           severity: critical
@@ -107,7 +107,7 @@ groups:
           summary: "Stream processing error rate high"
           description: "Stream processor errors at {{ $value }}/sec."
 
-      # ── Component Health ─────────────────────────────
+      # â”€â”€ Component Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: ServiceDown
         expr: |
           up == 0
@@ -119,7 +119,7 @@ groups:
           summary: "Service {{ $labels.instance }} is down"
           description: "{{ $labels.instance }} has been unreachable for 2 minutes."
 
-      # ── Disk Space ────────────────────────────────────
+      # â”€â”€ Disk Space â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       - alert: LowDiskSpace
         expr: |
           (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1

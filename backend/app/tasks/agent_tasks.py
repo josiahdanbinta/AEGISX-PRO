@@ -1,5 +1,5 @@
 """
-AEGISX - Agent-related Celery tasks
+AEGIS - Agent-related Celery tasks
 """
 from datetime import datetime, timezone
 

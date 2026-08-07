@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-kafka
+  name: {{ include "AEGIS.fullname" . }}-kafka
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 spec:
   type: ClusterIP
@@ -18,15 +18,15 @@ spec:
       port: 9093
       targetPort: 9093
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aegisx.fullname" . }}-kafka-bootstrap
+  name: {{ include "AEGIS.fullname" . }}-kafka-bootstrap
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 spec:
   type: ClusterIP
@@ -35,21 +35,21 @@ spec:
       port: 9092
       targetPort: 9092
   selector:
-    {{- include "aegisx.selectorLabels" . | nindent 4 }}
+    {{- include "AEGIS.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aegisx.fullname" . }}-kafka-config
+  name: {{ include "AEGIS.fullname" . }}-kafka-config
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 data:
   server.properties: |
     process.roles=broker,controller
     node.id=${KAFKA_NODE_ID}
-    controller.quorum.voters={{- range $i := until (int .Values.kafka.replicaCount) }}{{ if $i }},{{ end }}{{ $i }}@{{ include "aegisx.fullname" $ }}-kafka-{{ $i }}.{{ include "aegisx.fullname" $ }}-kafka.{{ include "aegisx.namespace" $ }}.svc.cluster.local:9093{{- end }}
+    controller.quorum.voters={{- range $i := until (int .Values.kafka.replicaCount) }}{{ if $i }},{{ end }}{{ $i }}@{{ include "AEGIS.fullname" $ }}-kafka-{{ $i }}.{{ include "AEGIS.fullname" $ }}-kafka.{{ include "AEGIS.namespace" $ }}.svc.cluster.local:9093{{- end }}
     listeners=PLAINTEXT://:9092,CONTROLLER://:9093
     advertised.listeners=PLAINTEXT://${KAFKA_ADVERTISED_HOSTNAME}:9092
     listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -78,22 +78,22 @@ data:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "aegisx.fullname" . }}-kafka
+  name: {{ include "AEGIS.fullname" . }}-kafka
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: kafka
 spec:
-  serviceName: {{ include "aegisx.fullname" . }}-kafka
+  serviceName: {{ include "AEGIS.fullname" . }}-kafka
   replicas: {{ .Values.kafka.replicaCount }}
   podManagementPolicy: Parallel
   selector:
     matchLabels:
-      {{- include "aegisx.selectorLabels" . | nindent 6 }}
+      {{- include "AEGIS.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: kafka
   template:
     metadata:
       labels:
-        {{- include "aegisx.selectorLabels" . | nindent 8 }}
+        {{- include "AEGIS.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: kafka
     spec:
       {{- with .Values.global.imagePullSecrets }}
@@ -114,14 +114,14 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: kafka
-          image: {{ include "aegisx.image" (dict "imageRoot" .Values.kafka.image "Values" .Values) }}
+          image: {{ include "AEGIS.image" (dict "imageRoot" .Values.kafka.image "Values" .Values) }}
           imagePullPolicy: {{ .Values.kafka.image.pullPolicy }}
           command:
             - /bin/bash
             - -c
             - |
               export KAFKA_NODE_ID=${HOSTNAME##*-}
-              export KAFKA_ADVERTISED_HOSTNAME=${HOSTNAME}.{{ include "aegisx.fullname" . }}-kafka.{{ include "aegisx.namespace" . }}.svc.cluster.local
+              export KAFKA_ADVERTISED_HOSTNAME=${HOSTNAME}.{{ include "AEGIS.fullname" . }}-kafka.{{ include "AEGIS.namespace" . }}.svc.cluster.local
               export KAFKA_HEAP_OPTS="-Xms{{ .Values.kafka.resources.requests.memory }} -Xmx{{ .Values.kafka.resources.limits.memory }}"
               export KAFKA_JVM_PERFORMANCE_OPTS="-server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+DisableExplicitGC -Djava.awt.headless=true"
               exec /opt/kafka/bin/kafka-server-start.sh /mnt/config/server.properties
@@ -164,12 +164,12 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "aegisx.fullname" . }}-kafka-config
+            name: {{ include "AEGIS.fullname" . }}-kafka-config
   volumeClaimTemplates:
     - metadata:
         name: data
         labels:
-          {{- include "aegisx.labels" . | nindent 10 }}
+          {{- include "AEGIS.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce

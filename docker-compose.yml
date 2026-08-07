@@ -1,24 +1,24 @@
 version: "3.9"
 
 services:
-  # ── PostgreSQL 15 (OLTP) ────────────────────────────────────────
+  # â”€â”€ PostgreSQL 15 (OLTP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   postgres:
     image: postgres:15-alpine
-    container_name: aegisx-postgres
+    container_name: AEGIS-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-aegisx}
+      POSTGRES_USER: ${POSTGRES_USER:-AEGIS}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
-      POSTGRES_DB: ${POSTGRES_DB:-aegisx}
+      POSTGRES_DB: ${POSTGRES_DB:-AEGIS}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5433:5432"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aegisx} -d ${POSTGRES_DB:-aegisx}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-AEGIS} -d ${POSTGRES_DB:-AEGIS}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,10 +29,10 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # ── Redis 7 (Cache + Session Store) ─────────────────────────────
+  # â”€â”€ Redis 7 (Cache + Session Store) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   redis:
     image: redis:7-alpine
-    container_name: aegisx-redis
+    container_name: AEGIS-redis
     restart: unless-stopped
     command: >
       redis-server
@@ -45,7 +45,7 @@ services:
     ports:
       - "127.0.0.1:6380:6379"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -54,10 +54,10 @@ services:
       start_period: 10s
     logging: *log-defaults
 
-  # ── OpenSearch 2.x (Search + Log Index) ─────────────────────────
+  # â”€â”€ OpenSearch 2.x (Search + Log Index) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   opensearch:
     image: opensearchproject/opensearch:2.14.0
-    container_name: aegisx-opensearch
+    container_name: AEGIS-opensearch
     restart: unless-stopped
     environment:
       discovery.type: single-node
@@ -65,8 +65,8 @@ services:
       DISABLE_INSTALL_DEMO_CONFIG: "true"
       OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD:?OPENSEARCH_PASSWORD must be set}
       OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
-      cluster.name: aegisx-opensearch-cluster
-      node.name: aegisx-opensearch-node
+      cluster.name: AEGIS-opensearch-cluster
+      node.name: AEGIS-opensearch-node
       bootstrap.memory_lock: "true"
     ulimits:
       memlock:
@@ -81,7 +81,7 @@ services:
       - "127.0.0.1:9200:9200"
       - "127.0.0.1:9600:9600"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
       interval: 15s
@@ -90,10 +90,10 @@ services:
       start_period: 60s
     logging: *log-defaults
 
-  # ── RabbitMQ 3.12 (Message Broker) ──────────────────────────────
+  # â”€â”€ RabbitMQ 3.12 (Message Broker) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
-    container_name: aegisx-rabbitmq
+    container_name: AEGIS-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -105,7 +105,7 @@ services:
       - "127.0.0.1:5672:5672"
       - "127.0.0.1:15672:15672"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 15s
@@ -114,10 +114,10 @@ services:
       start_period: 30s
     logging: *log-defaults
 
-  # ── Kafka (Event Streaming) ────────────────────────────────────
+  # â”€â”€ Kafka (Event Streaming) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   kafka:
     image: apache/kafka:3.7.0
-    container_name: aegisx-kafka
+    container_name: AEGIS-kafka
     restart: unless-stopped
     environment:
       KAFKA_NODE_ID: 1
@@ -138,7 +138,7 @@ services:
     ports:
       - "127.0.0.1:9092:9092"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
       interval: 15s
@@ -147,10 +147,10 @@ services:
       start_period: 30s
     logging: *log-defaults
 
-  # ── Schema Registry ────────────────────────────────────────────
+  # â”€â”€ Schema Registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.0
-    container_name: aegisx-schema-registry
+    container_name: AEGIS-schema-registry
     restart: unless-stopped
     depends_on:
       kafka:
@@ -165,7 +165,7 @@ services:
     ports:
       - "127.0.0.1:8081:8081"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8081/subjects || exit 1"]
       interval: 15s
@@ -174,15 +174,15 @@ services:
       start_period: 15s
     logging: *log-defaults
 
-  # ── TimescaleDB (Time-Series Events) ───────────────────────────
+  # â”€â”€ TimescaleDB (Time-Series Events) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   timescaledb:
     image: timescale/timescaledb:2.14.2-pg15
-    container_name: aegisx-timescaledb
+    container_name: AEGIS-timescaledb
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${TIMESCALEDB_USER:-aegisx}
-      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD:-aegisx}
-      POSTGRES_DB: ${TIMESCALEDB_DB:-aegisx_tsdb}
+      POSTGRES_USER: ${TIMESCALEDB_USER:-AEGIS}
+      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD:-AEGIS}
+      POSTGRES_DB: ${TIMESCALEDB_DB:-AEGIS_tsdb}
       PGDATA: /var/lib/postgresql/data/pgdata
       TIMESCALEDB_TELEMETRY: "off"
     volumes:
@@ -190,23 +190,23 @@ services:
     ports:
       - "127.0.0.1:5434:5432"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER:-aegisx} -d ${TIMESCALEDB_DB:-aegisx_tsdb}"]
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER:-AEGIS} -d ${TIMESCALEDB_DB:-AEGIS_tsdb}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     logging: *log-defaults
 
-  # ── MinIO (S3-Compatible Object Storage) ───────────────────────
+  # â”€â”€ MinIO (S3-Compatible Object Storage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   minio:
     image: minio/minio:RELEASE.2024-06-13T22-53-53Z
-    container_name: aegisx-minio
+    container_name: AEGIS-minio
     restart: unless-stopped
     command: server /data --console-address :9001
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-aegisx}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-AEGIS}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD must be set}
       MINIO_BROWSER: "on"
       MINIO_PROMETHEUS_AUTH_TYPE: public
@@ -216,7 +216,7 @@ services:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 15s
@@ -225,10 +225,10 @@ services:
       start_period: 15s
     logging: *log-defaults
 
-  # ── Prometheus (Metrics) ───────────────────────────────────────
+  # â”€â”€ Prometheus (Metrics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   prometheus:
     image: prom/prometheus:v2.52.0
-    container_name: aegisx-prometheus
+    container_name: AEGIS-prometheus
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -241,7 +241,7 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
       interval: 15s
@@ -249,10 +249,10 @@ services:
       retries: 3
     logging: *log-defaults
 
-  # ── Grafana (Dashboards) ───────────────────────────────────────
+  # â”€â”€ Grafana (Dashboards) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   grafana:
     image: grafana/grafana:11.0.0
-    container_name: aegisx-grafana
+    container_name: AEGIS-grafana
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
@@ -266,7 +266,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 15s
@@ -275,10 +275,10 @@ services:
       start_period: 30s
     logging: *log-defaults
 
-  # ── Jaeger (Distributed Tracing) ───────────────────────────────
+  # â”€â”€ Jaeger (Distributed Tracing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   jaeger:
     image: jaegertracing/all-in-one:1.57
-    container_name: aegisx-jaeger
+    container_name: AEGIS-jaeger
     restart: unless-stopped
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
@@ -294,7 +294,7 @@ services:
       - "127.0.0.1:14250:14250"
       - "127.0.0.1:14268:14268"
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:14269/"]
       interval: 15s
@@ -302,13 +302,13 @@ services:
       retries: 3
     logging: *log-defaults
 
-  # ── Backend (FastAPI) ──────────────────────────────────────────
+  # â”€â”€ Backend (FastAPI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: development
-    container_name: aegisx-backend
+    container_name: AEGIS-backend
     restart: unless-stopped
     command: >
       uvicorn app.main:app
@@ -351,16 +351,16 @@ services:
       kafka:
         condition: service_healthy
     networks:
-      - aegisx-network
+      - AEGIS-network
     logging: *log-defaults
 
-  # ── Celery Worker ──────────────────────────────────────────────
+  # â”€â”€ Celery Worker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   celery_worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: development
-    container_name: aegisx-celery-worker
+    container_name: AEGIS-celery-worker
     restart: unless-stopped
     command: >
       celery -A app.core.celery_config.celery_app worker
@@ -389,16 +389,16 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - aegisx-network
+      - AEGIS-network
     logging: *log-defaults
 
-  # ── Celery Beat ────────────────────────────────────────────────
+  # â”€â”€ Celery Beat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   celery_beat:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: development
-    container_name: aegisx-celery-beat
+    container_name: AEGIS-celery-beat
     restart: unless-stopped
     command: >
       celery -A app.core.celery_config.celery_app beat
@@ -425,16 +425,16 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - aegisx-network
+      - AEGIS-network
     logging: *log-defaults
 
-  # ── Frontend (React + Vite) ────────────────────────────────────
+  # â”€â”€ Frontend (React + Vite) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: development
-    container_name: aegisx-frontend
+    container_name: AEGIS-frontend
     restart: unless-stopped
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
     volumes:
@@ -452,13 +452,13 @@ services:
     depends_on:
       - backend
     networks:
-      - aegisx-network
+      - AEGIS-network
     logging: *log-defaults
 
-  # ── Nginx Reverse Proxy ────────────────────────────────────────
+  # â”€â”€ Nginx Reverse Proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   nginx:
     image: nginx:1.27-alpine
-    container_name: aegisx-nginx
+    container_name: AEGIS-nginx
     restart: unless-stopped
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -472,7 +472,7 @@ services:
       - frontend
       - grafana
     networks:
-      - aegisx-network
+      - AEGIS-network
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -481,36 +481,36 @@ services:
     logging: *log-defaults
 
 networks:
-  aegisx-network:
-    name: aegisx-network
+  AEGIS-network:
+    name: AEGIS-network
     driver: bridge
 
 volumes:
   postgres_data:
-    name: aegisx-postgres-data
+    name: AEGIS-postgres-data
   timescaledb_data:
-    name: aegisx-timescaledb-data
+    name: AEGIS-timescaledb-data
   redis_data:
-    name: aegisx-redis-data
+    name: AEGIS-redis-data
   opensearch_data:
-    name: aegisx-opensearch-data
+    name: AEGIS-opensearch-data
   rabbitmq_data:
-    name: aegisx-rabbitmq-data
+    name: AEGIS-rabbitmq-data
   kafka_data:
-    name: aegisx-kafka-data
+    name: AEGIS-kafka-data
   minio_data:
-    name: aegisx-minio-data
+    name: AEGIS-minio-data
   prometheus_data:
-    name: aegisx-prometheus-data
+    name: AEGIS-prometheus-data
   grafana_data:
-    name: aegisx-grafana-data
+    name: AEGIS-grafana-data
   jaeger_data:
-    name: aegisx-jaeger-data
+    name: AEGIS-jaeger-data
   uploads_data:
-    name: aegisx-uploads-data
+    name: AEGIS-uploads-data
   celery_beat_data:
-    name: aegisx-celery-beat-data
+    name: AEGIS-celery-beat-data
   frontend_node_modules:
-    name: aegisx-frontend-node-modules
+    name: AEGIS-frontend-node-modules
   frontend_dist:
-    name: aegisx-frontend-dist
+    name: AEGIS-frontend-dist

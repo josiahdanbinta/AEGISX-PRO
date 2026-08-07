@@ -3,15 +3,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "aegisx.fullname" . }}-celery-worker
+  name: {{ include "AEGIS.fullname" . }}-celery-worker
   labels:
-    {{- include "aegisx.labels" . | nindent 4 }}
+    {{- include "AEGIS.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery-worker
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "aegisx.fullname" . }}-celery-worker
+    name: {{ include "AEGIS.fullname" . }}-celery-worker
   minReplicas: {{ .Values.celeryWorker.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.celeryWorker.autoscaling.maxReplicas }}
   metrics:

@@ -1,5 +1,5 @@
 """
-AEGISX - OpenTelemetry / Jaeger Tracing
+AEGIS - OpenTelemetry / Jaeger Tracing
 Tier 9: Distributed tracing for detection rule execution and event processing.
 Samples 10% of events for performance monitoring.
 """

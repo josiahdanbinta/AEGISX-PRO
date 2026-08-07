@@ -1,4 +1,4 @@
-# AEGISX API Reference v1.0.0
+# AEGIS API Reference v1.0.0
 
 A comprehensive, AI-powered cybersecurity platform combining SIEM, SOAR, XDR,
 Vulnerability Management, Asset Management, Threat Intelligence, Compliance,
@@ -2047,13 +2047,13 @@ AI-generated security insights.
 
 | Code | Meaning |
 |------|---------|
-| 400 | Bad Request — invalid input |
-| 401 | Unauthorized — missing/invalid token |
-| 403 | Forbidden — insufficient permissions |
-| 404 | Not Found — resource doesn't exist |
-| 409 | Conflict — duplicate resource |
-| 422 | Validation Error — invalid fields |
-| 429 | Rate Limited — too many requests |
+| 400 | Bad Request â€” invalid input |
+| 401 | Unauthorized â€” missing/invalid token |
+| 403 | Forbidden â€” insufficient permissions |
+| 404 | Not Found â€” resource doesn't exist |
+| 409 | Conflict â€” duplicate resource |
+| 422 | Validation Error â€” invalid fields |
+| 429 | Rate Limited â€” too many requests |
 | 500 | Internal Server Error |
 
 ## Rate Limits
@@ -2080,4 +2080,4 @@ AI-generated security insights.
 
 ---
 
-*Comprehensive API Reference — AEGISX Platform v1.0.0 — 330+ Endpoints across 18 Categories*
+*Comprehensive API Reference â€” AEGIS Platform v1.0.0 â€” 330+ Endpoints across 18 Categories*

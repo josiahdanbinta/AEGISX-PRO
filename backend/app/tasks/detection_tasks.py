@@ -1,5 +1,5 @@
 """
-AEGISX - Detection-related Celery tasks
+AEGIS - Detection-related Celery tasks
 Sigma rule evaluation, IOC matching, event correlation.
 """
 import logging

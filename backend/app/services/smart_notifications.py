@@ -1,5 +1,5 @@
 """
-AEGISX - Smart AI-Driven Notification Service
+AEGIS - Smart AI-Driven Notification Service
 AI determines notification routing: who gets notified, at what severity,
 through which channel, and when. Suppresses noise, escalates critical.
 """
@@ -46,7 +46,7 @@ class SmartNotificationEngine:
         if severity == "critical" and self._critical_always:
             self._recent_alerts[alert_key].append(now)
             return self._build_decision(True, "immediate", ["slack", "pagerduty", "email"],
-                                         alert, "Critical alert — always notify")
+                                         alert, "Critical alert â€” always notify")
 
         if severity == "high" and confidence > 0.7:
             self._recent_alerts[alert_key].append(now)

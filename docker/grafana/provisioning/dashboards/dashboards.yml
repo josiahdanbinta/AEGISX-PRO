@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: "AEGISX Dashboards"
+  - name: "AEGIS Dashboards"
     orgId: 1
-    folder: "AEGISX Platform"
+    folder: "AEGIS Platform"
     type: file
     disableDeletion: true
     updateIntervalSeconds: 30

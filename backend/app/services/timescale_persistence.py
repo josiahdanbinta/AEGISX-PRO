@@ -1,5 +1,5 @@
 """
-AEGISX - TimescaleDB Event Persistence Service
+AEGIS - TimescaleDB Event Persistence Service
 Writes raw events, alerts, and audit entries to TimescaleDB hypertables
 alongside the existing PostgreSQL OLTP tables.
 """
@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from app.core.config import settings
 
-logger = logging.getLogger("aegisx.timescaledb.persistence")
+logger = logging.getLogger("AEGIS.timescaledb.persistence")
 
 _BATCH_SIZE = 100
 _BATCH_TIMEOUT = 5.0

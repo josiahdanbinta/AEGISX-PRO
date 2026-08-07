@@ -1,5 +1,5 @@
 """
-Integration tests for AEGISX Compliance API endpoints.
+Integration tests for AEGIS Compliance API endpoints.
 """
 import uuid
 

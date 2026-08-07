@@ -1,12 +1,12 @@
 """
-AEGISX - TimescaleDB Service
+AEGIS - TimescaleDB Service
 Hypertable management, retention policies, continuous aggregates for time-series events.
 """
 import logging
 
 from app.core.config import settings
 
-logger = logging.getLogger("aegisx.timescaledb")
+logger = logging.getLogger("AEGIS.timescaledb")
 
 TIMESCALE_SQL = """
 -- Convert tables to hypertables

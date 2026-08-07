@@ -1,5 +1,5 @@
 """
-Security tests for AEGISX - validates security requirements are met.
+Security tests for AEGIS - validates security requirements are met.
 """
 import pytest
 from app.core.security import (

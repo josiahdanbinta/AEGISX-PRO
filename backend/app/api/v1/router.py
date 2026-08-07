@@ -1,6 +1,6 @@
 """
-AEGISX - API v1 Router
-Safe imports — individual router failures don't crash the app.
+AEGIS - API v1 Router
+Safe imports â€” individual router failures don't crash the app.
 """
 from fastapi import APIRouter
 
@@ -40,4 +40,4 @@ for name, prefix, tag in _routers:
         mod = __import__(f"app.api.v1.{name}", fromlist=["router"])
         api_router.include_router(mod.router, prefix=prefix, tags=[tag])
     except Exception as e:
-        print(f"  ⚠ Router '{name}' failed to load: {e} — skipping")
+        print(f"  âš  Router '{name}' failed to load: {e} â€” skipping")

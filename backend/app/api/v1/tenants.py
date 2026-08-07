@@ -1,5 +1,5 @@
 """
-AEGISX - Tenant Management Endpoints (Super Admin)
+AEGIS - Tenant Management Endpoints (Super Admin)
 """
 import math
 import uuid
@@ -46,7 +46,7 @@ async def _audit(
     db.add(entry)
 
 
-# ── Pydantic Models ───────────────────────────────────────────────
+# â”€â”€ Pydantic Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TenantCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Unique tenant identifier slug")
@@ -140,7 +140,7 @@ class TenantAuditLogResponse(BaseModel):
     total_pages: int
 
 
-# ── Endpoints ─────────────────────────────────────────────────────
+# â”€â”€ Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.post(
     "/",

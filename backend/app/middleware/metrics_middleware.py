@@ -1,5 +1,5 @@
 """
-AEGISX - Prometheus HTTP Metrics Middleware
+AEGIS - Prometheus HTTP Metrics Middleware
 Auto-instruments all HTTP requests for count and duration tracking.
 """
 import time
@@ -44,7 +44,7 @@ class PrometheusHTTPMiddleware(BaseHTTPMiddleware):
 
         try:
             from app.services.metrics import METRICS as m
-            gauge = m.get("aegisx_db_connections_active")
+            gauge = m.get("AEGIS_db_connections_active")
             if gauge:
                 from app.core.database import engine
                 if engine and engine.pool:
