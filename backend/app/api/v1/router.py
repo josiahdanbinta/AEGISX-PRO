@@ -26,6 +26,7 @@ _routers = [
     ("sso", "/sso", "SSO"),
     ("websocket", "", "WebSocket"),
     ("agent", "/agent", "Agent"),
+    ("agent_inventory", "/agents", "Agent Inventory"),
     ("ingestion", "/ingestion", "Ingestion"),
     ("osquery", "/osquery", "Osquery"),
     ("remediation", "/remediation", "AI Remediation"),

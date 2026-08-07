@@ -37,6 +37,7 @@ const navSections: NavSection[] = [
     items: [
       { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/assets', icon: Monitor, label: 'Assets' },
+      { to: '/agents', icon: Monitor, label: 'Agents' },
       { to: '/incidents', icon: Shield, label: 'Incidents' },
       { to: '/detection', icon: AlertTriangle, label: 'Detection' },
       { to: '/detection/live', icon: Radio, label: 'Live Alerts' },

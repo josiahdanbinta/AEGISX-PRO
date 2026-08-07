@@ -7,6 +7,7 @@ import { ExecutiveDashboard } from '@/pages/dashboard/ExecutiveDashboard';
 import { SOCDashboard } from '@/pages/dashboard/SOCDashboard';
 import { AssetListPage } from '@/pages/assets/AssetListPage';
 import { AssetDetailPage } from '@/pages/assets/AssetDetailPage';
+import AgentDashboardPage from '@/pages/assets/AgentDashboardPage';
 import { IncidentListPage } from '@/pages/incidents/IncidentListPage';
 import { IncidentDetailPage } from '@/pages/incidents/IncidentDetailPage';
 import { AlertsPage } from '@/pages/alerts/AlertsPage';
@@ -49,6 +50,7 @@ export default function App() {
       {/* Asset routes */}
       <Route path="/assets" element={<ProtectedRoute><AssetListPage /></ProtectedRoute>} />
       <Route path="/assets/:id" element={<ProtectedRoute><AssetDetailPage /></ProtectedRoute>} />
+      <Route path="/agents" element={<ProtectedRoute><AgentDashboardPage /></ProtectedRoute>} />
 
       <Route path="/incidents" element={<ProtectedRoute><IncidentListPage /></ProtectedRoute>} />
       <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetailPage /></ProtectedRoute>} />
