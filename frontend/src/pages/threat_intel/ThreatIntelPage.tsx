@@ -677,11 +677,11 @@ export function ThreatIntelPage() {
                       </th>
                       {mitreTacticsList.map((tactic) => (
                         <th
-                          key={tactic}
+                          key={tactic.id}
                           className="text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2 py-2 bg-slate-50 border-b border-slate-200"
-                          style={{ minWidth: '90px', maxWidth: '90px', writingMode: 'horizontal-tb' }}
+                          style={{ minWidth: '90px', maxWidth: '90px' }}
                         >
-                          {tactic}
+                          {tactic.name}
                         </th>
                       ))}
                     </tr>
@@ -698,9 +698,9 @@ export function ThreatIntelPage() {
                           </div>
                         </td>
                         {mitreTacticsList.map((tactic) => {
-                          const match = mitreByTactic[tactic]?.find((m) => m.id === item.id);
+                          const match = mitreByTactic[tactic.name]?.find((m) => m.id === item.id);
                           return (
-                            <td key={tactic} className="px-2 py-2 text-center" style={{ minWidth: '90px' }}>
+                            <td key={tactic.id} className="px-2 py-2 text-center" style={{ minWidth: '90px' }}>
                               {match ? (
                                 <div className="w-full h-7 rounded bg-brand-100 flex items-center justify-center">
                                   <span className="w-3 h-3 rounded-full bg-brand-500" />
