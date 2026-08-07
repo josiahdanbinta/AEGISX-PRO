@@ -148,7 +148,7 @@ export function ThreatIntelPage() {
     if (indicatorSearch) params.search = indicatorSearch;
     if (indicatorType) params.type = indicatorType;
     api.get<PaginatedResponse<ThreatIndicator>>('/threat-intel/indicators', { params })
-      .then((res) => { setIndicators(res.data); setIndicatorTotal(res.total); })
+      .then((res) => { setIndicators((res as unknown as { items: ThreatIndicator[] }).items); setIndicatorTotal((res as unknown as { meta: { total_items: number } }).meta.total_items); })
       .catch((err) => setIndicatorError(err?.error?.message || 'Failed to load indicators'))
       .finally(() => setIndicatorLoading(false));
   }, [indicatorPage, indicatorSearch, indicatorType]);
@@ -162,7 +162,7 @@ export function ThreatIntelPage() {
     setFeedLoading(true);
     setFeedError(null);
     api.get<ThreatFeed[]>('/threat-intel/feeds')
-      .then((res) => setFeeds(res))
+      .then((res) => setFeeds((res as unknown as { items: ThreatFeed[] }).items))
       .catch((err) => setFeedError(err?.error?.message || 'Failed to load feeds'))
       .finally(() => setFeedLoading(false));
   }, []);
@@ -176,7 +176,7 @@ export function ThreatIntelPage() {
     setActorLoading(true);
     setActorError(null);
     api.get<ThreatActor[]>('/threat-intel/actors')
-      .then((res) => setActors(res))
+      .then((res) => setActors((res as unknown as { items: ThreatActor[] }).items))
       .catch((err) => setActorError(err?.error?.message || 'Failed to load threat actors'))
       .finally(() => setActorLoading(false));
   }, []);
@@ -190,7 +190,7 @@ export function ThreatIntelPage() {
     setCampaignLoading(true);
     setCampaignError(null);
     api.get<ThreatCampaign[]>('/threat-intel/campaigns')
-      .then((res) => setCampaigns(res))
+      .then((res) => setCampaigns((res as unknown as { items: ThreatCampaign[] }).items))
       .catch((err) => setCampaignError(err?.error?.message || 'Failed to load campaigns'))
       .finally(() => setCampaignLoading(false));
   }, []);
@@ -204,7 +204,7 @@ export function ThreatIntelPage() {
     setMitreLoading(true);
     setMitreError(null);
     api.get<MitreTechnique[]>('/threat-intel/mitre')
-      .then((res) => setMitreData(res))
+      .then((res) => setMitreData((res as unknown as { techniques: MitreTechnique[] }).techniques))
       .catch((err) => setMitreError(err?.error?.message || 'Failed to load MITRE data'))
       .finally(() => setMitreLoading(false));
   }, []);
