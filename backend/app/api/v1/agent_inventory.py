@@ -166,7 +166,7 @@ async def enroll_agent(
 @router.get("/enroll/command", summary="Get enrollment command for current tenant")
 async def get_enrollment_command(
     request: Request,
-    platform: str = Query("linux", regex="^(linux|windows|macos)$"),
+    platform: str = Query("linux", pattern="^(linux|windows|macos)$"),
     tenant_id: str = Depends(require_tenant),
     current_user: dict = Depends(get_current_user),
 ):
